@@ -1,0 +1,16 @@
+The file /home/project/src/pages/GuestbookPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+   1→import { useState, useEffect, useRef } from 'react';
+   2→import { motion, AnimatePresence } from 'framer-motion';
+   3→import { ArrowLeft, MessageSquare, Send, Lock, Clock, User, Flag, X, AlertTriangle } from 'lucide-react';
+   4→import { useNavigate } from 'react-router-dom';
+   5→import { SEOHead } from '../components/SEOHead';
+   6→import { Footer } from '../components/Footer';
+   7→import { APP_CONFIG } from '../types';
+   8→import { supabase, supabaseUrl } from '../supabase/client';
+   9→
+  10→// 获取 Edge Function URL
+  11→function getEdgeFunctionUrl(): string {
+  12→  const url = supabaseUrl;
+  13→  return url.replace(/\/sb-api$/, '');

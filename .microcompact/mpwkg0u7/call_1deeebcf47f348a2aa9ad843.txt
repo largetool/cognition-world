@@ -1,0 +1,1 @@
+{"results":[{"file":"src/utils/storage.ts","matches":[{"line":663,"content":"export async function getAllUsersWithStats(limit: number = 1000): Promise<Array<{"}]}],"pattern":"getAllUsersWithStats","path":"src/utils/storage.ts","totalMatches":1,"truncated":false,"returnedCount":1}

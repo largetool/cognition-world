@@ -1,0 +1,28 @@
+The file /home/project/src/pages/UserPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  20→const LOGS_PER_PAGE = 10;
+  21→
+  22→const defaultBg = new URL('../../assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg', import.meta.url).href;
+  23→
+  24→export default function UserPage() {
+  25→  const { userId } = useParams<{ userId: string }>();
+  26→  const navigate = useNavigate();
+  27→  const { user: currentUser } = useAuth() as { user: Profile | null };
+  28→  const { profile, logs, activeBackground, isLoading, error, refreshLogs } = useUser(userId);
+  29→  const { isBlocked, isLoading: ipLoading } = useIPCheck();
+  30→  const [logContent, setLogContent] = useState('');
+  31→  const [isSubmitting, setIsSubmitting] = useState(false);
+  32→  const [currentPage, setCurrentPage] = useState(1);
+  33→
+  34→  // 举报相关状态
+  35→  const [reportModalOpen, setReportModalOpen] = useState(false);
+  36→  const [reportingItem, setReportingItem] = useState<{ id: string; content: string; type: 'log' | 'message'; user_id: string; username: string } | null>(null);
+  37→  const [reportReason, setReportReason] = useState('');
+  38→  const [reportSubmitting, setReportSubmitting] = useState(false);
+  39→  const [reportSuccess, setReportSuccess] = useState(false);
+  40→
+  41→  // 分页计算
+  42→  const totalPages = Math.ceil(logs.length / LOGS_PER_PAGE);
+  43→  const paginatedLogs = logs.slice((currentPage - 1) * LOGS_PER_PAGE, currentPage * LOGS_PER_PAGE);
+  44→

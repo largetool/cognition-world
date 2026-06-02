@@ -1,0 +1,20 @@
+The file /home/project/src/pages/GuestbookPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+   4→import { useNavigate } from 'react-router-dom';
+   5→import { SEOHead } from '../components/SEOHead';
+   6→import { Footer } from '../components/Footer';
+   7→import { APP_CONFIG } from '../types';
+   8→import { supabase, getSupabaseUrl } from '../supabase/client';
+   9→
+  10→// 获取 Edge Function URL（去掉 /sb-api 后缀）
+  11→function getEdgeFunctionUrl(): string {
+  12→  const url = getSupabaseUrl();
+  13→  // 如果 URL 以 /sb-api 结尾，去掉它
+  14→  return url.replace(/\/sb-api$/, '');
+  15→}
+  16→import { useAuth } from '../hooks/useAuth';
+  17→
+  18→// 格式化相对时间
+  19→function formatDistanceToNow(dateString: string): string {
+  20→  const date = new Date(dateString);

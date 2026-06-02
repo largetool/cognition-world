@@ -1,0 +1,74 @@
+[
+  {
+    "id": "1",
+    "status": "completed",
+    "content": "实现BreadcrumbList结构化数据",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "status": "completed",
+    "content": "扩展语言文件（zh.json/en.json）添加全站文案",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "status": "completed",
+    "content": "修改Navbar组件使用国际化",
+    "priority": "high"
+  },
+  {
+    "id": "4",
+    "status": "completed",
+    "content": "修改Footer组件使用国际化",
+    "priority": "high"
+  },
+  {
+    "id": "5",
+    "status": "completed",
+    "content": "修改HomePage组件使用国际化",
+    "priority": "high"
+  },
+  {
+    "id": "6",
+    "status": "completed",
+    "content": "修改UserPage组件使用国际化",
+    "priority": "high"
+  },
+  {
+    "id": "7",
+    "status": "completed",
+    "content": "修改其他页面组件使用国际化",
+    "priority": "medium"
+  },
+  {
+    "id": "8",
+    "status": "completed",
+    "content": "配置英文路由",
+    "priority": "high"
+  },
+  {
+    "id": "9",
+    "status": "completed",
+    "content": "实现语言切换器",
+    "priority": "high"
+  },
+  {
+    "id": "10",
+    "status": "completed",
+    "content": "添加SEO多语言支持（hreflang）",
+    "priority": "medium"
+  },
+  {
+    "id": "11",
+    "status": "completed",
+    "content": "翻译内容页面（白皮书/协议等）",
+    "priority": "medium"
+  },
+  {
+    "id": "12",
+    "status": "completed",
+    "content": "运行typecheck验证",
+    "priority": "high"
+  }
+]

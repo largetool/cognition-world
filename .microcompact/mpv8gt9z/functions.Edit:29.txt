@@ -1,0 +1,16 @@
+The file /home/project/src/pages/GuestbookPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  59→  const [eligibility, setEligibility] = useState<EligibilityStatus | null>(null);
+  60→  const [error, setError] = useState('');
+  61→  const messagesEndRef = useRef<HTMLDivElement>(null);
+  62→
+  63→  // 获取留言列表
+  64→  const fetchMessages = async () => {
+  65→    try {
+  66→      const response = await fetch(`${getEdgeFunctionUrl()}/functions/v1/guestbook`, {
+  67→        method: 'GET',
+  68→        headers: {
+  69→          'Content-Type': 'application/json',
+  70→        },
+  71→      });

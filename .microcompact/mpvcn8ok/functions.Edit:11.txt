@@ -1,0 +1,51 @@
+The file /home/project/src/pages/UserPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 183→          },
+ 184→        } : undefined}
+ 185→      />
+ 186→
+ 187→      {/* 账户冻结提示横幅 */}
+ 188→      {profile?.is_frozen && (
+ 189→        <motion.div
+ 190→          initial={{ opacity: 0, y: -20 }}
+ 191→          animate={{ opacity: 1, y: 0 }}
+ 192→          className="fixed top-0 left-0 right-0 z-[60] bg-red-500 text-white px-4 py-3"
+ 193→        >
+ 194→          <div className="max-w-4xl mx-auto flex items-center justify-center gap-2">
+ 195→            <ShieldAlert className="w-5 h-5 flex-shrink-0" />
+ 196→            <p className="text-sm font-medium">
+ 197→              该账户已被冻结
+ 198→              {profile.frozen_reason && `：${profile.frozen_reason}`}
+ 199→            </p>
+ 200→          </div>
+ 201→        </motion.div>
+ 202→      )}
+ 203→
+ 204→      <div className={`relative ${profile?.is_frozen ? 'pt-12' : ''}`}>
+ 205→        <div
+ 206→          className="absolute top-0 left-0 right-0 h-[50vh] bg-cover bg-center bg-no-repeat"
+ 207→          style={{
+ 208→            backgroundImage: `url('${activeBackground?.url || defaultBg}')`,
+ 209→            backgroundPosition: 'center top',
+ 210→          }}
+ 211→        />
+ 212→        <div className="absolute top-0 left-0 right-0 h-[50vh] bg-user-gradient" />
+ 213→
+ 214→        <div className="relative z-10">
+ 215→          <div className="glass border-b border-white/20">
+ 216→            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+ 217→              <div className="flex items-center justify-between h-16">
+
+<system-reminder>
+⚠️ REPEATED FILE MODIFICATION WARNING: You have modified "/home/project/src/pages/UserPage.tsx" 5 times (Write + Edit combined)!
+
+You keep rewriting or editing the same file. This is a strong sign your current approach is not working.
+
+🛑 REQUIRED ACTIONS:
+1. STOP and think: why do you keep modifying the same file?
+2. If the content keeps being wrong, try a fundamentally different approach
+3. If you're making incremental fixes, consolidate them into ONE write instead of many small changes
+
+⏰ 3 more attempt(s) before modifications to this file are AUTOMATICALLY BLOCKED.
+</system-reminder>

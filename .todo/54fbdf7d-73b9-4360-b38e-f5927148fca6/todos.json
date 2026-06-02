@@ -1,0 +1,62 @@
+[
+  {
+    "id": "1",
+    "content": "创建 reports 表数据库迁移",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "content": "更新 profiles 表添加冻结字段",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "content": "创建举报 Edge Function",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "4",
+    "content": "部署举报 Edge Function",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "5",
+    "content": "更新 useAuth hook 返回 is_frozen 状态",
+    "status": "completed",
+    "priority": "medium"
+  },
+  {
+    "id": "6",
+    "content": "在 GuestbookPage 添加举报按钮",
+    "status": "in_progress",
+    "priority": "medium"
+  },
+  {
+    "id": "7",
+    "content": "在 UserPage 添加举报按钮（留言板和动态）",
+    "status": "pending",
+    "priority": "medium"
+  },
+  {
+    "id": "8",
+    "content": "在 UserPage 显示冻结提示横幅",
+    "status": "pending",
+    "priority": "medium"
+  },
+  {
+    "id": "9",
+    "content": "在 AdminPage 添加举报管理 Tab",
+    "status": "pending",
+    "priority": "medium"
+  },
+  {
+    "id": "10",
+    "content": "在 AdminPage 用户列表添加冻结功能",
+    "status": "pending",
+    "priority": "medium"
+  }
+]

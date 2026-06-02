@@ -1,0 +1,32 @@
+[
+  {
+    "id": "1",
+    "content": "读取数据库文档了解表结构",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "content": "创建用户等级和发布限额的数据库迁移",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "content": "实现发布限制逻辑（检查等级和限额）",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "4",
+    "content": "更新AdminPage添加用户权限管理板块",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "5",
+    "content": "初始化system_config表数据",
+    "status": "completed",
+    "priority": "high"
+  }
+]

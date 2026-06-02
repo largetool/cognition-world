@@ -1,0 +1,1 @@
+{"success":true,"message":"查询返回 1 行","data":{"query":"SELECT COUNT(*) as count FROM profiles","rowCount":1,"truncated":false,"rows":[{"count":2}]}}

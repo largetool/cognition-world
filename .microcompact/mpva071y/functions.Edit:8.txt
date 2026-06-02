@@ -1,0 +1,137 @@
+The file /home/project/src/pages/AdminPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 561→                    暂无系统背景图
+ 562→                  </div>
+ 563→                )}
+ 564→              </GlassCard>
+ 565→            ) : activeTab === 'messages' ? (
+ 566→              <div className="space-y-6">
+ 567→                {/* 全局留言板控制 */}
+ 568→                <GlassCard>
+ 569→                  <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+ 570→                    <Settings className="w-5 h-5" />
+ 571→                    留言板全局控制
+ 572→                  </h2>
+ 573→
+ 574→                  <div className="space-y-6">
+ 575→                    {/* 全局开关 */}
+ 576→                    <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl">
+ 577→                      <div>
+ 578→                        <h3 className="font-medium text-[var(--text-primary)]">全局留言板开关</h3>
+ 579→                        <p className="text-sm text-[var(--text-secondary)]">
+ 580→                          关闭后，所有用户都无法发送和查看留言
+ 581→                        </p>
+ 582→                      </div>
+ 583→                      <button
+ 584→                        onClick={() => setGlobalMessageBoardEnabled(!globalMessageBoardEnabled)}
+ 585→                        className={`w-12 h-6 rounded-full transition-colors relative ${
+ 586→                          globalMessageBoardEnabled ? 'bg-green-500' : 'bg-gray-300'
+ 587→                        }`}
+ 588→                      >
+ 589→                        <span
+ 590→                          className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+ 591→                            globalMessageBoardEnabled ? 'translate-x-6' : 'translate-x-0.5'
+ 592→                          }`}
+ 593→                        />
+ 594→                      </button>
+ 595→                    </div>
+ 596→
+ 597→                    {/* 限流配置 */}
+ 598→                    <div className="p-4 bg-[var(--bg-secondary)] rounded-xl space-y-4">
+ 599→                      <div>
+ 600→                        <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+ 601→                          最大留言数（每小时）
+ 602→                        </label>
+ 603→                        <input
+ 604→                          type="number"
+ 605→                          value={messageRateLimit}
+ 606→                          onChange={(e) => setMessageRateLimit(Number(e.target.value))}
+ 607→                          className="w-full px-3 py-2 bg-white border border-[var(--border-light)] rounded-lg text-[var(--text-primary)]"
+ 608→                          min="1"
+ 609→                          max="100"
+ 610→                        />
+ 611→                        <p className="text-xs text-[var(--text-tertiary)] mt-1">
+ 612→                          每个用户每小时最多发送的留言数
+ 613→                        </p>
+ 614→                      </div>
+ 615→
+ 616→                      <div>
+ 617→                        <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+ 618→                          需要验证码（超过限制时）
+ 619→                        </label>
+ 620→                        <select
+ 621→                          value={captchaRequired ? 'true' : 'false'}
+ 622→                          onChange={(e) => setCaptchaRequired(e.target.value === 'true')}
+ 623→                          className="w-full px-3 py-2 bg-white border border-[var(--border-light)] rounded-lg text-[var(--text-primary)]"
+ 624→                        >
+ 625→                          <option value="true">是</option>
+ 626→                          <option value="false">否</option>
+ 627→                        </select>
+ 628→                      </div>
+ 629→                    </div>
+ 630→
+ 631→                    <button
+ 632→                      onClick={handleSaveMessageConfig}
+ 633→                      disabled={isSavingConfig}
+ 634→                      className="w-full px-4 py-3 bg-[var(--accent)] text-white rounded-lg hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+ 635→                    >
+ 636→                      {isSavingConfig ? (
+ 637→                        <>
+ 638→                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+ 639→                          保存中...
+ 640→                        </>
+ 641→                      ) : (
+ 642→                        <>
+ 643→                          <Save className="w-4 h-4" />
+ 644→                          保存设置
+ 645→                        </>
+ 646→                      )}
+ 647→                    </button>
+ 648→                  </div>
+ 649→                </GlassCard>
+ 650→
+ 651→                {/* 用户间留言板开关 */}
+ 652→                <GlassCard>
+ 653→                  <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+ 654→                    <MessageSquare className="w-5 h-5" />
+ 655→                    用户间留言板
+ 656→                  </h2>
+ 657→
+ 658→                  <div className="space-y-6">
+ 659→                    <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl">
+ 660→                      <div>
+ 661→                        <h3 className="font-medium text-[var(--text-primary)]">用户间留言板开关</h3>
+ 662→                        <p className="text-sm text-[var(--text-secondary)]">
+ 663→                          开启后，用户可以在个人主页互相留言
+ 664→                        </p>
+ 665→                      </div>
+ 666→                      <button
+ 667→                        onClick={toggleUserGuestbook}
+ 668→                        disabled={isSavingUserGuestbook}
+ 669→                        className={`w-12 h-6 rounded-full transition-colors relative ${
+ 670→                          userGuestbookEnabled ? 'bg-green-500' : 'bg-gray-300'
+ 671→                        }`}
+ 672→                      >
+ 673→                        <span
+ 674→                          className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+ 675→                            userGuestbookEnabled ? 'translate-x-6' : 'translate-x-0.5'
+ 676→                          }`}
+ 677→                        />
+ 678→                      </button>
+ 679→                    </div>
+ 680→
+ 681→                    <div className="p-4 bg-amber-50 rounded-lg">
+ 682→                      <p className="text-sm text-amber-700 flex items-center gap-2">
+ 683→                        <AlertTriangle className="w-4 h-4" />
+ 684→                        注意：用户间留言板功能涉及用户隐私，请谨慎开启
+ 685→                      </p>
+ 686→                    </div>
+ 687→                  </div>
+ 688→                </GlassCard>
+ 689→              </div>
+ 690→            ) : activeTab === 'sitemap' ? (
+ 691→              <GlassCard>
+ 692→                <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+ 693→                  <Globe className="w-5 h-5" />
+ 694→                  站点地图设置

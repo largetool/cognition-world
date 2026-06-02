@@ -1,0 +1,25 @@
+The file /home/project/src/pages/RegisterPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 162→  const goToLogin = () => {
+ 163→    navigate('/login');
+ 164→  };
+ 165→
+ 166→  if (registered) {
+ 167→    return (
+ 168→      <div className="min-h-screen bg-[#FAFAFA] text-[#18181B]">
+ 169→        <SEOHead
+ 170→          data={{
+ 171→            title: `注册成功 - ${APP_CONFIG.name}`,
+ 172→            description: '您的数字身份已创建成功，现在可以登录使用一言超人的全部功能。',
+ 173→            canonicalUrl: `${APP_CONFIG.url}/register`,
+ 174→            ogImage: `${APP_CONFIG.url}/og-image.jpg`,
+ 175→          }}
+ 176→          jsonLd={generateWebPageSchema('注册成功', `${APP_CONFIG.url}/register`, '您的数字身份已创建成功')}
+ 177→        />
+ 178→        <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+ 179→          <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center">
+ 180→            <button
+ 181→              onClick={() => navigate('/')}
+ 182→              className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-[#18181B] transition-colors"
+ 183→            >

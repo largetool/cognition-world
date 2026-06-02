@@ -1,0 +1,198 @@
+{
+  "app": {
+    "name": "认知界",
+    "subtitle": "个人GEO公开信息平台",
+    "slogan": "让AI认识每一个具体的普通人"
+  },
+  "nav": {
+    "home": "首页",
+    "about": "关于",
+    "projects": "项目",
+    "posts": "文章",
+    "login": "登录",
+    "register": "注册",
+    "user": "用户",
+    "messages": "消息",
+    "admin": "管理",
+    "whitepaper": "白皮书",
+    "terms": "用户协议",
+    "privacy": "隐私政策",
+    "contact": "联系我们",
+    "accessibility": "无障碍声明",
+    "guestbook": "留言板",
+    "me": "个人中心",
+    "logout": "退出",
+    "back": "返回",
+    "backToHome": "返回首页"
+  },
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "email": "邮箱",
+    "phone": "手机号",
+    "password": "密码",
+    "google_login": "使用 Google 账号登录",
+    "google_register": "使用 Google 账号注册",
+    "forgot_password": "忘记密码",
+    "reset_password": "重置密码",
+    "send_code": "发送验证码",
+    "verify_code": "验证码",
+    "createAccount": "创建你的数字身份",
+    "registerSubtitle": "使用邮箱创建数字身份",
+    "agreeTerms": "同意服务条款",
+    "loginTitle": "登录",
+    "loginSubtitle": "登录认知界，管理您的个人公开身份页面",
+    "forgotPasswordTitle": "忘记密码",
+    "resetPasswordTitle": "重置密码",
+    "emailPlaceholder": "请输入邮箱",
+    "passwordPlaceholder": "请输入密码",
+    "confirmPassword": "确认密码",
+    "username": "用户名",
+    "tag": "标签",
+    "slogan": "口号",
+    "location": "所在地",
+    "country": "国家",
+    "province": "省/市",
+    "city": "城市",
+    "community": "社区",
+    "isPublic": "公开资料",
+    "registerSuccess": "注册成功",
+    "registerSuccessDesc": "您的数字身份已创建成功，现在可以登录使用一言超人的全部功能。",
+    "errors": {
+      "emailInvalid": "请输入正确的邮箱格式",
+      "emailExists": "该邮箱已被注册",
+      "passwordMismatch": "两次输入的密码不一致",
+      "passwordTooShort": "密码长度至少为6位",
+      "agreeTermsRequired": "请同意服务条款才能注册",
+      "locationRequired": "请完整填写所在地信息",
+      "loginFailed": "邮箱或密码错误"
+    }
+  },
+  "user": {
+    "profile": "个人中心",
+    "settings": "设置",
+    "logout": "退出",
+    "edit_profile": "编辑资料",
+    "my_homepage": "我的主页",
+    "slogan": "口号",
+    "tag": "标签",
+    "location": "位置",
+    "noLogs": "暂无认知日志",
+    "noLogsDesc": "该用户还没有发布任何动态",
+    "postLog": "发布认知日志",
+    "postLogPlaceholder": "记录你的想法...",
+    "postLogSubmit": "发布",
+    "postLogSubmitting": "发布中...",
+    "logsTitle": "认知日志",
+    "joinedAt": "加入于",
+    "public": "公开",
+    "private": "私密",
+    "viewMore": "查看更多动态",
+    "userNotFound": "该用户不存在",
+    "userNotFoundDesc": "请检查链接是否正确",
+    "frozen": "该账户已被冻结",
+    "hidden": "该用户已暂停展示",
+    "report": "举报",
+    "share": "分享",
+    "id": "ID"
+  },
+  "thought": {
+    "title": "动态",
+    "backToProfile": "返回个人主页",
+    "notFound": "动态不存在",
+    "notFoundDesc": "该动态已被删除或不存在",
+    "author": "作者",
+    "publishedAt": "发布时间"
+  },
+  "guestbook": {
+    "title": "留言板",
+    "subtitle": "公开留言 · 所有人可见 · 您在此留下的足迹将成为数字身份的一部分",
+    "placeholder": "写下你的留言...",
+    "submit": "发送",
+    "noMessages": "暂无留言",
+    "received": "留言板",
+    "sent": "足迹"
+  },
+  "footer": {
+    "product": "产品",
+    "legal": "法律",
+    "learnMore": "了解更多",
+    "whitepaper": "白皮书",
+    "terms": "用户协议",
+    "privacy": "隐私政策",
+    "about": "关于我们",
+    "contact": "联系我们",
+    "accessibility": "无障碍声明",
+    "copyright": "© 2026 认知界. All rights reserved."
+  },
+  "home": {
+    "title": "认知界",
+    "subtitle": "人本位 —— 在 AI 时代，重建真实的人类连接",
+    "description": "面向全球化的个人 GEO 公开信息平台",
+    "cta": {
+      "register": "立即入驻",
+      "whitepaper": "阅读白皮书"
+    },
+    "features": {
+      "globalIndex": {
+        "title": "全球索引",
+        "desc": "让世界透过AI认识每一个具体的普通人"
+      },
+      "transparent": {
+        "title": "透明优先",
+        "desc": "向世界宣告你的存在"
+      },
+      "seo": {
+        "title": "SEO、GEO",
+        "desc": "结构化数据友好"
+      }
+    },
+    "stats": {
+      "users": "人拥有先发优势",
+      "logs": "篇日志拥有先发优势",
+      "infinite": "无限可能"
+    },
+    "slogan": "让世界透过AI认识每一个具体的普通人",
+    "beta": "Beta 测试阶段"
+  },
+  "admin": {
+    "title": "管理后台",
+    "tabs": {
+      "overview": "概览",
+      "users": "用户管理",
+      "logs": "日志管理",
+      "backgrounds": "背景管理",
+      "slogans": "口号审核",
+      "config": "系统配置",
+      "reports": "举报管理"
+    }
+  },
+  "seo": {
+    "keywords": "个人主页, 个人GEO, 个人SEO, GEO, SEO, AI搜索, 认知界, 生成式引擎优化"
+  },
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "创建",
+    "search": "搜索",
+    "loading": "加载中",
+    "error": "错误",
+    "success": "成功",
+    "back": "返回",
+    "close": "关闭",
+    "submit": "提交",
+    "copy": "复制",
+    "copied": "已复制",
+    "more": "更多",
+    "expand": "展开全文",
+    "collapse": "收起"
+  },
+  "language": {
+    "zh": "中",
+    "en": "EN",
+    "switch": "切换语言"
+  }
+}

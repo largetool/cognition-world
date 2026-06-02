@@ -1,0 +1,1 @@
+{"exitCode":0,"output":"38: const [users, setUsers] = useState<Array<{\n39- user_id: string;\n40- username: string;\n41- role: string;\n42- is_admin: boolean;\n43- today_posts: number;\n44- }>>([]);\n45- const [postLimits, setPostLimits] = useState({\n46- user: 10,\n47- verified: 10,\n48- premium: 30,"}

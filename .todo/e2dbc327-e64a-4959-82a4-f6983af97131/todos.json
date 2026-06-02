@@ -1,0 +1,44 @@
+[
+  {
+    "id": "1",
+    "status": "completed",
+    "content": "创建 .env.example 文件，列出所有环境变量",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "status": "completed",
+    "content": "修改 supabase/client.ts 从环境变量读取配置",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "status": "completed",
+    "content": "确认 webpack 构建配置",
+    "priority": "high"
+  },
+  {
+    "id": "4",
+    "status": "completed",
+    "content": "清理 MEOO 内部文件夹",
+    "priority": "high"
+  },
+  {
+    "id": "5",
+    "status": "completed",
+    "content": "恢复 AdminPage 登录验证",
+    "priority": "high"
+  },
+  {
+    "id": "6",
+    "status": "completed",
+    "content": "生成部署说明文档",
+    "priority": "high"
+  },
+  {
+    "id": "7",
+    "status": "completed",
+    "content": "构建验证",
+    "priority": "medium"
+  }
+]

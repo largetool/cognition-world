@@ -1,0 +1,1 @@
+{"success":true,"message":"Edge Function \"guestbook\" 部署成功","data":{"functionName":"guestbook","verify_jwt":true,"function":{"id":"guestbook","slug":"guestbook","name":"guestbook","status":"READY","version":4,"created_at":1780309251472,"updated_at":1780327025007,"verify_jwt":true,"import_map":false,"entrypoint_path":"","import_map_path":"","ezbr_sha256":""}}}

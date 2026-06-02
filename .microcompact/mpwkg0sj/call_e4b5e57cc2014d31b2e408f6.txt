@@ -1,0 +1,64 @@
+The file /home/project/src/pages/AdminPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 602→ <option value="verified">认证用户</option>
+ 603→ <option value="premium">付费用户</option>
+ 604→ </select>
+ 605→ </td>
+ 606→ <td className="py-3 px-4"><span className={`text-sm ${u.today_posts >= postLimits[u.role as keyof typeof postLimits] ? 'text-red-500' : 'text-[var(--text-secondary)]'}`}>{u.today_posts} 条</span></td>
+ 607→ <td className="py-3 px-4">
+ 608→ {u.is_frozen ? (
+ 609→ <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium flex items-center gap-1 w-fit">
+ 610→ <Lock className="w-3 h-3" />已冻结
+ 611→ </span>
+ 612→ ) : (
+ 613→ <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">正常</span>
+ 614→ )}
+ 615→ </td>
+ 616→ <td className="py-3 px-4">{u.is_admin ? <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">管理员</span> : <span className="text-[var(--text-tertiary)] text-sm">-</span>}</td>
+ 617→ <td className="py-3 px-4">
+ 618→ <div className="flex items-center gap-2">
+ 619→ <Link to={`/${u.user_id}`} className="text-sm text-[var(--accent)] hover:underline">查看</Link>
+ 620→ {!u.is_admin && (
+ 621→ u.is_frozen ? (
+ 622→ <button
+ 623→ onClick={async () => {
+ 624→ if (confirm(`确定要解冻用户 "${u.username}" 吗？`)) {
+ 625→ const result = await unfreezeUser(u.user_id);
+ 626→ if (result.success) {
+ 627→ loadData();
+ 628→ } else {
+ 629→ alert('解冻失败：' + result.error);
+ 630→ }
+ 631→ }
+ 632→ }}
+ 633→ className="text-sm text-green-600 hover:text-green-700 flex items-center gap-1"
+ 634→ >
+ 635→ <Unlock className="w-3 h-3" />解冻
+ 636→ </button>
+ 637→ ) : (
+ 638→ <button
+ 639→ onClick={async () => {
+ 640→ const reason = prompt(`请输入冻结用户 "${u.username}" 的原因：`);
+ 641→ if (reason) {
+ 642→ const result = await freezeUser(u.user_id, reason);
+ 643→ if (result.success) {
+ 644→ loadData();
+ 645→ } else {
+ 646→ alert('冻结失败：' + result.error);
+ 647→ }
+ 648→ }
+ 649→ }}
+ 650→ className="text-sm text-red-600 hover:text-red-700 flex items-center gap-1"
+ 651→ >
+ 652→ <Lock className="w-3 h-3" />冻结
+ 653→ </button>
+ 654→ )
+ 655→ )}
+ 656→ </div>
+ 657→ </td>
+ 658→ </tr>
+ 659→ ))}
+ 660→ </tbody>
+ 661→ </table>
+ 662→ </div>

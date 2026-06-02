@@ -1,0 +1,38 @@
+[
+  {
+    "content": "分析 UserPage.tsx 当前 SEO 实现",
+    "id": "1",
+    "priority": "high",
+    "status": "in_progress"
+  },
+  {
+    "content": "增强 JSON-LD 结构化数据",
+    "id": "2",
+    "priority": "high",
+    "status": "pending"
+  },
+  {
+    "content": "个性化 Open Graph 标签",
+    "id": "3",
+    "priority": "high",
+    "status": "pending"
+  },
+  {
+    "content": "优化页面标题和关键词",
+    "id": "4",
+    "priority": "high",
+    "status": "pending"
+  },
+  {
+    "content": "验证 Canonical URL",
+    "id": "5",
+    "priority": "medium",
+    "status": "pending"
+  },
+  {
+    "content": "运行 typecheck 验证",
+    "id": "6",
+    "priority": "high",
+    "status": "pending"
+  }
+]

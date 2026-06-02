@@ -1,0 +1,20 @@
+The file /home/project/src/pages/GuestbookPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 117→    try {
+ 118→      const session = (await supabase.auth.getSession()).data.session;
+ 119→      const authHeaders = session ? { Authorization: `Bearer ${session.access_token}` } : {};
+ 120→
+ 121→      const response = await fetch(`${getEdgeFunctionUrl()}/functions/v1/guestbook`, {
+ 122→        method: 'POST',
+ 123→        headers: {
+ 124→          'Content-Type': 'application/json',
+ 125→          ...(authHeaders as Record<string, string>),
+ 126→        },
+ 127→        body: JSON.stringify({ content: newMessage.trim() }),
+ 128→      });
+ 129→
+ 130→      const result = await response.json();
+ 131→
+ 132→      if (!response.ok) {
+ 133→        setError(result.error || '提交失败');

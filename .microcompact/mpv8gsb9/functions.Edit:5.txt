@@ -1,0 +1,24 @@
+The file /home/project/src/pages/RegisterPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 217→      </div>
+ 218→    );
+ 219→  }
+ 220→
+ 221→  return (
+ 222→    <div className="min-h-screen bg-[#FAFAFA] text-[#18181B]">
+ 223→      <SEOHead
+ 224→        data={{
+ 225→          title: `创建数字身份 - ${APP_CONFIG.name}`,
+ 226→          description: '在一言超人创建您的数字身份，加入认知界，记录和分享您的思考与见解。',
+ 227→          canonicalUrl: `${APP_CONFIG.url}/register`,
+ 228→          ogImage: `${APP_CONFIG.url}/og-image.jpg`,
+ 229→        }}
+ 230→        jsonLd={generateWebPageSchema('创建数字身份', `${APP_CONFIG.url}/register`, '在一言超人创建您的数字身份，加入认知界')}
+ 231→      />
+ 232→      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+ 233→        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center">
+ 234→          <button
+ 235→            onClick={() => navigate('/')}
+ 236→            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-[#18181B] transition-colors"
+ 237→          >

@@ -1,0 +1,29 @@
+The file /home/project/src/pages/GuestbookPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  47→  remainingCount: number;
+  48→  limitReached: boolean;
+  49→}
+  50→
+  51→export default function GuestbookPage() {
+  52→  const navigate = useNavigate();
+  53→  const { user } = useAuth();
+  54→  const [messages, setMessages] = useState<GuestbookMessage[]>([]);
+  55→  const [newMessage, setNewMessage] = useState('');
+  56→  const [loading, setLoading] = useState(true);
+  57→  const [submitting, setSubmitting] = useState(false);
+  58→  const [eligibility, setEligibility] = useState<EligibilityStatus | null>(null);
+  59→  const [error, setError] = useState('');
+  60→  const messagesEndRef = useRef<HTMLDivElement>(null);
+  61→
+  62→  // 举报相关状态
+  63→  const [reportModalOpen, setReportModalOpen] = useState(false);
+  64→  const [reportingMessage, setReportingMessage] = useState<GuestbookMessage | null>(null);
+  65→  const [reportReason, setReportReason] = useState('');
+  66→  const [reportSubmitting, setReportSubmitting] = useState(false);
+  67→  const [reportSuccess, setReportSuccess] = useState(false);
+  68→
+  69→  // 获取留言列表
+  70→  const fetchMessages = async () => {
+  71→    try {
+  72→      const response = await fetch(`${getEdgeFunctionUrl()}/functions/v1/guestbook`, {

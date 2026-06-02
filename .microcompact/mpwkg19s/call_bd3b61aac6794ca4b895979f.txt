@@ -1,0 +1,1 @@
+{"results":[{"file":"src/pages/AdminPage.tsx","matches":[{"line":38,"content":" const [users, setUsers] = useState<Array<{"}]}],"pattern":"const \\[users, setUsers\\]","path":"src/pages/AdminPage.tsx","totalMatches":1,"truncated":false,"returnedCount":1}

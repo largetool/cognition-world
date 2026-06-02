@@ -1,0 +1,18 @@
+The file /home/project/src/pages/AdminPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 511→          </motion.div>
+ 512→        </div>
+ 513→      </div>
+ 514→
+ 515→      {/* 底部说明 */}
+ 516→      <footer style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
+ 517→        <p style={{ fontSize: '0.75rem', color: '#9ca3af', textAlign: 'center' }}>
+ 518→          管理面板仅供开发测试使用 · 正式上线前将恢复登录验证
+ 519→        </p>
+ 520→      </footer>
+ 521→
+ 522→      <Footer />
+ 523→    </div>
+ 524→  );
+ 525→}

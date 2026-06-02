@@ -1,0 +1,37 @@
+The file /home/project/src/utils/seo.ts has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  73→    mainEntity: generatePersonSchema(profile),
+  74→  };
+  75→}
+  76→
+  77→export function generateWebPageSchema(name: string, url: string, description: string) {
+  78→  return {
+  79→    '@context': 'https://schema.org',
+  80→    '@type': 'WebPage',
+  81→    name,
+  82→    url,
+  83→    description,
+  84→    inLanguage: 'zh-CN',
+  85→    isPartOf: {
+  86→      '@type': 'WebSite',
+  87→      name: APP_CONFIG.name,
+  88→      url: APP_CONFIG.url,
+  89→    },
+  90→  };
+  91→}
+  92→
+  93→export function getDefaultSEO(): SEOData {
+  94→  return {
+  95→    title: '面向全球化的个人黄页索引｜全民 GEO 公开信息平台',
+  96→    description: APP_CONFIG.description,
+  97→    keywords: ['个人主页', '黄页', 'AI', '认知', '索引', 'GEO', '全民 GEO', 'Cognition World'],
+  98→    ogType: 'website',
+  99→    canonicalUrl: APP_CONFIG.url,
+ 100→  };
+ 101→}
+ 102→
+ 103→/**
+ 104→ * 获取用户页面的 SEO 数据 - 安全降级版本
+ 105→ * 修复：当 profile 字段缺失时提供默认值
+ 106→ */

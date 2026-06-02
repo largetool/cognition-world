@@ -1,0 +1,17 @@
+The file /home/project/src/pages/RegisterPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+   1→import { useState } from 'react';
+   2→import { motion } from 'framer-motion';
+   3→import { useNavigate } from 'react-router-dom';
+   4→import { ArrowLeft, User, Tag, MapPin, MessageSquare, Globe, Check, Mail, Lock, Eye, EyeOff, CheckCircle, Phone } from 'lucide-react';
+   5→import { registerWithEmail, checkEmailExists } from '../utils/auth';
+   6→import { supabase } from '../supabase/client';
+   7→import { generateUserId, APP_CONFIG } from '../types';
+   8→import { SEOHead } from '../components/SEOHead';
+   9→import { generateWebPageSchema } from '../utils/seo';
+  10→
+  11→export default function RegisterPage() {
+  12→  const navigate = useNavigate();
+  13→  const [formData, setFormData] = useState({
+  14→    email: '',

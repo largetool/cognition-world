@@ -1,0 +1,46 @@
+The file /home/project/src/utils/storage.ts has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 659→  return { success: true };
+ 660→}
+ 661→
+ 662→// 获取所有用户列表（带发布统计）
+ 663→export async function getAllUsersWithStats(limit: number = 1000): Promise<Array<{
+ 664→  user_id: string;
+ 665→  username: string;
+ 666→  role: string;
+ 667→  is_admin: boolean;
+ 668→  is_frozen: boolean;
+ 669→  today_posts: number;
+ 670→}>> {
+ 671→ const today = new Date().toISOString().split('T')[0];
+ 672→
+ 673→ const { data, error } = await supabase
+ 674→   .from('profiles')
+ 675→   .select('user_id, username, role, is_admin, is_frozen, daily_posts_count, last_post_date')
+ 676→   .limit(limit);
+ 677→
+ 678→ if (error || !data) return [];
+ 679→
+ 680→ // 获取今日发布记录
+ 681→ const { data: postLogs } = await supabase
+ 682→   .from('daily_post_logs')
+ 683→   .select('user_id, post_count')
+ 684→   .eq('post_date', today);
+ 685→
+ 686→ const postCountMap = new Map((postLogs || []).map((log) => [log.user_id, log.post_count]));
+ 687→
+ 688→ return data.map((user) => ({
+ 689→   user_id: user.user_id,
+ 690→   username: user.username,
+ 691→   role: user.role || 'user',
+ 692→   is_admin: user.is_admin || false,
+ 693→   is_frozen: user.is_frozen || false,
+ 694→   today_posts: postCountMap.get(user.user_id) || 0,
+ 695→ }));
+ 696→}
+ 697→
+ 698→// ========== Slogan 审核相关 ==========
+ 699→
+ 700→// 获取待审核的 Slogan 列表
+ 701→export async function getPendingSlogans(): Promise<Array<{

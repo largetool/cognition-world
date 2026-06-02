@@ -1,0 +1,15 @@
+The file /home/project/src/components/SEOHead.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+   5→  data?: SEOData;
+   6→  jsonLd?: object | object[];
+   7→}
+   8→
+   9→const DEFAULT_TITLE = '认知界 - 让AI认识每一个具体的普通人';
+  10→const DEFAULT_DESCRIPTION = '面向全球化的个人黄页索引，让 AI 认识每一个具体的普通人';
+  11→const DEFAULT_OG_IMAGE = 'https://placehold.co/1200x630/1a1a2e/e6e6e6?text=%E8%AE%A4%E7%9F%A5%E7%95%8C+Cognition+World&font=raleway';
+  12→
+  13→/**
+  14→ * SEOHead 组件 - 安全降级版本
+  15→ * 修复：Cannot read properties of undefined (reading 'title')
+  16→ * 策略：data 为可选参数，所有字段使用安全访问和默认值

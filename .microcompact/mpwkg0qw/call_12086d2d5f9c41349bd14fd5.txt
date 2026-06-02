@@ -1,0 +1,20 @@
+The file /home/project/src/pages/AdminPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 582→ ) : users.length > 0 ? (
+ 583→ <div className="overflow-x-auto">
+ 584→ <table className="w-full">
+ 585→ <thead>
+ 586→ <tr className="border-b border-[var(--border-light)]">
+ 587→ <th className="text-left py-3 px-4 text-sm font-medium text-[var(--text-secondary)]">用户名</th>
+ 588→ <th className="text-left py-3 px-4 text-sm font-medium text-[var(--text-secondary)]">等级</th>
+ 589→ <th className="text-left py-3 px-4 text-sm font-medium text-[var(--text-secondary)]">今日发布</th>
+ 590→ <th className="text-left py-3 px-4 text-sm font-medium text-[var(--text-secondary)]">状态</th>
+ 591→ <th className="text-left py-3 px-4 text-sm font-medium text-[var(--text-secondary)]">管理员</th>
+ 592→ <th className="text-left py-3 px-4 text-sm font-medium text-[var(--text-secondary)]">操作</th>
+ 593→ </tr>
+ 594→ </thead>
+ 595→ <tbody>
+ 596→ {users.map((u) => (
+ 597→ <tr key={u.user_id} className="border-b border-[var(--border-light)] last:border-0">
+ 598→ <td className="py-3 px-4"><span className="font-medium text-[var(--text-primary)]">{u.username}</span></td>

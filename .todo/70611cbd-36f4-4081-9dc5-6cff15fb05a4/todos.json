@@ -1,0 +1,50 @@
+[
+  {
+    "id": "1",
+    "content": "从 IndexPage.tsx 移除隐私政策 section",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "content": "更新 Footer 组件，添加三列链接",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "content": "创建白皮书页面 /whitepaper",
+    "status": "completed",
+    "priority": "medium"
+  },
+  {
+    "id": "4",
+    "content": "创建隐私政策页面 /privacy",
+    "status": "completed",
+    "priority": "medium"
+  },
+  {
+    "id": "5",
+    "content": "创建用户协议页面 /terms",
+    "status": "completed",
+    "priority": "medium"
+  },
+  {
+    "id": "6",
+    "content": "创建关于我们页面 /about",
+    "status": "completed",
+    "priority": "medium"
+  },
+  {
+    "id": "7",
+    "content": "创建联系我们页面 /contact",
+    "status": "completed",
+    "priority": "medium"
+  },
+  {
+    "id": "8",
+    "content": "更新 App.tsx 添加新路由",
+    "status": "completed",
+    "priority": "high"
+  }
+]

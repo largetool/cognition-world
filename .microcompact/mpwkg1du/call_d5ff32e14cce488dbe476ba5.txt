@@ -1,0 +1,20 @@
+The file /home/project/src/pages/AdminPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  34→ const [sitemapMode, setSitemapMode] = useState<SitemapMode>('static');
+  35→ const [sitemapStats, setSitemapStats] = useState({ userCount: 0, logCount: 0 });
+  36→ const [isSavingSitemap, setIsSavingSitemap] = useState(false);
+  37→
+  38→ const [users, setUsers] = useState<Array<{
+  39→ user_id: string;
+  40→ username: string;
+  41→ role: string;
+  42→ is_admin: boolean;
+  43→ is_frozen: boolean;
+  44→ today_posts: number;
+  45→ }>>([]);
+  46→ const [postLimits, setPostLimits] = useState({
+  47→ user: 10,
+  48→ verified: 10,
+  49→ premium: 30,
+  50→ });

@@ -1,0 +1,12 @@
+The file /home/project/src/pages/UserPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+   1→import { useEffect, useState } from 'react';
+   2→import { useParams, Link, useNavigate } from 'react-router-dom';
+   3→import { motion, AnimatePresence } from 'framer-motion';
+   4→import { ArrowLeft, Settings, Share2, MapPin, Calendar, Eye, EyeOff, Send, ChevronLeft, ChevronRight, ArrowUp, Flag, X, AlertTriangle, ShieldAlert } from 'lucide-react';
+   5→import { SEOHead } from '../components/SEOHead';
+   6→import { Navbar } from '../components/Navbar';
+   7→import { Footer } from '../components/Footer';
+   8→import { GlassCard } from '../components/GlassCard';
+   9→import { LogItem } from '../components/LogItem';

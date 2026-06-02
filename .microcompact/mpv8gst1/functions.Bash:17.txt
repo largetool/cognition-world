@@ -1,0 +1,1 @@
+{"success":true,"message":"查询返回 2 行","data":{"query":"SELECT user_id, username FROM profiles WHERE is_hidden = false OR is_hidden IS NULL","rowCount":2,"truncated":false,"rows":[{"user_id":"USER2F79998B000000000","username":"用户2f79998b"},{"user_id":"YIYANCHAOREN000000000","username":"一言超人"}]}}

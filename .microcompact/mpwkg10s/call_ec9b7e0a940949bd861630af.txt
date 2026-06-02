@@ -1,0 +1,1 @@
+{"success":true,"message":"Edge Function \"reports\" 部署成功","data":{"functionName":"reports","verify_jwt":true,"function":{"id":"reports","slug":"reports","name":"reports","status":"READY","version":2,"created_at":1780322393357,"updated_at":1780326973381,"verify_jwt":true,"import_map":false,"entrypoint_path":"","import_map_path":"","ezbr_sha256":""}}}

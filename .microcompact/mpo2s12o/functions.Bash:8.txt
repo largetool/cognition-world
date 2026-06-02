@@ -1,0 +1,1 @@
+{"exitCode":0,"output":"153:      <div className=\"bg-yellow-50 border-b border-yellow-200 px-4 py-3\">\n155:          <span className=\"text-yellow-600 text-lg\">⚠️</span>\n157:            <p className=\"text-yellow-800 font-medium text-sm\">\n160:            <p className=\"text-yellow-600 text-xs\">"}

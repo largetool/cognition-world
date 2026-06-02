@@ -1,0 +1,66 @@
+The file /home/project/src/pages/GuestbookPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 340→                  <MessageSquare className="w-12 h-12 text-gray-200 mb-3" />
+ 341→                  <p className="text-[var(--text-secondary)]">暂无留言</p>
+ 342→                  <p className="text-sm text-[var(--text-tertiary)] mt-1">成为第一个留言的人吧</p>
+ 343→                </div>
+ 344→              ) : (
+ 345→                messages.map((message, index) => (
+ 346→                  <motion.div
+ 347→                    key={message.id}
+ 348→                    initial={{ opacity: 0, y: 10 }}
+ 349→                    animate={{ opacity: 1, y: 0 }}
+ 350→                    transition={{ delay: index * 0.05 }}
+ 351→                    className={`flex gap-3 ${message.user_id === user?.id ? 'flex-row-reverse' : ''}`}
+ 352→                  >
+ 353→                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+ 354→                      <User className="w-4 h-4 text-purple-500" />
+ 355→                    </div>
+ 356→                    <div className={`max-w-[80%] ${message.user_id === user?.id ? 'text-right' : ''}`}>
+ 357→                      <div className={`inline-block rounded-2xl px-4 py-2 ${
+ 358→                        message.user_id === user?.id
+ 359→                          ? 'bg-purple-500 text-white'
+ 360→                          : 'bg-gray-100 text-[var(--text-primary)]'
+ 361→                      }`}>
+ 362→                        <p className="text-sm font-medium mb-1 opacity-80">{message.username}</p>
+ 363→                        <p className="text-sm">{message.content}</p>
+ 364→                      </div>
+ 365→                      <div className={`flex items-center gap-2 mt-1 ${message.user_id === user?.id ? 'justify-end' : ''}`}>
+ 366→                        <p className="text-xs text-[var(--text-tertiary)]">
+ 367→                          {formatDistanceToNow(message.created_at)}
+ 368→                        </p>
+ 369→                        {/* 举报按钮 - 仅对非自己的留言显示 */}
+ 370→                        {user && message.user_id !== user.id && (
+ 371→                          <button
+ 372→                            onClick={() => openReportModal(message)}
+ 373→                            className="text-xs text-gray-400 hover:text-red-500 transition-colors flex items-center gap-0.5"
+ 374→                            title="举报"
+ 375→                          >
+ 376→                            <Flag className="w-3 h-3" />
+ 377→                            <span>举报</span>
+ 378→                          </button>
+ 379→                        )}
+ 380→                      </div>
+ 381→                    </div>
+ 382→                  </motion.div>
+ 383→                ))
+ 384→              )}
+ 385→              <div ref={messagesEndRef} />
+ 386→            </div>
+ 387→
+ 388→            {/* 输入区域 */}
+ 389→            {user && isEligible && (
+
+<system-reminder>
+⚠️ REPEATED FILE MODIFICATION WARNING: You have modified "/home/project/src/pages/GuestbookPage.tsx" 5 times (Write + Edit combined)!
+
+You keep rewriting or editing the same file. This is a strong sign your current approach is not working.
+
+🛑 REQUIRED ACTIONS:
+1. STOP and think: why do you keep modifying the same file?
+2. If the content keeps being wrong, try a fundamentally different approach
+3. If you're making incremental fixes, consolidate them into ONE write instead of many small changes
+
+⏰ 3 more attempt(s) before modifications to this file are AUTOMATICALLY BLOCKED.
+</system-reminder>

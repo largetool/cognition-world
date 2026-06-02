@@ -1,0 +1,90 @@
+The file /home/project/src/pages/UserPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  46→  const isAdminUser = isAdminFromProfile(currentUser);
+  47→  const canPostLog = isCurrentUser || isAdminUser;
+  48→  const isLoggedIn = !!currentUser;
+  49→
+  50→  const handleSubmitLog = async () => {
+  51→    if (!logContent.trim() || !profile) return;
+  52→
+  53→    setIsSubmitting(true);
+  54→    const result = await createLog(profile.user_id, logContent.trim());
+  55→
+  56→    if (result.success) {
+  57→      setLogContent('');
+  58→      refreshLogs();
+  59→    }
+  60→
+  61→    setIsSubmitting(false);
+  62→  };
+  63→
+  64→  // 打开举报弹窗
+  65→  const openReportModal = (item: { id: string; content: string; type: 'log' | 'message'; user_id: string; username: string }) => {
+  66→    if (!currentUser) {
+  67→      navigate('/login');
+  68→      return;
+  69→    }
+  70→    if (item.user_id === currentUser.user_id) {
+  71→      return; // 不能举报自己
+  72→    }
+  73→    setReportingItem(item);
+  74→    setReportReason('');
+  75→    setReportSuccess(false);
+  76→    setReportModalOpen(true);
+  77→  };
+  78→
+  79→  // 关闭举报弹窗
+  80→  const closeReportModal = () => {
+  81→    setReportModalOpen(false);
+  82→    setReportingItem(null);
+  83→    setReportReason('');
+  84→    setReportSuccess(false);
+  85→  };
+  86→
+  87→  // 提交举报
+  88→  const handleReportSubmit = async () => {
+  89→    if (!reportingItem || !currentUser || !reportReason.trim()) return;
+  90→
+  91→    setReportSubmitting(true);
+  92→    try {
+  93→      const session = (await supabase.auth.getSession()).data.session;
+  94→      const authHeaders = session ? { Authorization: `Bearer ${session.access_token}` } : {};
+  95→
+  96→      const edgeUrl = supabase.supabaseUrl.replace(/\/sb-api$/, '');
+  97→      const response = await fetch(`${edgeUrl}/functions/v1/reports`, {
+  98→        method: 'POST',
+  99→        headers: {
+ 100→          'Content-Type': 'application/json',
+ 101→          ...(authHeaders as Record<string, string>),
+ 102→        },
+ 103→        body: JSON.stringify({
+ 104→          reported_message_id: reportingItem.id,
+ 105→          message_table: reportingItem.type === 'log' ? 'logs' : 'user_messages',
+ 106→          message_content: reportingItem.content,
+ 107→          reported_user_id: reportingItem.user_id,
+ 108→          reason: reportReason.trim(),
+ 109→        }),
+ 110→      });
+ 111→
+ 112→      const result = await response.json();
+ 113→
+ 114→      if (response.ok && result.success) {
+ 115→        setReportSuccess(true);
+ 116→        setTimeout(() => {
+ 117→          closeReportModal();
+ 118→        }, 2000);
+ 119→      } else {
+ 120→        console.error('举报失败:', result.error);
+ 121→      }
+ 122→    } catch (err) {
+ 123→      console.error('举报提交失败:', err);
+ 124→    } finally {
+ 125→      setReportSubmitting(false);
+ 126→    }
+ 127→  };
+ 128→
+ 129→  if (ipLoading) {
+ 130→    return (
+ 131→      <div className="min-h-screen flex items-center justify-center">
+ 132→        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" />

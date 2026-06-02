@@ -1,0 +1,32 @@
+[
+  {
+    "id": "1",
+    "status": "completed",
+    "content": "数据库：profiles表添加slogan_approved字段",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "status": "completed",
+    "content": "修改注册/更新slogan逻辑，自动设为false",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "status": "completed",
+    "content": "AdminPage新增Slogan审核Tab",
+    "priority": "high"
+  },
+  {
+    "id": "4",
+    "status": "completed",
+    "content": "首页修改随机slogan展示逻辑",
+    "priority": "high"
+  },
+  {
+    "id": "5",
+    "status": "completed",
+    "content": "storage.ts添加Slogan审核相关函数",
+    "priority": "high"
+  }
+]

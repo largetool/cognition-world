@@ -1,0 +1,13 @@
+The file /home/project/src/pages/AdminPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+   6→import { Navbar } from '../components/Navbar';
+   7→import { Footer } from '../components/Footer';
+   8→import { GlassCard } from '../components/GlassCard';
+   9→import { useAuth } from '../hooks/useAuth';
+  10→import { getPendingBackgroundImages, approveBackgroundImage, rejectBackgroundImage, getSystemBackgrounds, getMessageBoardConfig, updateMessageBoardConfig, getSitemapMode, setSitemapMode, getSitemapStats, type SitemapMode, getAllUsersWithStats, updateUserRole, getDailyPostLimit, updateDailyPostLimit, getPendingSlogans, approveSlogan, isUserGuestbookEnabled, setUserGuestbookEnabled, freezeUser, unfreezeUser } from '../utils/storage';
+  11→import { getAllBlacklist, addToBlacklist, removeFromBlacklist } from '../utils/ip';
+  12→import { getDefaultSEO, isAdminFromProfile } from '../types';
+  13→import type { Profile, BackgroundImage, IPBlacklist, SystemBackground } from '../types';
+  14→import { supabase } from '../supabase/client';
+  15→

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "1",
+    "content": "修改 WhitepaperPage.tsx - 添加面包屑: 首页 -> 白皮书",
+    "status": "in_progress",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "content": "修改 PrivacyPage.tsx - 添加面包屑: 首页 -> 隐私政策",
+    "status": "pending",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "content": "修改 TermsPage.tsx - 添加面包屑: 首页 -> 用户协议",
+    "status": "pending",
+    "priority": "high"
+  },
+  {
+    "id": "4",
+    "content": "修改 AboutPage.tsx - 添加面包屑: 首页 -> 关于我们",
+    "status": "pending",
+    "priority": "high"
+  },
+  {
+    "id": "5",
+    "content": "修改 ContactPage.tsx - 添加面包屑: 首页 -> 联系我们",
+    "status": "pending",
+    "priority": "high"
+  },
+  {
+    "id": "6",
+    "content": "修改 AccessibilityPage.tsx - 添加面包屑: 首页 -> 无障碍声明",
+    "status": "pending",
+    "priority": "high"
+  },
+  {
+    "id": "7",
+    "content": "修改 GuestbookPage.tsx - 添加面包屑: 首页 -> 留言板",
+    "status": "pending",
+    "priority": "high"
+  }
+]

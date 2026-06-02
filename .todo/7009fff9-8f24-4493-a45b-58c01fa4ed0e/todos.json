@@ -1,0 +1,14 @@
+[
+  {
+    "id": "1",
+    "content": "扩展 zh.json 添加全站文案",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "content": "扩展 en.json 添加全站英文翻译",
+    "status": "in_progress",
+    "priority": "high"
+  }
+]

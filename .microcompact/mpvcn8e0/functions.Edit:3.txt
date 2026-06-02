@@ -1,0 +1,82 @@
+The file /home/project/src/pages/GuestbookPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 156→    fetchMessages();
+ 157→    checkEligibility();
+ 158→  }, [user]);
+ 159→
+ 160→  // 自动滚动到底部
+ 161→  useEffect(() => {
+ 162→    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+ 163→  }, [messages]);
+ 164→
+ 165→  // 打开举报弹窗
+ 166→  const openReportModal = (message: GuestbookMessage) => {
+ 167→    if (!user) {
+ 168→      navigate('/login');
+ 169→      return;
+ 170→    }
+ 171→    if (message.user_id === user.id) {
+ 172→      return; // 不能举报自己
+ 173→    }
+ 174→    setReportingMessage(message);
+ 175→    setReportReason('');
+ 176→    setReportSuccess(false);
+ 177→    setReportModalOpen(true);
+ 178→  };
+ 179→
+ 180→  // 关闭举报弹窗
+ 181→  const closeReportModal = () => {
+ 182→    setReportModalOpen(false);
+ 183→    setReportingMessage(null);
+ 184→    setReportReason('');
+ 185→    setReportSuccess(false);
+ 186→  };
+ 187→
+ 188→  // 提交举报
+ 189→  const handleReportSubmit = async () => {
+ 190→    if (!reportingMessage || !user || !reportReason.trim()) return;
+ 191→
+ 192→    setReportSubmitting(true);
+ 193→    try {
+ 194→      const session = (await supabase.auth.getSession()).data.session;
+ 195→      const authHeaders = session ? { Authorization: `Bearer ${session.access_token}` } : {};
+ 196→
+ 197→      const response = await fetch(`${getEdgeFunctionUrl()}/functions/v1/reports`, {
+ 198→        method: 'POST',
+ 199→        headers: {
+ 200→          'Content-Type': 'application/json',
+ 201→          ...(authHeaders as Record<string, string>),
+ 202→        },
+ 203→        body: JSON.stringify({
+ 204→          reported_message_id: reportingMessage.id,
+ 205→          message_table: 'guestbook_messages',
+ 206→          message_content: reportingMessage.content,
+ 207→          reported_user_id: reportingMessage.user_id,
+ 208→          reason: reportReason.trim(),
+ 209→        }),
+ 210→      });
+ 211→
+ 212→      const result = await response.json();
+ 213→
+ 214→      if (response.ok && result.success) {
+ 215→        setReportSuccess(true);
+ 216→        setTimeout(() => {
+ 217→          closeReportModal();
+ 218→        }, 2000);
+ 219→      } else {
+ 220→        console.error('举报失败:', result.error);
+ 221→      }
+ 222→    } catch (err) {
+ 223→      console.error('举报提交失败:', err);
+ 224→    } finally {
+ 225→      setReportSubmitting(false);
+ 226→    }
+ 227→  };
+ 228→
+ 229→  const isEligible = eligibility?.eligible ?? false;
+ 230→  const limitReached = eligibility?.limitReached ?? false;
+ 231→  const remainingCount = eligibility?.remainingCount ?? 3;
+ 232→  const canSubmit = user && isEligible && !limitReached && newMessage.trim().length > 0;
+ 233→
+ 234→  return (

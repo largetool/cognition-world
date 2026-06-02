@@ -1,0 +1,11 @@
+--- src/pages/AdminPage.tsx
++++ src/pages/AdminPage.tsx
+@@ -55,7 +55,7 @@ export function AdminPage() {
+ const [sitemapStats, setSitemapStats] = useState({ userCount: 0, logCount: 0 });
+ const [isSavingSitemap, setIsSavingSitemap] = useState(false);
+ 
+- // 用户权限管理
++ // 用户权限管理 - 包含冻结状态
+ const [users, setUsers] = useState<Array<{
+ user_id: string;
+ username: string;

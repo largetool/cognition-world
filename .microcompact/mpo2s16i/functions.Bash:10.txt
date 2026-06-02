@@ -1,0 +1,1 @@
+{"exitCode":0,"output":"{/* 底部说明 */}\n      <footer className=\"mt-8 pt-4 border-t border-gray-200\">\n        <p className=\"text-xs text-gray-400 text-center\">\n          管理面板仅供开发测试使用 · 正式上线前将恢复登录验证\n        </p>\n      </footer>\n\n      <Footer />\n    </div>\n  );\n}"}

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "1",
+    "content": "创建邮件发送 Edge Function",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "content": "修改前端密码重置页面调用 Edge Function",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "content": "部署 Edge Function 到 Meoo Cloud",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "4",
+    "content": "验证无障碍页面可访问性",
+    "status": "completed",
+    "priority": "medium"
+  },
+  {
+    "id": "5",
+    "content": "创建密码重置 Edge Function",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "6",
+    "content": "配置 RESEND_API_KEY 环境变量",
+    "status": "in_progress",
+    "priority": "high"
+  }
+]

@@ -1,0 +1,38 @@
+The file /home/project/src/pages/AdminPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 142→    }
+ 143→    setIsSavingSitemap(false);
+ 144→  };
+ 145→
+ 146→  const handleSaveMessageConfig = async () => {
+ 147→    setIsSavingConfig(true);
+ 148→    const result = await updateMessageBoardConfig({
+ 149→      enabled: globalMessageBoardEnabled,
+ 150→      rateLimit: messageRateLimit,
+ 151→      captchaRequired: captchaRequired,
+ 152→    });
+ 153→    if (result.success) {
+ 154→      alert('配置已保存');
+ 155→    } else {
+ 156→      alert('保存失败：' + (result.error || '未知错误'));
+ 157→    }
+ 158→    setIsSavingConfig(false);
+ 159→  };
+ 160→
+ 161→  const toggleUserGuestbook = async () => {
+ 162→    setIsSavingUserGuestbook(true);
+ 163→    const result = await setUserGuestbookEnabled(!userGuestbookEnabled);
+ 164→    if (result.success) {
+ 165→      setUserGuestbookEnabled(!userGuestbookEnabled);
+ 166→      alert('用户间留言板设置已保存');
+ 167→    } else {
+ 168→      alert('保存失败：' + (result.error || '未知错误'));
+ 169→    }
+ 170→    setIsSavingUserGuestbook(false);
+ 171→  };
+ 172→
+ 173→  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+ 174→    const files = e.target.files;
+ 175→    if (!files || files.length === 0) return;
+ 176→

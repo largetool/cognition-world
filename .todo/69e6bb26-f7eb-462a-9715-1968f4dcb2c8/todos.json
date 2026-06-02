@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "content": "修复 Edge Function 中 profiles 查询字段错误 (id -> user_id)",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "2",
+    "content": "在 AdminPage 添加完整的举报管理 Tab",
+    "status": "completed",
+    "priority": "high"
+  },
+  {
+    "id": "3",
+    "content": "实现冻结用户限制逻辑（禁止发布动态、留言）",
+    "status": "in_progress",
+    "priority": "high"
+  },
+  {
+    "id": "4",
+    "content": "验证所有功能正常工作",
+    "status": "pending",
+    "priority": "medium"
+  }
+]

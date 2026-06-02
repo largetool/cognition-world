@@ -1,0 +1,1 @@
+{"exitCode":0,"output":"461:export async function setSitemapMode(mode: SitemapMode): Promise<{ success: boolean; error?: string }> {\n765:export async function setUserGuestbookEnabled(enabled: boolean): Promise<{ success: boolean; error?: string }> {"}

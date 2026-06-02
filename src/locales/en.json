@@ -1,0 +1,198 @@
+{
+  "app": {
+    "name": "Cognition World",
+    "subtitle": "Personal GEO Public Information Platform",
+    "slogan": "Let AI know every specific ordinary person"
+  },
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "projects": "Projects",
+    "posts": "Posts",
+    "login": "Login",
+    "register": "Register",
+    "user": "User",
+    "messages": "Messages",
+    "admin": "Admin",
+    "whitepaper": "Whitepaper",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "contact": "Contact Us",
+    "accessibility": "Accessibility",
+    "guestbook": "Guestbook",
+    "me": "Profile",
+    "logout": "Logout",
+    "back": "Back",
+    "backToHome": "Back to Home"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "phone": "Phone",
+    "password": "Password",
+    "google_login": "Login with Google",
+    "google_register": "Register with Google",
+    "forgot_password": "Forgot Password",
+    "reset_password": "Reset Password",
+    "send_code": "Send Code",
+    "verify_code": "Verification Code",
+    "createAccount": "Create Your Digital Identity",
+    "registerSubtitle": "Create your digital identity using email",
+    "agreeTerms": "Agree to Terms of Service",
+    "loginTitle": "Login",
+    "loginSubtitle": "Login to Cognition World to manage your public identity page",
+    "forgotPasswordTitle": "Forgot Password",
+    "resetPasswordTitle": "Reset Password",
+    "emailPlaceholder": "Enter your email",
+    "passwordPlaceholder": "Enter your password",
+    "confirmPassword": "Confirm Password",
+    "username": "Username",
+    "tag": "Tag",
+    "slogan": "Slogan",
+    "location": "Location",
+    "country": "Country",
+    "province": "Province",
+    "city": "City",
+    "community": "Community",
+    "isPublic": "Public Profile",
+    "registerSuccess": "Registration Successful",
+    "registerSuccessDesc": "Your digital identity has been created successfully. You can now login to use all features.",
+    "errors": {
+      "emailInvalid": "Please enter a valid email format",
+      "emailExists": "This email is already registered",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "agreeTermsRequired": "Please agree to the terms of service to register",
+      "locationRequired": "Please complete the location information",
+      "loginFailed": "Invalid email or password"
+    }
+  },
+  "user": {
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout",
+    "edit_profile": "Edit Profile",
+    "my_homepage": "My Homepage",
+    "slogan": "Slogan",
+    "tag": "Tag",
+    "location": "Location",
+    "noLogs": "No logs yet",
+    "noLogsDesc": "This user hasn't posted any updates yet",
+    "postLog": "Post a log",
+    "postLogPlaceholder": "Record your thoughts...",
+    "postLogSubmit": "Post",
+    "postLogSubmitting": "Posting...",
+    "logsTitle": "Cognition Logs",
+    "joinedAt": "Joined",
+    "public": "Public",
+    "private": "Private",
+    "viewMore": "View more updates",
+    "userNotFound": "User not found",
+    "userNotFoundDesc": "Please check if the link is correct",
+    "frozen": "This account has been frozen",
+    "hidden": "This user is temporarily unavailable",
+    "report": "Report",
+    "share": "Share",
+    "id": "ID"
+  },
+  "thought": {
+    "title": "Thought",
+    "backToProfile": "Back to Profile",
+    "notFound": "Thought not found",
+    "notFoundDesc": "This thought has been deleted or does not exist",
+    "author": "Author",
+    "publishedAt": "Published"
+  },
+  "guestbook": {
+    "title": "Guestbook",
+    "subtitle": "Public messages · Visible to all · Your footprints here become part of your digital identity",
+    "placeholder": "Write your message...",
+    "submit": "Send",
+    "noMessages": "No messages yet",
+    "received": "Guestbook",
+    "sent": "Footprints"
+  },
+  "footer": {
+    "product": "Product",
+    "legal": "Legal",
+    "learnMore": "Learn More",
+    "whitepaper": "Whitepaper",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "about": "About Us",
+    "contact": "Contact Us",
+    "accessibility": "Accessibility",
+    "copyright": "© 2026 Cognition World. All rights reserved."
+  },
+  "home": {
+    "title": "Cognition World",
+    "subtitle": "Human-centric — Rebuilding authentic human connections in the AI era",
+    "description": "A global personal GEO public information platform",
+    "cta": {
+      "register": "Join Now",
+      "whitepaper": "Read Whitepaper"
+    },
+    "features": {
+      "globalIndex": {
+        "title": "Global Index",
+        "desc": "Let the world know every specific ordinary person through AI"
+      },
+      "transparent": {
+        "title": "Transparency First",
+        "desc": "Declare your existence to the world"
+      },
+      "seo": {
+        "title": "SEO & GEO",
+        "desc": "Structured data friendly"
+      }
+    },
+    "stats": {
+      "users": "users with first-mover advantage",
+      "logs": "logs with first-mover advantage",
+      "infinite": "Infinite possibilities"
+    },
+    "slogan": "Let the world know every specific ordinary person through AI",
+    "beta": "Beta Testing"
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "tabs": {
+      "overview": "Overview",
+      "users": "Users",
+      "logs": "Logs",
+      "backgrounds": "Backgrounds",
+      "slogans": "Slogan Review",
+      "config": "Settings",
+      "reports": "Reports"
+    }
+  },
+  "seo": {
+    "keywords": "personal profile, personal GEO, personal SEO, GEO, SEO, AI search, Cognition World, generative engine optimization"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "loading": "Loading",
+    "error": "Error",
+    "success": "Success",
+    "back": "Back",
+    "close": "Close",
+    "submit": "Submit",
+    "copy": "Copy",
+    "copied": "Copied",
+    "more": "More",
+    "expand": "Expand",
+    "collapse": "Collapse"
+  },
+  "language": {
+    "zh": "中",
+    "en": "EN",
+    "switch": "Switch Language"
+  }
+}

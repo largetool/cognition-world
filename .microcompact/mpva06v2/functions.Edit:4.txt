@@ -1,0 +1,51 @@
+The file /home/project/src/pages/AdminPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  91→
+  92→    checkAuth();
+  93→  }, [navigate, user, authLoading]);
+  94→
+  95→  const loadData = async () => {
+  96→    setIsLoading(true);
+  97→    const [images, list, sysBgs, msgConfig, sMode, sStats, usersList, guestbookEnabled] = await Promise.all([
+  98→      getPendingBackgroundImages(),
+  99→      getAllBlacklist(),
+ 100→      getSystemBackgrounds(),
+ 101→      getMessageBoardConfig(),
+ 102→      getSitemapMode(),
+ 103→      getSitemapStats(),
+ 104→      getAllUsersWithStats(),
+ 105→      isUserGuestbookEnabled(),
+ 106→    ]);
+ 107→    setPendingImages(images);
+ 108→    setBlacklist(list);
+ 109→    setSystemBackgrounds(sysBgs as any);
+ 110→    if (msgConfig) {
+ 111→      setGlobalMessageBoardEnabled(msgConfig.enabled);
+ 112→      setMessageRateLimit(msgConfig.rateLimit);
+ 113→      setCaptchaRequired(msgConfig.captchaRequired);
+ 114→    }
+ 115→    setSitemapMode(sMode);
+ 116→    setSitemapStats(sStats);
+ 117→    setUsers(usersList);
+ 118→    setUserGuestbookEnabled(guestbookEnabled);
+ 119→
+ 120→    // 加载待审核 Slogan
+ 121→    const slogans = await getPendingSlogans();
+ 122→    setPendingSlogans(slogans);
+ 123→
+ 124→    // 加载发布限额配置
+ 125→    const [userLimit, verifiedLimit, premiumLimit] = await Promise.all([
+ 126→      getDailyPostLimit('user'),
+ 127→      getDailyPostLimit('verified'),
+ 128→      getDailyPostLimit('premium'),
+ 129→    ]);
+ 130→    setPostLimits({ user: userLimit, verified: verifiedLimit, premium: premiumLimit });
+ 131→
+ 132→    setIsLoading(false);
+ 133→  };
+ 134→
+ 135→  const handleSaveSitemapMode = async () => {
+ 136→    setIsSavingSitemap(true);
+ 137→    const result = await setSitemapMode(sitemapMode);
+ 138→    if (result.success) {

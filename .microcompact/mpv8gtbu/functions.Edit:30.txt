@@ -1,0 +1,13 @@
+The file /home/project/src/pages/GuestbookPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+  88→    try {
+  89→      const session = (await supabase.auth.getSession()).data.session;
+  90→      const authHeaders = session ? { Authorization: `Bearer ${session.access_token}` } : {};
+  91→
+  92→      const response = await fetch(`${getEdgeFunctionUrl()}/functions/v1/guestbook/check-eligibility`, {
+  93→        method: 'POST',
+  94→        headers: {
+  95→          'Content-Type': 'application/json',
+  96→          ...(authHeaders as Record<string, string>),
+  97→        },

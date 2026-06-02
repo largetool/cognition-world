@@ -1,0 +1,5 @@
+{"exitCode":0,"output":"/>\n\n      {/* 账户冻结提示横幅 */}\n      {profile?.is_frozen && (\n        <motion.div\n          initial={{ opacity: 0, y: -20 }}\n          animate={{ opacity: 1, y: 0 }}\n          className=\"fixed top-0 left-0 right-0 z-[60] bg-red-500 text-white px-4 py-3\"\n        >\n          <div className=\"max-w-4xl mx-auto flex items-center justify-center gap-2\">\n            <ShieldAlert className=\"w-5 h-5 flex-shrink-0\" />\n            <p className=\"text-sm font-medium\">\n              该账户已被冻结\n              {profile.frozen_reason && `：${profile.frozen_reason}`}\n            </p>\n          </div>\n        </motion.div>\n      )}\n\n      <div className={`relative ${profile?.is_frozen ? 'pt-12' : ''}`}>\n        <div\n          className=\"absolute top-0 left-0 right-0 h-[50vh] bg-cover bg-center bg-no-repeat\"\n          style={{\n            backgroundImage: `url('${activeBackground?.url || defaultBg}')`,\n            backgroundPosition: 'center top',\n          }}"}
+
+<system-reminder>
+如果遇到项目问题， 去检查webpack.config.js文件，重点检查文件里兜底策略的exclude: .(js|jsx|ts|tsx|css|json|html)$/i中 是否忘记添加mjs类型。
+</system-reminder>

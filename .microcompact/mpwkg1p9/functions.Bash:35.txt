@@ -1,0 +1,5 @@
+{"success":true,"message":"变更 \"add_account_hide_fields\" 执行成功，请查看 src/supabase/types.ts 了解表结构","data":{"migrationName":"add_account_hide_fields","migrationFile":"migrations/20260601_223624_add_account_hide_fields.sql","typesFile":"src/supabase/types.ts","query":"\n-- 用户主动隐藏状态\nALTER TABLE profiles ADD COLUMN IF NOT EXISTS hide_status TEXT DEFAULT 'none' CHECK (hide_status IN ('none', 'cooling', 'frozen'));\n\n-- 时间节点\nALTER TABLE profiles ADD COLUMN IF NOT EXISTS hide_requested_at TIMESTAMPTZ;\nALTER TABLE profiles ADD COLUMN IF NOT EXISTS cooling_ends_at TIMESTAMPTZ;\nALTER TABLE profiles ADD COLUMN IF NOT EXISTS frozen_ends_at TIMESTAMPTZ;\nALTER TABLE profiles ADD COLUMN IF NOT EXISTS hide_canceled_at TIMESTAMPTZ;\nALTER TABLE profiles ADD COLUMN IF NOT EXISTS restored_at TIMESTAMPTZ;\n","result":[]}}
+
+<system-reminder>
+如果遇到项目问题， 去检查webpack.config.js文件，重点检查文件里兜底策略的exclude: .(js|jsx|ts|tsx|css|json|html)$/i中 是否忘记添加mjs类型。
+</system-reminder>

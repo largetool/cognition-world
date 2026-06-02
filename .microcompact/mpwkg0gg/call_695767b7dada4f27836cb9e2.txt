@@ -1,0 +1,51 @@
+The file /home/project/src/utils/storage.ts has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 776→// 设置用户间留言板开关状态
+ 777→export async function setUserGuestbookEnabled(enabled: boolean): Promise<{ success: boolean; error?: string }> {
+ 778→  const { error } = await supabase
+ 779→    .from('system_config')
+ 780→    .upsert(
+ 781→      { key: 'user_guestbook_enabled', value: String(enabled) },
+ 782→      { onConflict: 'key' }
+ 783→    );
+ 784→  if (error) return { success: false, error: error.message };
+ 785→  return { success: true };
+ 786→}
+ 787→
+ 788→// ==================== 用户冻结管理 ====================
+ 789→
+ 790→/**
+ 791→ * 冻结用户
+ 792→ */
+ 793→export async function freezeUser(userId: string, reason: string): Promise<{ success: boolean; error?: string }> {
+ 794→  const { error } = await supabase
+ 795→    .from('profiles')
+ 796→    .update({ 
+ 797→      is_frozen: true, 
+ 798→      frozen_at: new Date().toISOString(),
+ 799→      freeze_reason: reason 
+ 800→    })
+ 801→    .eq('user_id', userId);
+ 802→  
+ 803→  if (error) return { success: false, error: error.message };
+ 804→  return { success: true };
+ 805→}
+ 806→
+ 807→/**
+ 808→ * 解冻用户
+ 809→ */
+ 810→export async function unfreezeUser(userId: string): Promise<{ success: boolean; error?: string }> {
+ 811→  const { error } = await supabase
+ 812→    .from('profiles')
+ 813→    .update({ 
+ 814→      is_frozen: false, 
+ 815→      frozen_at: null,
+ 816→      freeze_reason: null 
+ 817→    })
+ 818→    .eq('user_id', userId);
+ 819→  
+ 820→  if (error) return { success: false, error: error.message };
+ 821→  return { success: true };
+ 822→}
+ 823→

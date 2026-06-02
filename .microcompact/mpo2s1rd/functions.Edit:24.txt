@@ -1,0 +1,19 @@
+The file /home/project/src/pages/MessagesPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 247→                  <p className="p-4 text-gray-500 text-center">暂无留言，来发表第一条留言吧</p>
+ 248→                )}
+ 249→              </div>
+ 250→            </>
+ 251→          ) : (
+ 252→            <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
+ 253→              <MessageSquare className="w-12 h-12 text-amber-400 mx-auto mb-3" />
+ 254→              <p className="text-amber-800 font-medium mb-1">留言板已关闭</p>
+ 255→              <p className="text-amber-600 text-sm">请联系管理员开启</p>
+ 256→            </div>
+ 257→          )}
+ 258→        </section>
+ 259→      </main>
+ 260→    </div>
+ 261→  );
+ 262→}

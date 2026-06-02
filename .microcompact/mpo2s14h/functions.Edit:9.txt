@@ -1,0 +1,26 @@
+The file /home/project/src/pages/AdminPage.tsx has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 148→    <div className="min-h-screen bg-[var(--bg-primary)]">
+ 149→      <SEOHead data={{ ...getDefaultSEO(), title: '管理后台 - 认知界' }} />
+ 150→      <Navbar user={user} />
+ 151→
+ 152→      {/* 测试版提示横幅 */}
+ 153→      <div style={{ backgroundColor: '#fef3c7', borderBottom: '1px solid #f59e0b' }} className="px-4 py-3">
+ 154→        <div className="max-w-4xl mx-auto flex items-center gap-3">
+ 155→          <span style={{ color: '#d97706', fontSize: '1.125rem' }}>⚠️</span>
+ 156→          <div>
+ 157→            <p style={{ color: '#92400e', fontWeight: 500, fontSize: '0.875rem' }}>
+ 158→              测试版管理面板
+ 159→            </p>
+ 160→            <p style={{ color: '#b45309', fontSize: '0.75rem' }}>
+ 161→              正式上线前将恢复登录验证，当前仅供开发测试使用
+ 162→            </p>
+ 163→          </div>
+ 164→        </div>
+ 165→      </div>
+ 166→
+ 167→      <div className="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+ 168→        <div className="max-w-4xl mx-auto">
+ 169→          <motion.div
+ 170→            initial={{ opacity: 0, y: 20 }}

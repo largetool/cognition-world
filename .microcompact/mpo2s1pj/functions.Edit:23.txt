@@ -1,0 +1,95 @@
+The file /home/project/src/utils/storage.ts has been updated. Made 1 replacement.
+
+Here's the result of running `cat -n` on a snippet of the edited file:
+ 110→export interface Message { id: string; sender_id: string; sender_name: string; content: string; created_at: string; }
+ 111→export interface SystemMessage { id: string; content: string; created_at: string; type: 'system' | 'announcement'; }
+ 112→export interface MessageBoardConfig { enabled: boolean; rateLimit: number; captchaRequired: boolean; }
+ 113→
+ 114→export async function getMessageBoardConfig(): Promise<MessageBoardConfig | null> {
+ 115→  // 分别查询三个配置项
+ 116→  const { data: enabledData } = await supabase.from('system_config').select('value').eq('key', 'global_message_board_enabled').single();
+ 117→  const { data: limitData } = await supabase.from('system_config').select('value').eq('key', 'message_rate_limit').single();
+ 118→  const { data: captchaData } = await supabase.from('system_config').select('value').eq('key', 'captcha_required').single();
+ 119→  
+ 120→  return {
+ 121→    enabled: enabledData?.value === 'true',
+ 122→    rateLimit: parseInt(limitData?.value || '10', 10),
+ 123→    captchaRequired: captchaData?.value === 'true',
+ 124→  };
+ 125→}
+ 126→
+ 127→export async function isMessageBoardEnabled(): Promise<boolean> {
+ 128→  const { data } = await supabase.from('system_config').select('value').eq('key', 'global_message_board_enabled').single();
+ 129→  return data?.value === 'true';
+ 130→}
+ 131→
+ 132→export async function updateMessageBoardConfig(config: MessageBoardConfig): Promise<{ success: boolean; error?: string }> {
+ 133→  // 分别更新三个配置
+ 134→  const updates = [
+ 135→    { key: 'global_message_board_enabled', value: String(config.enabled) },
+ 136→    { key: 'message_rate_limit', value: String(config.rateLimit) },
+ 137→    { key: 'captcha_required', value: String(config.captchaRequired) },
+ 138→  ];
+ 139→  
+ 140→  for (const item of updates) {
+ 141→    const { error } = await supabase.from('system_config').upsert({ ...item, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+ 142→    if (error) return { success: false, error: error.message };
+ 143→  }
+ 144→  return { success: true };
+ 145→}
+ 146→
+ 147→// 获取留言板消息（从 guestbook 表）
+ 148→export async function getGuestbookMessages(): Promise<Message[]> {
+ 149→  const { data, error } = await supabase.from('guestbook').select('*, profiles(username)').eq('is_public', true).order('created_at', { ascending: false });
+ 150→  if (error) { console.error('Error fetching guestbook:', error); return []; }
+ 151→  return (data || []).map(item => ({
+ 152→    id: item.id,
+ 153→    sender_id: item.user_id,
+ 154→    sender_name: item.profiles?.username || '匿名用户',
+ 155→    content: item.content,
+ 156→    created_at: item.created_at,
+ 157→  }));
+ 158→}
+ 159→
+ 160→// 获取系统通知（从 notifications 表）
+ 161→export async function getSystemMessages(): Promise<SystemMessage[]> {
+ 162→  const { data, error } = await supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(20);
+ 163→  if (error) { console.error('Error fetching notifications:', error); return []; }
+ 164→  return (data || []).map(item => ({
+ 165→    id: item.id,
+ 166→    content: item.content,
+ 167→    created_at: item.created_at,
+ 168→    type: item.type === 'announcement' ? 'announcement' : 'system',
+ 169→  }));
+ 170→}
+ 171→
+ 172→// 发送留言到 guestbook
+ 173→export async function sendGuestbookMessage(userId: string, content: string): Promise<{ success: boolean; error?: string }> {
+ 174→  const { error } = await supabase.from('guestbook').insert({ user_id: userId, content, is_public: true });
+ 175→  if (error) return { success: false, error: error.message };
+ 176→  return { success: true };
+ 177→}
+ 178→
+ 179→// 检查留言限流（基于 guestbook 表）
+ 180→export async function checkMessageRateLimit(userId: string): Promise<boolean> {
+ 181→  const config = await getMessageBoardConfig();
+ 182→  const limit = config?.rateLimit || 10;
+ 183→  const oneHourAgo = new Date(Date.now() - 3600000).toISOString();
+ 184→  const { count, error } = await supabase.from('guestbook').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', oneHourAgo);
+ 185→  if (error) { console.error('Error checking rate limit:', error); return false; }
+ 186→  return (count || 0) < limit;
+ 187→}
+ 188→
+ 189→// 兼容旧接口
+ 190→export async function getMessages(): Promise<Message[]> {
+ 191→  return getGuestbookMessages();
+ 192→}
+ 193→
+ 194→export async function sendMessage(senderId: string, senderName: string, content: string): Promise<{ success: boolean; error?: string }> {
+ 195→  return sendGuestbookMessage(senderId, content);
+ 196→}
+ 197→
+ 198→// ========== 系统统计相关 ==========
+ 199→
+ 200→export async function getSystemStats(): Promise<{ userCount: number; logCount: number }> {
+ 201→  try {

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <title>清除缓存</title>
+ <meta charset="UTF-8">
+</head>
+<body>
+ <h1>正在清除缓存...</h1>
+ <script>
+ localStorage.clear();
+ sessionStorage.clear();
+ document.cookie.split(";").forEach(function(c) {
+ document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+ });
+ setTimeout(() => {
+ window.location.href = '/';
+ }, 1000);
+ </script>
+ <p>缓存已清除，正在跳转...</p>
+</body>
+</html>

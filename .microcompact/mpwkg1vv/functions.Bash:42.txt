@@ -1,0 +1,5 @@
+{"exitCode":0,"output":"187:      {/* 账户冻结提示横幅 */}\n188:      {profile?.is_frozen && (\n197:              该账户已被冻结\n204:      <div className={`relative ${profile?.is_frozen ? 'pt-12' : ''}`}>"}
+
+<system-reminder>
+如果遇到项目问题， 去检查webpack.config.js文件，重点检查文件里兜底策略的exclude: .(js|jsx|ts|tsx|css|json|html)$/i中 是否忘记添加mjs类型。
+</system-reminder>

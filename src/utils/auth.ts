@@ -1,0 +1,134 @@
+import { supabase } from '../supabase/client';
+import type { Profile } from '../types';
+
+// 认证状态变更监听器，自动处理清理
+export function onAuthStateChange(callback: (event: string, session: any) => void) {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    callback(event, session);
+  });
+  return subscription;
+}
+
+// 检查会话是否过期
+export function isSessionExpired(session: any): boolean {
+  if (!session?.expires_at) return true;
+  return Date.now() >= session.expires_at * 1000;
+}
+
+export async function getUserById(userId: string): Promise<Profile | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data as Profile;
+}
+
+// 检查邮箱是否已存在（仅检查 profiles 表，避免安全风险）
+export async function checkEmailExists(email: string): Promise<boolean> {
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (error) {
+    console.error('检查邮箱存在性失败:', error);
+    return false; // 出错时保守返回不存在
+  }
+
+  return !!profile;
+}
+
+export async function registerWithEmail(email: string, password: string, metadata: {
+  username: string;
+  user_id: string;
+  tag: string;
+  slogan: string;
+  location: string;
+  is_public: boolean;
+  phone?: string;
+}) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        ...metadata
+      }
+    }
+  });
+  return { user: data?.user, error };
+}
+
+export async function loginWithEmail(email: string, password: string) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+  return { session: data?.session, user: data?.user, error };
+}
+
+export async function logout() {
+  const { error } = await supabase.auth.signOut();
+  return { error };
+}
+
+export async function getCurrentSession() {
+  const { data: { session }, error } = await supabase.auth.getSession();
+  return { session, error };
+}
+
+export async function getCurrentUser() {
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) {
+      return { user: null, profile: null, error };
+    }
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle();
+    return { user, profile, error: profileError };
+  } catch (err) {
+    console.error('获取当前用户失败:', err);
+    return { user: null, profile: null, error: err as Error };
+  }
+}
+
+export async function updateProfile(userId: string, updates: {
+  tag?: string;
+  slogan?: string;
+  location?: string;
+  is_public?: boolean;
+}) {
+  try {
+    // 过滤掉 undefined 值
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([_, v]) => v !== undefined)
+    );
+
+    if (Object.keys(cleanUpdates).length === 0) {
+      return { profile: null, error: new Error('没有要更新的字段') };
+    }
+
+    // 如果更新了 slogan，自动将 slogan_approved 设为 false
+    if (cleanUpdates.slogan !== undefined) {
+      (cleanUpdates as any).slogan_approved = cleanUpdates.slogan ? false : null;
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ ...cleanUpdates, updated_at: new Date().toISOString() })
+      .eq('id', userId)
+      .select()
+      .maybeSingle();
+
+    return { profile: data, error };
+  } catch (err) {
+    console.error('更新资料失败:', err);
+    return { profile: null, error: err as Error };
+  }
+}
