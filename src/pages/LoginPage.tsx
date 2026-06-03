@@ -83,13 +83,17 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[var(--bg-primary)]">
       <SEOHead data={seoData} jsonLd={jsonLd} />
 
-      <div className="min-h-screen flex flex-col relative">
-        {/* 背景图 */}
+      <div className="min-h-screen flex flex-col">
+        {/* 背景图（与首页风格一致） */}
         <div
-          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url('${heroBg}')` }}
+          className="fixed inset-0 bg-cover bg-no-repeat will-change-transform"
+          style={{
+            backgroundImage: `url('${heroBg}')`,
+            backgroundPosition: 'center 40%',
+            filter: 'brightness(1.08) contrast(0.95) saturate(1.11)',
+          }}
+          role="img" aria-label="Hero background"
         />
-        <div className="absolute inset-0 z-0 bg-black/40" />
 
         {/* 顶部导航 */}
         <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
