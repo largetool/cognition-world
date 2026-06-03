@@ -502,9 +502,17 @@ export default function UserPage() {
                 {getInitials(profile.username)}
               </div>
 
-              <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-2">
-                {profile.username}
-              </h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)]">
+                  {profile.username}
+                </h1>
+                {/* 页面所有者标识 */}
+                {isCurrentUser && (
+                  <span className="px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-medium">
+                    这是你的主页
+                  </span>
+                )}
+              </div>
 
               <p className="text-[var(--text-secondary)] mb-2">
                 {profile.tag}
@@ -524,18 +532,15 @@ export default function UserPage() {
               )}
 
               <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-[var(--text-secondary)]">
-                {isLoggedIn && (
-                  <>
-                    <div className="flex items-center space-x-1">
-                      <MapPin className="w-4 h-4" />
-                      <span>{profile.location}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Calendar className="w-4 h-4" />
-                      <span>加入于 {new Date(profile.created_at || '').getFullYear()}</span>
-                    </div>
-                  </>
-                )}
+                {/* 所在地和加入时间对访客可见 */}
+                <div className="flex items-center space-x-1">
+                  <MapPin className="w-4 h-4" />
+                  <span>{profile.location}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Calendar className="w-4 h-4" />
+                  <span>加入于 {new Date(profile.created_at || '').getFullYear()}</span>
+                </div>
                 <div className="flex items-center space-x-1">
                   {profile.is_public ? (
                     <>
@@ -582,80 +587,107 @@ export default function UserPage() {
           </GlassCard>
         )}
 
-        {isLoggedIn && (
-          <section aria-label="认知日志列表" itemScope itemType="https://schema.org/ItemList">
-            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-6">
-              认知日志
-            </h2>
+        {/* 登录提示 - 未登录访客可见 */}
+        {!isLoggedIn && (
+          <div className="mb-6 text-center">
+            <p className="text-sm text-[var(--text-tertiary)]">
+              登录后可留言互动、查看所在地和加入时间
+            </p>
+          </div>
+        )}
 
-            {/* 冻结状态下不显示动态列表（仅自己和管理员可见） */}
-            {profile?.hide_status === 'frozen' && !isCurrentUser && !isAdminUser ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Lock className="w-8 h-8 text-gray-400" />
-                </div>
-                <p className="text-[var(--text-secondary)]">该用户已暂停展示</p>
+        <section aria-label="认知日志列表" itemScope itemType="https://schema.org/ItemList">
+          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-6">
+            认知日志
+          </h2>
+
+          {/* 冻结状态下不显示动态列表（仅自己和管理员可见） */}
+          {profile?.hide_status === 'frozen' && !isCurrentUser && !isAdminUser ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Lock className="w-8 h-8 text-gray-400" />
               </div>
-            ) : logs.length > 0 ? (
-              <>
-                <div className="space-y-4">
-                  {paginatedLogs.map((log, index) => (
-                    <div key={log.id} className="relative group" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                      <meta itemProp="position" content={String((currentPage - 1) * LOGS_PER_PAGE + index + 1)} />
-                      <LogItem log={log} index={index} userId={profile?.user_id} />
-                      {/* 举报按钮 - 仅对非自己的日志显示 */}
-                      {currentUser && log.user_id !== currentUser.user_id && (
-                        <button
-                          onClick={() => openReportModal({
-                            id: log.id,
-                            content: log.content,
-                            type: 'log',
-                            user_id: log.user_id,
-                            username: profile?.username || '未知用户'
-                          })}
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50"
-                          title="举报"
-                        >
-                          <Flag className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* 分页控件 */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-4 mt-8">
-                    <button
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                      className="flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-[var(--accent)] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                      上一页
-                    </button>
-                    <span className="text-[var(--text-secondary)]">
-                      第 {currentPage} / {totalPages} 页
-                    </span>
-                    <button
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      disabled={currentPage === totalPages}
-                      className="flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-[var(--accent)] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      下一页
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
+              <p className="text-[var(--text-secondary)]">该用户已暂停展示</p>
+            </div>
+          ) : logs.length > 0 ? (
+            <>
+              <div className="space-y-4">
+                {paginatedLogs.map((log, index) => (
+                  <div key={log.id} className="relative group" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                    <meta itemProp="position" content={String((currentPage - 1) * LOGS_PER_PAGE + index + 1)} />
+                    <LogItem log={log} index={index} userId={profile?.user_id} />
+                    {/* 举报按钮 - 仅对非自己的日志显示 */}
+                    {currentUser && log.user_id !== currentUser.user_id && (
+                      <button
+                        onClick={() => openReportModal({
+                          id: log.id,
+                          content: log.content,
+                          type: 'log',
+                          user_id: log.user_id,
+                          username: profile?.username || '未知用户'
+                        })}
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50"
+                        title="举报"
+                      >
+                        <Flag className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
-                )}
-              </>
-            ) : (
-              <GlassCard className="text-center py-12">
-                <p className="text-[var(--text-tertiary)]">
-                  暂无认知日志
-                </p>
-              </GlassCard>
-            )}
-          </section>
+                ))}
+              </div>
+
+              {/* 分页控件 */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-4 mt-8">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-[var(--accent)] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    上一页
+                  </button>
+                  <span className="text-[var(--text-secondary)]">
+                    第 {currentPage} / {totalPages} 页
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-[var(--accent)] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    下一页
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <GlassCard className="text-center py-12">
+              <p className="text-[var(--text-tertiary)]">
+                暂无认知日志
+              </p>
+            </GlassCard>
+          )}
+        </section>
+
+        {/* 注册引导 CTA - 未登录访客可见 */}
+        {!isLoggedIn && (
+          <div className="mt-8">
+            <div className="bg-gradient-to-r from-[var(--accent)]/10 to-[var(--accent)]/5 border border-[var(--accent)]/20 rounded-2xl p-8 text-center">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
+                想要拥有自己的个人主页？
+              </h3>
+              <p className="text-[var(--text-secondary)] mb-6">
+                创建你的数字身份，让 AI 认识你
+              </p>
+              <Link
+                to="/register"
+                className="inline-flex items-center px-6 py-3 rounded-lg bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] transition-colors"
+              >
+                立即注册
+              </Link>
+            </div>
+          </div>
         )}
       </div>
 

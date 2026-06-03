@@ -8,7 +8,9 @@ import { Footer } from '../components/Footer';
 import { APP_CONFIG } from '../types';
 import { generateBreadcrumbList, breadcrumbs } from '../utils/seo';
 import { t, getCurrentLanguage } from '../locales';
-import heroBg from '../../assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg';
+
+// 背景图
+const heroBg = new URL('../../assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg', import.meta.url).href;
 
 type LoginType = 'email' | 'phone';
 
@@ -79,20 +81,16 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
-      {/* 背景图 */}
-      <div
-        className="fixed inset-0 bg-cover bg-no-repeat will-change-transform"
-        style={{
-          backgroundImage: `url('${heroBg}')`,
-          backgroundPosition: 'center 40%',
-          filter: 'brightness(1.08) contrast(0.95) saturate(1.11)',
-        }}
-        role="img" aria-label="Hero background"
-      />
-
       <SEOHead data={seoData} jsonLd={jsonLd} />
 
-      <div className="relative z-10 min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col relative">
+        {/* 背景图 */}
+        <div
+          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url('${heroBg}')` }}
+        />
+        <div className="absolute inset-0 z-0 bg-black/40" />
+
         {/* 顶部导航 */}
         <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center">
@@ -107,14 +105,14 @@ export default function LoginPage() {
         </header>
 
         {/* 主内容 */}
-        <main className="flex-1 flex items-center justify-center pt-16 px-4">
+        <main className="flex-1 flex items-center justify-center pt-16 px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="w-full max-w-md"
           >
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-gray-100 p-8">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
               <h1 className="text-2xl font-bold text-center text-[var(--text-primary)] mb-2">
                 欢迎回来
               </h1>
