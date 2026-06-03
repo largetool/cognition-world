@@ -8,8 +8,7 @@ import { Footer } from '../components/Footer';
 import { APP_CONFIG } from '../types';
 import { generateBreadcrumbList, breadcrumbs } from '../utils/seo';
 import { t, getCurrentLanguage } from '../locales';
-
-const heroBg = new URL('../../assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg', import.meta.url).href;
+import heroBg from '../../assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg';
 
 type LoginType = 'email' | 'phone';
 
