@@ -675,10 +675,10 @@ export default function UserPage() {
           <div className="mt-8">
             <div className="bg-gradient-to-r from-[var(--accent)]/10 to-[var(--accent)]/5 border border-[var(--accent)]/20 rounded-2xl p-8 text-center">
               <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
-                想要拥有自己的个人主页？
+                了解更多？
               </h3>
               <p className="text-[var(--text-secondary)] mb-6">
-                创建你的数字身份，让 AI 认识你
+                快速创建个人页面，让 AI 和搜索引擎带你连接全球
               </p>
               <Link
                 to="/register"
