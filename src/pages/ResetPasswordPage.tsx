@@ -7,7 +7,7 @@ import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { GlassCard } from '../components/GlassCard';
 import { getDefaultSEO } from '../types';
-import { supabase, supabaseUrl } from '../supabase/client';
+import { supabaseUrl } from '../supabase/client';
 import { generateBreadcrumbList, breadcrumbs } from '../utils/seo';
 
 export default function ResetPasswordPage() {
@@ -19,9 +19,8 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isValidLink, setIsValidLink] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
 
-  // 检查重置令牌是否有效
+  // 通过 Edge Function 检查重置令牌是否有效
   useEffect(() => {
     const checkToken = async () => {
       const token = searchParams.get('token');
@@ -31,35 +30,26 @@ export default function ResetPasswordPage() {
         return;
       }
 
-      // 查询令牌是否有效
-      const { data: resetRecord, error: resetError } = await supabase
-        .from('password_resets')
-        .select('user_id, expires_at, used')
-        .eq('token', token)
-        .maybeSingle();
+      try {
+        const response = await fetch(`${supabaseUrl}/functions/v1/reset-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, action: 'validate' }),
+        });
 
-      if (resetError || !resetRecord) {
+        const result = await response.json();
+
+        if (response.ok && result.valid) {
+          setIsValidLink(true);
+        } else {
+          setIsValidLink(false);
+          setError(result.error || '重置链接无效，请重新申请');
+        }
+      } catch (err) {
+        console.error('Token validation error:', err);
         setIsValidLink(false);
-        setError('重置链接无效，请重新申请');
-        return;
+        setError('网络错误，请重试');
       }
-
-      // 检查是否已过期
-      if (new Date(resetRecord.expires_at) < new Date()) {
-        setIsValidLink(false);
-        setError('重置链接已过期，请重新申请');
-        return;
-      }
-
-      // 检查是否已使用
-      if (resetRecord.used) {
-        setIsValidLink(false);
-        setError('重置链接已被使用，请重新申请');
-        return;
-      }
-
-      setUserId(resetRecord.user_id);
-      setIsValidLink(true);
     };
     checkToken();
   }, [searchParams]);
@@ -87,36 +77,17 @@ export default function ResetPasswordPage() {
 
     try {
       const token = searchParams.get('token');
-      if (!token || !userId) {
+      if (!token) {
         setError('重置链接无效');
         setIsLoading(false);
         return;
       }
 
-      // 1. 获取用户的 auth user_id
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (profileError || !profile) {
-        setError('用户不存在');
-        setIsLoading(false);
-        return;
-      }
-
-      // 2. 使用 Supabase Admin API 更新密码（需要 Service Role Key）
-      // 这里我们调用 Edge Function 来执行密码重置
+      // 调用 Edge Function 重置密码
       const response = await fetch(`${supabaseUrl}/functions/v1/reset-password`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token: token,
-          newPassword: newPassword,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, newPassword, action: 'reset' }),
       });
 
       const result = await response.json();
@@ -125,7 +96,6 @@ export default function ResetPasswordPage() {
         setError(result.error || '重置失败，请重试');
       } else {
         setSuccess(true);
-        // 3秒后跳转到登录页
         setTimeout(() => {
           navigate('/login');
         }, 3000);
