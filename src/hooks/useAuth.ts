@@ -36,8 +36,12 @@ export function useAuth() {
 
         if (session?.user) {
           const { profile } = await getCurrentUser();
-          // 检查并转换冷静期到冻结期
-          await checkAndTransitionAccountHide();
+          // 检查并转换冷静期到冻结期（独立 try/catch，失败不影响登录）
+          try {
+            await checkAndTransitionAccountHide();
+          } catch (_e) {
+            console.warn('[useAuth] checkAndTransitionAccountHide 失败（可忽略）:', _e);
+          }
           if (mountedRef.current) {
             setSession({
               user: profile,
