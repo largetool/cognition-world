@@ -7,7 +7,7 @@ import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { GlassCard } from '../components/GlassCard';
 import { getDefaultSEO } from '../types';
-import { supabase, supabaseUrl } from '../supabase/client';
+import { supabaseUrl } from '../supabase/client';
 import { generateBreadcrumbList, breadcrumbs } from '../utils/seo';
 
 export function ForgotPasswordPage() {
@@ -35,44 +35,7 @@ export function ForgotPasswordPage() {
     setError(null);
 
     try {
-      // 1. 首先检查邮箱是否存在于系统中
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, user_id, email')
-        .eq('email', email)
-        .maybeSingle();
-
-      if (profileError || !profile) {
-        setError('该邮箱未注册，请检查邮箱地址');
-        setIsLoading(false);
-        return;
-      }
-
-      // 2. 生成密码重置令牌
-      const resetToken = crypto.randomUUID();
-      const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1小时后过期
-
-      // 3. 保存重置令牌到数据库
-      const { error: tokenError } = await supabase
-        .from('password_resets')
-        .insert({
-          user_id: profile.id,  // 使用 uuid 类型的 id，不是 user_id
-          email: email,
-          token: resetToken,
-          expires_at: expiresAt,
-        });
-
-      if (tokenError) {
-        console.error('保存重置令牌失败:', tokenError);
-        setError('生成重置链接失败: ' + tokenError.message);
-        setIsLoading(false);
-        return;
-      }
-
-      // 4. 构建重置链接
-      const resetUrl = `${window.location.origin}/reset-password?token=${resetToken}`;
-
-      // 5. 调用 Edge Function 发送邮件
+      // 调用 Edge Function：后端验证邮箱、生成令牌、保存到DB、发送邮件
       const response = await fetch(`${supabaseUrl}/functions/v1/resend-email`, {
         method: 'POST',
         headers: {
@@ -80,17 +43,14 @@ export function ForgotPasswordPage() {
         },
         body: JSON.stringify({
           to: email,
-          subject: '密码重置 - 认知界',
           type: 'password-reset',
-          resetUrl: resetUrl,
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        console.error('Send email error:', result);
-        setError(result.error || '发送邮件失败，请重试');
+        setError(result.error || '发送失败，请重试');
       } else {
         setSuccess(true);
       }
