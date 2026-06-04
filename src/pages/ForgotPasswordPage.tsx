@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, ArrowLeft, CheckCircle, Mail } from 'lucide-react';
+import { ChevronRight, ArrowLeft, CheckCircle } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
@@ -177,14 +177,13 @@ export function ForgotPasswordPage() {
                     <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                       注册邮箱
                     </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-tertiary)]" />
+                    <div>
                       <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="请输入注册时使用的邮箱"
-                        className="input-field pl-10"
+                        className="input-field"
                         required
                       />
                     </div>
