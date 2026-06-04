@@ -57,16 +57,34 @@ Deno.serve(async (req) => {
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
       );
 
-      // 1. 检查邮箱是否存在
+      // 1. 检查邮箱是否存在（查 auth.users，不是 profiles —— profiles.email 可能为空）
+      const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+      if (listError) {
+        console.error('List users error:', listError);
+        return new Response(
+          JSON.stringify({ error: '服务器错误' }),
+          { status: 500, headers: corsHeaders }
+        );
+      }
+
+      const authUser = users?.find(u => u.email === to);
+      if (!authUser) {
+        return new Response(
+          JSON.stringify({ error: '该邮箱未注册，请检查邮箱地址' }),
+          { status: 400, headers: corsHeaders }
+        );
+      }
+
+      // 获取对应的 profile（用 auth user id 查找）
       const { data: profile, error: profileError } = await supabaseAdmin
         .from('profiles')
-        .select('id, user_id, email')
-        .eq('email', to)
+        .select('id')
+        .eq('id', authUser.id)
         .maybeSingle();
 
       if (profileError || !profile) {
         return new Response(
-          JSON.stringify({ error: '该邮箱未注册，请检查邮箱地址' }),
+          JSON.stringify({ error: '用户不存在' }),
           { status: 400, headers: corsHeaders }
         );
       }
