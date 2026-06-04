@@ -91,7 +91,6 @@ Deno.serve(async (req) => {
     }
 
     // 调用 Resend API 发送邮件
-    // 注意：使用 Resend 提供的测试域名，如需使用自定义域名请在 resend.com 验证
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -99,7 +98,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'onboarding@resend.dev',
+        from: '认知界 <noreply@uptef.com>',
         to: [to],
         subject: emailSubject,
         html: emailContent,

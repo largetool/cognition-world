@@ -7,7 +7,7 @@ import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { GlassCard } from '../components/GlassCard';
 import { getDefaultSEO } from '../types';
-import { supabase } from '../supabase/client';
+import { supabase, supabaseUrl } from '../supabase/client';
 import { generateBreadcrumbList, breadcrumbs } from '../utils/seo';
 
 export default function ResetPasswordPage() {
@@ -108,7 +108,7 @@ export default function ResetPasswordPage() {
 
       // 2. 使用 Supabase Admin API 更新密码（需要 Service Role Key）
       // 这里我们调用 Edge Function 来执行密码重置
-      const response = await fetch(`${window.location.origin}/functions/v1/reset-password`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

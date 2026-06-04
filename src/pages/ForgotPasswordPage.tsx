@@ -73,7 +73,7 @@ export function ForgotPasswordPage() {
       const resetUrl = `${window.location.origin}/reset-password?token=${resetToken}`;
 
       // 5. 调用 Edge Function 发送邮件
-      const response = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/resend-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
