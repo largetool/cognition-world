@@ -1,5 +1,6 @@
 // 邮件发送 Edge Function
 // 使用 Resend API 发送邮件 + 密码重置令牌管理
+// 重写版：直接通过 GoTrue Admin API 操作，不依赖 profiles 表
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -9,11 +10,9 @@ interface EmailRequest {
   html?: string;
   text?: string;
   type?: 'password-reset' | 'welcome' | 'notification';
-  resetUrl?: string;
 }
 
 Deno.serve(async (req) => {
-  // CORS 预检
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
       headers: {
@@ -31,7 +30,7 @@ Deno.serve(async (req) => {
 
   try {
     const body: EmailRequest = await req.json();
-    const { to, subject, html, text, type, resetUrl } = body;
+    const { to, subject, html, text, type } = body;
 
     if (!to) {
       return new Response(
@@ -40,7 +39,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 获取 Resend API Key
     const resendApiKey = Deno.env.get('RESEND_API_KEY') || 're_AGKs7EGY_G5tHQATbwTEwc4fgQpt61hzj';
     if (!resendApiKey) {
       return new Response(
@@ -49,72 +47,80 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 密码重置流程：验证邮箱 → 生成令牌 → 保存到DB → 发邮件
+    // ========== 密码重置流程 ==========
     if (type === 'password-reset') {
-      // 创建 Supabase Admin 客户端（绕过 RLS）
-      const supabaseAdmin = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-      );
+      const sbUrl = Deno.env.get('SUPABASE_URL')!;
+      const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabaseAdmin = createClient(sbUrl, serviceKey);
 
-      // 1. 检查邮箱是否存在（查 auth.users，不是 profiles —— profiles.email 可能为空）
-      const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-      if (listError) {
-        console.error('List users error:', listError);
+      // 通过 GoTrue Admin API 直接查 auth.users，不再依赖 profiles 表
+      const resp = await fetch(`${sbUrl}/auth/v1/admin/users`, {
+        headers: {
+          'apikey': serviceKey,
+          'Authorization': `Bearer ${serviceKey}`,
+        },
+      });
+
+      if (!resp.ok) {
+        console.error('[resend-email] GoTrue API 请求失败:', resp.status);
         return new Response(
-          JSON.stringify({ error: '服务器错误' }),
+          JSON.stringify({ error: '服务异常，请稍后重试' }),
           { status: 500, headers: corsHeaders }
         );
       }
 
-      const authUser = users?.find(u => u.email === to);
+      const adminData: any = await resp.json();
+      const users: any[] = adminData?.users || [];
+
+      // 大小写不敏感匹配
+      const authUser = users.find(
+        (u: any) => u.email?.toLowerCase() === to.toLowerCase()
+      );
+
       if (!authUser) {
+        // 打印日志方便排查
+        const emails = users.map((u: any) => u.email);
+        console.log(`[resend-email] 未找到用户 ${to}。auth.users 共 ${users.length} 人: ${JSON.stringify(emails)}`);
         return new Response(
           JSON.stringify({ error: '该邮箱未注册，请检查邮箱地址' }),
           { status: 400, headers: corsHeaders }
         );
       }
 
-      // 获取对应的 profile（用 auth user id 查找）
-      const { data: profile, error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .select('id')
-        .eq('id', authUser.id)
-        .maybeSingle();
+      console.log(`[resend-email] 找到用户: ${authUser.email}, id: ${authUser.id}`);
 
-      if (profileError || !profile) {
-        return new Response(
-          JSON.stringify({ error: '用户不存在' }),
-          { status: 400, headers: corsHeaders }
-        );
-      }
-
-      // 2. 生成重置令牌
+      // 生成重置令牌
       const resetToken = crypto.randomUUID();
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
-      // 3. 保存到 password_resets 表
-      const { error: tokenError } = await supabaseAdmin
+      // 保存到 password_resets 表（user_id 存的是 auth.users.id）
+      const { data: insertData, error: tokenError } = await supabaseAdmin
         .from('password_resets')
         .insert({
-          user_id: profile.id,
+          user_id: authUser.id,
           email: to,
           token: resetToken,
           expires_at: expiresAt,
-        });
+        })
+        .select();
 
       if (tokenError) {
-        console.error('Save token error:', tokenError);
+        console.error('[resend-email] 保存 token 失败:', JSON.stringify(tokenError, null, 2));
+        console.error('[resend-email] 尝试插入的数据:', JSON.stringify({ user_id: authUser.id, email: to, token: resetToken, expires_at: expiresAt }));
         return new Response(
-          JSON.stringify({ error: '生成重置链接失败' }),
+          JSON.stringify({ error: '生成重置链接失败，请重试' }),
           { status: 500, headers: corsHeaders }
         );
       }
 
-      // 4. 构建重置链接
+      console.log(`[resend-email] token 保存成功: ${JSON.stringify(insertData)}`);
+
+      console.log(`[resend-email] token 已保存: ${resetToken.substring(0, 8)}...`);
+
+      // 构建重置链接
       const resetUrl = `https://uptef.com/reset-password?token=${resetToken}`;
 
-      // 5. 发送邮件
+      // 发送邮件
       const emailSubject = '密码重置 - 认知界';
       const emailHtml = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
@@ -169,13 +175,14 @@ Deno.serve(async (req) => {
       const emailResult = await emailResponse.json();
 
       if (!emailResponse.ok) {
-        console.error('Resend API error:', emailResult);
+        console.error('[resend-email] Resend API 错误:', emailResult);
         return new Response(
           JSON.stringify({ error: emailResult.message || '发送邮件失败' }),
           { status: 500, headers: corsHeaders }
         );
       }
 
+      console.log(`[resend-email] 邮件已发送: ${emailResult.id}`);
       return new Response(
         JSON.stringify({
           success: true,
@@ -186,7 +193,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 普通邮件发送（非密码重置）
+    // ========== 普通邮件发送 ==========
     if (!subject) {
       return new Response(
         JSON.stringify({ error: 'Missing required field: subject' }),
@@ -194,7 +201,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    let emailContent = html || text || '';
+    const emailContent = html || text || '';
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -212,7 +219,7 @@ Deno.serve(async (req) => {
     const result = await response.json();
 
     if (!response.ok) {
-      console.error('Resend API error:', result);
+      console.error('[resend-email] Resend API 错误:', result);
       return new Response(
         JSON.stringify({ error: result.message || 'Failed to send email' }),
         { status: 500, headers: corsHeaders }
@@ -230,7 +237,7 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Send email error:', message);
+    console.error('[resend-email] 异常:', message);
     return new Response(
       JSON.stringify({ error: message }),
       { status: 500, headers: corsHeaders }

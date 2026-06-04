@@ -1,5 +1,6 @@
 // 密码重置 Edge Function
 // 验证令牌并更新用户密码
+// 重写版：直接使用 auth.users.id，不依赖 profiles 表
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -27,6 +28,7 @@ function handleOptions() {
 }
 
 // 验证令牌，返回 { valid, userId, error? }
+// userId 就是 auth.users.id，可直接用于 updateUserById
 async function validateToken(supabaseAdmin: any, token: string) {
   const { data: resetRecord, error: resetError } = await supabaseAdmin
     .from('password_resets')
@@ -50,7 +52,6 @@ async function validateToken(supabaseAdmin: any, token: string) {
 }
 
 Deno.serve(async (req) => {
-  // CORS 预检
   if (req.method === 'OPTIONS') {
     return handleOptions();
   }
@@ -68,13 +69,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 创建 Supabase Admin 客户端
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    // 仅验证模式
+    // 仅验证令牌
     if (action === 'validate') {
       const result = await validateToken(supabaseAdmin, token);
       if (!result.valid) {
@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 重置密码模式
+    // 重置密码
     if (!newPassword) {
       return new Response(
         JSON.stringify({ error: 'Missing required field: newPassword' }),
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 先验证令牌
+    // 验证令牌
     const validation = await validateToken(supabaseAdmin, token);
     if (!validation.valid) {
       return new Response(
@@ -113,30 +113,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 获取用户的 auth id
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .select('id')
-      .eq('user_id', validation.userId)
-      .maybeSingle();
+    // user_id 就是 auth.users.id，直接用
+    console.log(`[reset-password] 更新密码，auth user id: ${validation.userId}`);
 
-    if (profileError || !profile) {
-      return new Response(
-        JSON.stringify({ error: '用户不存在' }),
-        { status: 404, headers: corsHeaders }
-      );
-    }
-
-    // 更新用户密码
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-      profile.id,
+      validation.userId,
       { password: newPassword }
     );
 
     if (updateError) {
-      console.error('Update password error:', updateError);
+      console.error('[reset-password] 密码更新失败:', updateError);
       return new Response(
-        JSON.stringify({ error: '密码更新失败' }),
+        JSON.stringify({ error: '密码更新失败，请重试' }),
         { status: 500, headers: corsHeaders }
       );
     }
@@ -147,6 +135,8 @@ Deno.serve(async (req) => {
       .update({ used: true, used_at: new Date().toISOString() })
       .eq('token', token);
 
+    console.log(`[reset-password] 密码重置成功`);
+
     return new Response(
       JSON.stringify({ success: true, message: '密码重置成功' }),
       { headers: corsHeaders }
@@ -154,7 +144,7 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Reset password error:', message);
+    console.error('[reset-password] 异常:', message);
     return new Response(
       JSON.stringify({ error: '服务器错误，请重试' }),
       { status: 500, headers: corsHeaders }

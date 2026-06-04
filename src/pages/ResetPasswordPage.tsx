@@ -19,6 +19,7 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isValidLink, setIsValidLink] = useState(false);
+  const [isValidating, setIsValidating] = useState(true);
 
   // 通过 Edge Function 检查重置令牌是否有效
   useEffect(() => {
@@ -26,6 +27,7 @@ export default function ResetPasswordPage() {
       const token = searchParams.get('token');
       if (!token) {
         setIsValidLink(false);
+        setIsValidating(false);
         setError('重置链接无效，请重新申请');
         return;
       }
@@ -49,6 +51,8 @@ export default function ResetPasswordPage() {
         console.error('Token validation error:', err);
         setIsValidLink(false);
         setError('网络错误，请重试');
+      } finally {
+        setIsValidating(false);
       }
     };
     checkToken();
@@ -136,7 +140,12 @@ export default function ResetPasswordPage() {
                 </div>
               )}
 
-              {success ? (
+              {isValidating ? (
+                <div className="text-center py-8">
+                  <div className="w-10 h-10 mx-auto mb-4 rounded-full animate-spin" style={{ border: '3px solid var(--accent)', borderTopColor: 'transparent' }} />
+                  <p className="text-[var(--text-secondary)]">正在验证重置链接...</p>
+                </div>
+              ) : success ? (
                 <div className="text-center py-8">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
                     <CheckCircle className="w-8 h-8 text-green-500" />
