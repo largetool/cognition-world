@@ -17,9 +17,6 @@ export function LogItem({ log, index = 0, userId }: LogItemProps) {
   const needsCollapse = log.content.length > MAX_PREVIEW_LENGTH;
   const previewText = needsCollapse ? log.content.slice(0, MAX_PREVIEW_LENGTH) + '...' : log.content;
 
-  // 生成用于链接的文本（前20个字符）
-  const linkText = log.content.slice(0, 20) + (log.content.length > 20 ? '...' : '');
-
   return (
     <motion.article
       initial={{ opacity: 0, y: 10 }}
@@ -74,11 +71,11 @@ export function LogItem({ log, index = 0, userId }: LogItemProps) {
         {userId && (
           <Link
             to={`/${userId}/thought/${log.id}`}
-            className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors"
+            className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors flex items-center gap-1"
             itemProp="url"
             title={log.content.slice(0, 100)}
           >
-            {linkText}
+            查看详情
           </Link>
         )}
       </footer>
