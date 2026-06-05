@@ -32,7 +32,7 @@ export async function uploadBackgroundImage(
 }
 
 export async function saveBackgroundImage(userId: string, url: string, fileName: string): Promise<{ success: boolean; error?: string }> {
- const { error } = await supabase.from('background_images').insert({ user_id: userId, url, file_name: fileName, status: 'pending' });
+ const { error } = await supabase.from('background_images').insert({ user_id: userId, url, file_name: fileName, status: 'pending' } as any);
  if (error) return { success: false, error: error.message };
  return { success: true };
 }
