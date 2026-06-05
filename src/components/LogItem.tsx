@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { formatDateTime } from '../types';
+import { formatDateTime, fmtDisplayId } from '../types';
 import type { Log } from '../types';
 
 interface LogItemProps {
   log: Log | { id: string; content: string; created_at: string | null; user_id: string; is_public?: boolean | null; published_at?: string | null };
   index?: number;
-  userId?: string;
+  displayId?: number | null;
 }
 
 const MAX_PREVIEW_LENGTH = 50;
 
-export function LogItem({ log, index = 0, userId }: LogItemProps) {
+export function LogItem({ log, index = 0, displayId }: LogItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const needsCollapse = log.content.length > MAX_PREVIEW_LENGTH;
 
@@ -57,9 +57,9 @@ export function LogItem({ log, index = 0, userId }: LogItemProps) {
         >
           {formatDateTime(log.published_at || log.created_at || '')}
         </time>
-        {userId && (
+        {displayId != null && (
           <Link
-            to={`/${userId}/thought/${log.id}`}
+            to={`/${fmtDisplayId(displayId)}/thought/${log.id}`}
             className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors flex items-center gap-1"
             itemProp="url"
             title={log.content.slice(0, 100)}

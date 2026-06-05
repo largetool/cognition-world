@@ -648,7 +648,7 @@ export default function UserPage() {
                 {paginatedLogs.map((log, index) => (
                   <div key={log.id} className="relative group" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
                     <meta itemProp="position" content={String((currentPage - 1) * LOGS_PER_PAGE + index + 1)} />
-                    <LogItem log={log} index={index} userId={profile?.user_id} />
+                    <LogItem log={log} index={index} displayId={profile?.display_id} />
                     {/* 举报按钮 - 仅对非自己的日志显示 */}
                     {currentUser && log.user_id !== currentUser.user_id && (
                       <button
