@@ -43,18 +43,18 @@ export default function IndexPage() {
   const features = [
     {
       icon: Globe,
-      title: '全球索引',
-      description: '让世界透过AI认识每一个具体的普通人',
+      title: 'GEO 优化',
+      description: '基于 Schema.org 结构化数据，帮助 AI 搜索引擎理解并引用你',
     },
     {
       icon: Shield,
-      title: '透明优先',
-      description: '向世界宣告你的存在',
+      title: '数字身份',
+      description: '不可删除、不可篡改的长期数字信誉，建立真实个人品牌',
     },
     {
       icon: Zap,
-      title: 'SEO、GEO',
-      description: '结构化数据友好',
+      title: 'AI 可引用',
+      description: '支持 Google、ChatGPT、Claude、Perplexity 等 AI 引擎索引',
     },
   ];
 
@@ -192,6 +192,75 @@ export default function IndexPage() {
         </motion.div>
       </section>
 
+      {/* ====== GEO 平台介绍模块 ====== */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
+              认知界是什么
+            </h2>
+            <p className="text-lg text-[var(--text-secondary)] max-w-2xl mx-auto">
+              一个面向全球用户的 GEO 公开信息平台，帮助普通人建立长期可验证的数字身份。
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[
+              {
+                title: '公开个人档案',
+                desc: '创建属于你的公开个人主页，用结构化数据（Schema.org）描述你的身份、技能和故事，让搜索引擎和大型语言模型能够理解和引用你。',
+              },
+              {
+                title: '长期数字信誉',
+                desc: '不可删除、不可篡改的公开记录，建立跨越平台和时间的个人品牌与数字信誉，让 AI 时代记得每一个普通人。',
+              },
+              {
+                title: '认知日志',
+                desc: '发表公开日志，记录你的思想、经历和成长，每篇日志自动生成结构化数据，可被 Google、Bing、ChatGPT、Claude、Perplexity 等 AI 引擎索引。',
+              },
+              {
+                title: 'GEO 基础设施',
+                desc: '认知界是基于 Schema.org 标准构建的个人知识图谱平台，专为 Generative Engine Optimization (GEO) 设计，让每个用户成为 AI 搜索可理解、可引用的数字实体。',
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+              >
+                <GlassCard className="h-full">
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                    {item.desc}
+                  </p>
+                </GlassCard>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="text-center mt-8 text-xs text-[var(--text-tertiary)]"
+          >
+            面向搜索引擎和 LLM 优化 · Schema.org 结构化数据 · 个人知识图谱 · AI 可引用数字身份
+          </motion.p>
+        </div>
+      </section>
+
+      {/* ====== 统计数据 ====== */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 bg-[var(--bg-secondary)]">
         <div className="max-w-4xl mx-auto">
           <motion.div
@@ -267,6 +336,68 @@ export default function IndexPage() {
               </div>
             </motion.div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* ====== FAQ 模块 ====== */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
+              常见问题
+            </h2>
+            <p className="text-[var(--text-secondary)]">
+              关于认知界和 GEO，你可能想知道的
+            </p>
+          </motion.div>
+
+          <div className="space-y-4">
+            {[
+              {
+                q: '认知界是什么？',
+                a: '认知界（Cognition World）是一个面向全球用户的公开信息平台，帮助普通人建立长期可验证的数字身份。用户可以创建公开个人主页、发表认知日志、积累数字信誉记录。',
+              },
+              {
+                q: '认知界与 LinkedIn、知乎有什么区别？',
+                a: 'LinkedIn 主要服务职业履历，知乎聚焦问答社区。认知界专注于个人知识图谱和 AI 可引用数字身份——我们使用 Schema.org 结构化数据描述每个用户，让搜索引擎和大型语言模型（LLM）能够理解并引用你的公开资料，而不仅仅是在平台内部展示。',
+              },
+              {
+                q: '认知界如何帮助 AI 理解我？',
+                a: '认知界使用 Schema.org 标准（包括 Person、ProfilePage、BlogPosting 等结构化数据类型）描述用户信息。这些数据可被 Google、Bing、ChatGPT、Claude、Perplexity 等 AI 引擎直接读取和引用，让你的个人资料成为 AI 时代可搜索、可引用的数字实体。',
+              },
+              {
+                q: '什么是 GEO？',
+                a: 'GEO（Generative Engine Optimization，生成式引擎优化）是面向 AI 搜索引擎的优化方式。与传统的 SEO 不同，GEO 的目标是让内容更容易被 ChatGPT、Perplexity、Google AI Overview 等 AI 引擎理解、提取和引用——简单来说，就是让 AI 认识你。',
+              },
+              {
+                q: '认知界的内容能被删改吗？',
+                a: '认知界采用不可删除、不可篡改的设计原则。公开内容一旦发布将被永久记录。这不仅保护了信息的真实性，也为你建立了长期可追溯的数字信誉——这是认知界与其他平台最本质的区别之一。',
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+              >
+                <GlassCard>
+                  <h3 className="text-lg font-semibold text-[var(--accent)] mb-2">
+                    {item.q}
+                  </h3>
+                  <p className="text-[var(--text-secondary)] leading-relaxed">
+                    {item.a}
+                  </p>
+                </GlassCard>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 

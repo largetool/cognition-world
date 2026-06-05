@@ -1,0 +1,51 @@
+# 认知界 (Cognition World)
+> 面向全球用户的 GEO 公开信息平台，让 AI 认识每一个具体的普通人。
+
+## 平台简介
+认知界是一个面向全球化的个人黄页索引平台，属于全民 GEO 公开信息平台。
+平台特点：
+1. 内容不可删除、不可篡改、不可撤回
+2. 所有公开内容可被搜索引擎和 LLM 索引
+3. 基于 Schema.org 标准构建个人知识图谱
+4. 建立公开可信的用户数字信誉记录
+
+## 核心概念
+- 个人品牌：建立跨平台、长期的数字身份
+- GEO：Generative Engine Optimization，面向 AI 搜索引擎的优化
+- Schema.org：结构化数据标准，帮助 AI 理解用户信息
+- 数字信誉：不可篡改的公开记录，防止诈骗和虚假行为
+
+## 支持索引的 AI 引擎
+- Google / Google AI Overview
+- Bing / Microsoft Copilot
+- ChatGPT (Search)
+- Claude (Search)
+- Perplexity
+- 通义千问
+- Kimi
+
+## 主要页面
+- 首页：https://uptef.com/
+- 白皮书：https://uptef.com/#/whitepaper
+- 示例用户页：https://uptef.com/#/example/000000001
+- 留言板：https://uptef.com/#/guestbook
+- 关于我们：https://uptef.com/#/about
+
+## 结构化数据
+首页使用以下 Schema.org 类型：
+- WebSite
+- Organization
+- FAQPage
+
+用户页面使用：
+- ProfilePage
+- Person
+
+日志使用：
+- BlogPosting
+
+## 技术架构
+- 前端：React 18 + Webpack 5 + Tailwind CSS
+- 后端：Supabase (PostgreSQL + Auth + Storage + Edge Functions)
+- 部署：Vercel
+- 域名：uptef.com
