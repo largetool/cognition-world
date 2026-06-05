@@ -16,7 +16,7 @@ export default function Document() {
         <meta property="og:description" content="一个面向全球用户的公开信息平台，提供不可删除、不可篡改、可索引的个人 GEO 信誉记录。" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://uptef.com/" />
-        <meta property="og:image" content="https://placehold.co/1200x630/1a1a2e/e6e6e6?text=认知界&font=raleway" />
+        <meta property="og:image" content="https://uptef.com/assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />

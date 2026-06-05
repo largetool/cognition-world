@@ -15,7 +15,6 @@ const MAX_PREVIEW_LENGTH = 50;
 export function LogItem({ log, index = 0, userId }: LogItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const needsCollapse = log.content.length > MAX_PREVIEW_LENGTH;
-  const previewText = needsCollapse ? log.content.slice(0, MAX_PREVIEW_LENGTH) + '...' : log.content;
 
   return (
     <motion.article
@@ -30,20 +29,10 @@ export function LogItem({ log, index = 0, userId }: LogItemProps) {
       <meta itemProp="headline" content={log.content.slice(0, 100)} />
       <meta itemProp="articleBody" content={log.content} />
 
-      {/* SEO友好：HTML包含完整内容，CSS控制显示 */}
+      {/* 只渲染一份内容：SSR 时输出完整文本供爬虫读取，客户端用 line-clamp 控制视觉截断 */}
       <div className="log-content-wrapper" itemProp="text">
-        {/* 预览文本（短内容或折叠时显示） */}
         <p
-          className={`text-[var(--text-primary)] whitespace-pre-wrap log-preview ${isExpanded ? 'hidden' : 'block'}`}
-          aria-hidden={isExpanded}
-        >
-          {previewText}
-        </p>
-
-        {/* 完整内容（SEO可见，展开时显示） */}
-        <p
-          className={`text-[var(--text-primary)] whitespace-pre-wrap log-full ${isExpanded ? 'block' : 'hidden'}`}
-          aria-hidden={!isExpanded}
+          className={`text-[var(--text-primary)] whitespace-pre-wrap ${needsCollapse && !isExpanded ? 'line-clamp-2' : ''}`}
         >
           {log.content}
         </p>
@@ -59,14 +48,14 @@ export function LogItem({ log, index = 0, userId }: LogItemProps) {
         </button>
       )}
 
-      {/* 时间和链接 - 使用语义化标签 */}
+      {/* 时间和链接 - 使用语义化 time 标签 */}
       <footer className="mt-2 flex items-center justify-between">
         <time
           itemProp="datePublished"
-          dateTime={log.created_at || new Date().toISOString()}
+          dateTime={log.published_at || log.created_at || new Date().toISOString()}
           className="text-xs text-[var(--text-tertiary)]"
         >
-          {formatDateTime(log.created_at || '')}
+          {formatDateTime(log.published_at || log.created_at || '')}
         </time>
         {userId && (
           <Link

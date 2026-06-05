@@ -10,7 +10,7 @@ interface SEOHeadProps {
 
 const DEFAULT_TITLE = '认知界 - 让AI认识每一个具体的普通人';
 const DEFAULT_DESCRIPTION = '面向全球化的个人黄页索引，让 AI 认识每一个具体的普通人';
-const DEFAULT_OG_IMAGE = 'https://placehold.co/1200x630/1a1a2e/e6e6e6?text=%E8%AE%A4%E7%9F%A5%E7%95%8C+Cognition+World&font=raleway';
+const DEFAULT_OG_IMAGE = 'https://uptef.com/assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg';
 
 /**
  * SEOHead 组件 - 安全降级版本
@@ -123,16 +123,16 @@ export function SEOHead({ data, jsonLd }: SEOHeadProps) {
       // 更新 html lang 属性
       document.documentElement.setAttribute('lang', currentLang === 'en' ? 'en' : 'zh-CN');
 
-      // 更新 JSON-LD 结构化数据
+      // 更新 JSON-LD 结构化数据（不删除 SSR 注入的全局 schema）
       if (jsonLd) {
-        const existingScript = document.querySelector('script[type="application/ld+json"]');
-        if (existingScript) {
-          existingScript.remove();
+        let script = document.getElementById('seo-client-jsonld') as HTMLScriptElement | null;
+        if (!script) {
+          script = document.createElement('script');
+          script.setAttribute('type', 'application/ld+json');
+          script.id = 'seo-client-jsonld';
+          document.head.appendChild(script);
         }
-        const script = document.createElement('script');
-        script.setAttribute('type', 'application/ld+json');
         script.textContent = JSON.stringify(jsonLd);
-        document.head.appendChild(script);
       }
     } catch (error) {
       // 捕获异常，避免页面崩溃

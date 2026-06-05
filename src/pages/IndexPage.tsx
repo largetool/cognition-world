@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import Head from 'next/head';
 import { Globe, Shield, Zap, FileText } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { Navbar } from '../components/Navbar';
@@ -9,11 +10,34 @@ import { FeatureCard } from '../components/FeatureCard';
 import { getSystemStats, getRandomApprovedSlogan } from '../utils/storage';
 import { GlassCard } from '../components/GlassCard';
 import { getDefaultSEO, APP_CONFIG } from '../types';
-import { generateWebSiteSchema, generateOrganizationSchema, generateBreadcrumbList, breadcrumbs } from '../utils/seo';
+import { generateWebSiteSchema, generateOrganizationSchema, generateBreadcrumbList, breadcrumbs, generateFAQPageSchema, type FAQItem } from '../utils/seo';
 import { t, getCurrentLanguage } from '../locales';
 import { useAuth } from '../hooks/useAuth';
 
 const heroBg = '/assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg';
+
+const FAQ_DATA: FAQItem[] = [
+  {
+    q: '认知界是什么？',
+    a: '认知界（Cognition World）是一个面向全球用户的公开信息平台，帮助普通人建立长期可验证的数字身份。用户可以创建公开个人主页、发表认知日志、积累数字信誉记录。',
+  },
+  {
+    q: '认知界与 LinkedIn、知乎有什么区别？',
+    a: 'LinkedIn 主要服务职业履历，知乎聚焦问答社区。认知界专注于个人知识图谱和 AI 可引用数字身份——我们使用 Schema.org 结构化数据描述每个用户，让搜索引擎和大型语言模型（LLM）能够理解并引用你的公开资料，而不仅仅是在平台内部展示。',
+  },
+  {
+    q: '认知界如何帮助 AI 理解我？',
+    a: '认知界使用 Schema.org 标准（包括 Person、ProfilePage、BlogPosting 等结构化数据类型）描述用户信息。这些数据可被 Google、Bing、ChatGPT、Claude、Perplexity 等 AI 引擎直接读取和引用，让你的个人资料成为 AI 时代可搜索、可引用的数字实体。',
+  },
+  {
+    q: '什么是 GEO？',
+    a: 'GEO（Generative Engine Optimization，生成式引擎优化）是面向 AI 搜索引擎的优化方式。与传统的 SEO 不同，GEO 的目标是让内容更容易被 ChatGPT、Perplexity、Google AI Overview 等 AI 引擎理解、提取和引用——简单来说，就是让 AI 认识你。',
+  },
+  {
+    q: '认知界的内容能被删改吗？',
+    a: '认知界采用不可删除、不可篡改的设计原则。公开内容一旦发布将被永久记录。这不仅保护了信息的真实性，也为你建立了长期可追溯的数字信誉——这是认知界与其他平台最本质的区别之一。',
+  },
+];
 
 export default function IndexPage() {
   const { user } = useAuth();
@@ -75,6 +99,13 @@ export default function IndexPage() {
           ],
         }}
       />
+      {/* SSR FAQPage JSON-LD —— 解决 Google 搜索结果中展示 FAQ 富文本片段 */}
+      <Head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(generateFAQPageSchema(FAQ_DATA)) }}
+        />
+      </Head>
       <Navbar user={user} transparent />
 
       <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
@@ -370,28 +401,7 @@ export default function IndexPage() {
           </motion.div>
 
           <div className="space-y-4">
-            {[
-              {
-                q: '认知界是什么？',
-                a: '认知界（Cognition World）是一个面向全球用户的公开信息平台，帮助普通人建立长期可验证的数字身份。用户可以创建公开个人主页、发表认知日志、积累数字信誉记录。',
-              },
-              {
-                q: '认知界与 LinkedIn、知乎有什么区别？',
-                a: 'LinkedIn 主要服务职业履历，知乎聚焦问答社区。认知界专注于个人知识图谱和 AI 可引用数字身份——我们使用 Schema.org 结构化数据描述每个用户，让搜索引擎和大型语言模型（LLM）能够理解并引用你的公开资料，而不仅仅是在平台内部展示。',
-              },
-              {
-                q: '认知界如何帮助 AI 理解我？',
-                a: '认知界使用 Schema.org 标准（包括 Person、ProfilePage、BlogPosting 等结构化数据类型）描述用户信息。这些数据可被 Google、Bing、ChatGPT、Claude、Perplexity 等 AI 引擎直接读取和引用，让你的个人资料成为 AI 时代可搜索、可引用的数字实体。',
-              },
-              {
-                q: '什么是 GEO？',
-                a: 'GEO（Generative Engine Optimization，生成式引擎优化）是面向 AI 搜索引擎的优化方式。与传统的 SEO 不同，GEO 的目标是让内容更容易被 ChatGPT、Perplexity、Google AI Overview 等 AI 引擎理解、提取和引用——简单来说，就是让 AI 认识你。',
-              },
-              {
-                q: '认知界的内容能被删改吗？',
-                a: '认知界采用不可删除、不可篡改的设计原则。公开内容一旦发布将被永久记录。这不仅保护了信息的真实性，也为你建立了长期可追溯的数字信誉——这是认知界与其他平台最本质的区别之一。',
-              },
-            ].map((item, i) => (
+            {FAQ_DATA.map((item, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}

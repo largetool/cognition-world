@@ -144,6 +144,27 @@ export function generateBreadcrumbList(items: BreadcrumbItem[]) {
   };
 }
 
+// FAQPage 结构化数据
+export interface FAQItem {
+  q: string;
+  a: string;
+}
+
+export function generateFAQPageSchema(faqs: FAQItem[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(faq => ({
+      '@type': 'Question',
+      name: faq.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.a,
+      },
+    })),
+  };
+}
+
 // 预定义的面包屑路径
 export const breadcrumbs = {
   home: { name: '认知界', url: APP_CONFIG.url },
