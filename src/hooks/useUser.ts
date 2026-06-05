@@ -10,7 +10,7 @@ interface LogWithPublicStatus {
   published_at?: string | null;
   canDelete?: boolean;
 }
-import { getUserById } from '../utils/auth';
+import { getUserById, getUserByDisplayId, isNumericDisplayId } from '../utils/auth';
 import { getUserLogs, getUserBackgroundImages, getActiveBackgroundImage } from '../utils/storage';
 
 interface UserData {
@@ -48,7 +48,10 @@ export function useUser(userId: string | undefined) {
     setData(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const profile = await getUserById(userId);
+      // 支持 display_id（纯数字）和 user_id（拼音+数字）两种查询
+      const profile = isNumericDisplayId(userId)
+        ? await getUserByDisplayId(parseInt(userId, 10))
+        : await getUserById(userId);
 
       if (!profile) {
         setData({

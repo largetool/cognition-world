@@ -48,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
       const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/profiles?select=user_id&is_public=eq.true&is_hidden=eq.false&order=created_at.desc&limit=500`,
+        `${SUPABASE_URL}/rest/v1/profiles?select=display_id&is_public=eq.true&is_hidden=eq.false&order=created_at.desc&limit=500`,
         {
           headers: {
             'apikey': SUPABASE_ANON_KEY,
@@ -60,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (response.ok) {
         const profiles = await response.json();
         userUrls = (Array.isArray(profiles) ? profiles : []).map(
-          (p: any) => `https://uptef.com/${p.user_id}`
+          (p: any) => `https://uptef.com/${String(p.display_id ?? 0).padStart(9, '0')}`
         );
       }
     } catch {

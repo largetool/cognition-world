@@ -172,4 +172,19 @@ export const APP_CONFIG = {
   url: 'https://UPTEF.com',
 };
 
+/** 将 display_id 格式化为 9 位定长显示 ID */
+export function fmtDisplayId(id: number | null): string {
+  return String(id ?? 0).padStart(9, '0');
+}
+
+/** 生成用户公开主页路径（e.g. /000000000） */
+export function userPath(id: number | null): string {
+  return `/${fmtDisplayId(id)}`;
+}
+
+/** 生成用户公开主页完整 URL（e.g. https://uptef.com/000000000） */
+export function userProfileWebUrl(id: number | null): string {
+  return `${APP_CONFIG.url}/${fmtDisplayId(id)}`;
+}
+
 export const DEFAULT_BLACKLIST: string[] = [];

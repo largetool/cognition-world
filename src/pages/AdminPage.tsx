@@ -37,6 +37,7 @@ export function AdminPage() {
 
  const [users, setUsers] = useState<Array<{
  user_id: string;
+ display_id: number | null;
  username: string;
  role: string;
  is_admin: boolean;
@@ -617,7 +618,7 @@ export function AdminPage() {
  <td className="py-3 px-4">{u.is_admin ? <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">管理员</span> : <span className="text-[var(--text-tertiary)] text-sm">-</span>}</td>
  <td className="py-3 px-4">
  <div className="flex items-center gap-2">
- <Link to={`/${u.user_id}`} className="text-sm text-[var(--accent)] hover:underline">查看</Link>
+ <Link to={`/${String(u.display_id ?? 0).padStart(9, '0')}`} className="text-sm text-[var(--accent)] hover:underline">查看</Link>
  {!u.is_admin && (
  u.is_frozen ? (
  <button

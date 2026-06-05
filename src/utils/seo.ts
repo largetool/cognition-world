@@ -1,5 +1,5 @@
 import type { SEOData, Profile } from '../types';
-import { APP_CONFIG } from '../types';
+import { APP_CONFIG, userProfileWebUrl, fmtDisplayId } from '../types';
 
 export function generateWebSiteSchema() {
   return {
@@ -37,13 +37,13 @@ export function generatePersonSchema(profile: Profile) {
     identifier: {
       '@type': 'PropertyValue',
       name: 'display_id',
-      value: String(profile.display_id).padStart(9, '0'),
+      value: fmtDisplayId(profile.display_id),
     },
     address: {
       '@type': 'PostalAddress',
       addressLocality: profile.location,
     },
-    url: `${APP_CONFIG.url}/${profile.user_id}`,
+    url: userProfileWebUrl(profile.display_id),
     sameAs: [],
   };
 }
@@ -67,7 +67,7 @@ export function generateProfilePageSchema(profile: Profile) {
     '@type': 'ProfilePage',
     name: `${profile.username} - ${APP_CONFIG.name}`,
     description: profile.slogan || `${profile.tag} | ${APP_CONFIG.name}`,
-    url: `${APP_CONFIG.url}/${profile.user_id}`,
+    url: userProfileWebUrl(profile.display_id),
     inLanguage: 'zh-CN',
     dateModified: profile.updated_at,
     mainEntity: generatePersonSchema(profile),
@@ -105,12 +105,10 @@ export function getDefaultSEO(): SEOData {
  * 修复：当 profile 字段缺失时提供默认值
  */
 export function getUserSEO(profile: Profile | null | undefined): SEOData {
-  // 安全降级：如果 profile 不存在，返回默认 SEO
   if (!profile) {
     return getDefaultSEO();
   }
 
-  // 安全访问字段，提供默认值
   const username = profile.username || '用户';
   const userId = profile.user_id || '';
   const tag = profile.tag || '';
@@ -121,7 +119,7 @@ export function getUserSEO(profile: Profile | null | undefined): SEOData {
     description: slogan,
     keywords: [username, tag, userId, '个人主页'],
     ogType: 'profile',
-    canonicalUrl: userId ? `${APP_CONFIG.url}/${userId}` : APP_CONFIG.url,
+    canonicalUrl: userProfileWebUrl(profile.display_id),
   };
 }
 
@@ -182,12 +180,12 @@ export const breadcrumbs = {
   admin: { name: '管理后台', url: `${APP_CONFIG.url}/admin` },
   forgotPassword: { name: '忘记密码', url: `${APP_CONFIG.url}/forgot-password` },
   resetPassword: { name: '重置密码', url: `${APP_CONFIG.url}/reset-password` },
-  thought: (username: string, userId: string, thoughtId: string) => ({
+  thought: (username: string, displayId: number | null, thoughtId: string) => ({
     name: '动态',
-    url: `${APP_CONFIG.url}/${userId}/thought/${thoughtId}`,
+    url: `${APP_CONFIG.url}/${fmtDisplayId(displayId)}/thought/${thoughtId}`,
   }),
-  user: (username: string, userId: string) => ({
+  user: (username: string, displayId: number | null) => ({
     name: username,
-    url: `${APP_CONFIG.url}/${userId}`,
+    url: userProfileWebUrl(displayId),
   }),
 };

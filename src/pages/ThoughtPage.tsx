@@ -15,9 +15,13 @@ function generateUserAvatar(username: string): string {
   return `https://api.dicebear.com/7.x/initials/png?seed=${encodeURIComponent(username)}&backgroundColor=1a1a2e&textColor=e6e6e6&size=1200`;
 }
 
+function padId(id: number | null): string {
+  return String(id ?? 0).padStart(9, '0');
+}
+
 // 生成动态页面的 JSON-LD 结构化数据
-function generateThoughtSchema(log: Log, profile: Profile, currentUrl: string) {
-  const userProfileUrl = `${APP_CONFIG.url}/${profile.user_id}`;
+function generateThoughtSchema(log: Log, profile: Profile, displayId: number | null, currentUrl: string) {
+  const userProfileUrl = `${APP_CONFIG.url}/${padId(displayId)}`;
   const avatarUrl = generateUserAvatar(profile.username);
 
   return {
@@ -61,7 +65,7 @@ interface Log {
 }
 
 export default function ThoughtPage() {
-  const { userId, thoughtId } = useParams<{ userId: string; thoughtId: string }>();
+  const { displayId, thoughtId } = useParams<{ displayId: string; thoughtId: string }>();
   const [log, setLog] = useState<Log | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,18 +73,38 @@ export default function ThoughtPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      if (!userId || !thoughtId) {
+      if (!displayId || !thoughtId) {
         setError('参数错误');
         setIsLoading(false);
         return;
       }
 
-      // 获取动态
+      const displayIdNum = parseInt(displayId, 10);
+      if (isNaN(displayIdNum)) {
+        setError('参数错误');
+        setIsLoading(false);
+        return;
+      }
+
+      // 先通过 display_id 获取用户
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('display_id', displayIdNum)
+        .single();
+
+      if (!profileData) {
+        setError('用户不存在');
+        setIsLoading(false);
+        return;
+      }
+
+      // 再通过 user_id 获取动态
       const { data: logData, error: logError } = await supabase
         .from('logs')
         .select('*')
         .eq('id', thoughtId)
-        .eq('user_id', userId)
+        .eq('user_id', profileData.user_id)
         .single();
 
       if (logError || !logData) {
@@ -89,20 +113,13 @@ export default function ThoughtPage() {
         return;
       }
 
-      // 获取用户信息
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
       setLog(logData);
       setProfile(profileData);
       setIsLoading(false);
     };
 
     loadData();
-  }, [userId, thoughtId]);
+  }, [displayId, thoughtId]);
 
   if (isLoading) {
     return (
@@ -134,7 +151,8 @@ export default function ThoughtPage() {
     );
   }
 
-  const currentUrl = `${APP_CONFIG.url}/${userId}/thought/${thoughtId}`;
+  const displayIdPadded = padId(profile.display_id);
+  const currentUrl = `${APP_CONFIG.url}/${displayIdPadded}/thought/${thoughtId}`;
   const avatarUrl = generateUserAvatar(profile.username);
 
   const seoData = {
@@ -150,14 +168,14 @@ export default function ThoughtPage() {
     <div className="min-h-screen bg-[var(--bg-primary)]">
       <SEOHead
         data={seoData}
-        jsonLd={generateThoughtSchema(log, profile, currentUrl)}
+        jsonLd={generateThoughtSchema(log, profile, profile.display_id, currentUrl)}
       />
 
       <nav className="glass border-b border-white/20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link
-              to={`/${userId}`}
+              to={`/${padId(profile.display_id)}`}
               className="flex items-center space-x-2 text-[var(--text-primary)] hover:text-[var(--text-secondary)] transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -175,7 +193,7 @@ export default function ThoughtPage() {
         >
           {/* 作者信息 */}
           <div className="flex items-center gap-3 mb-6">
-            <Link to={`/${userId}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <Link to={`/${padId(profile.display_id)}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="w-12 h-12 rounded-full bg-[var(--accent)] flex items-center justify-center text-white text-xl font-bold">
                 {profile.username?.[0]?.toUpperCase() || 'U'}
               </div>
@@ -205,14 +223,14 @@ export default function ThoughtPage() {
             {/* 作者信息 - 微数据 */}
             <div itemProp="author" itemScope itemType="https://schema.org/Person" className="mt-6 pt-4 border-t border-[var(--border-light)]">
               <meta itemProp="name" content={profile.username} />
-              <meta itemProp="url" content={`${APP_CONFIG.url}/${profile.user_id}`} />
+              <meta itemProp="url" content={`${APP_CONFIG.url}/${padId(profile.display_id)}`} />
             </div>
           </article>
 
           {/* 相关链接 */}
           <div className="mt-8 flex items-center justify-center gap-4">
             <Link
-              to={`/${userId}`}
+              to={`/${padId(profile.display_id)}`}
               className="flex items-center gap-2 px-6 py-3 rounded-lg bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] transition-colors"
             >
               <User className="w-4 h-4" />

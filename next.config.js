@@ -29,12 +29,12 @@ const nextConfig = {
       { source: '/en/contact', destination: '/contact' },
       { source: '/en/accessibility', destination: '/accessibility' },
       { source: '/en/guestbook', destination: '/guestbook' },
-      { source: '/en/example/:userId', destination: '/example/:userId' },
+      { source: '/en/example/:displayId', destination: '/example/:displayId' },
       {
-        source: '/en/:userId/thought/:thoughtId',
-        destination: '/:userId/thought/:thoughtId',
+        source: '/en/:displayId/thought/:thoughtId',
+        destination: '/:displayId/thought/:thoughtId',
       },
-      { source: '/en/:userId', destination: '/:userId' },
+      { source: '/en/:displayId', destination: '/:displayId' },
     ];
   },
 };

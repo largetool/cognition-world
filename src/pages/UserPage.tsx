@@ -36,8 +36,12 @@ interface LogForSEO {
   updated_at?: string | null;
 }
 
+function padDisplayId(id: number | null): string {
+  return String(id ?? 0).padStart(9, '0');
+}
+
 function generateEnhancedProfileSchema(profile: Profile, recentLogs: LogForSEO[]) {
-  const profileUrl = `${APP_CONFIG.url}/${profile.user_id}`;
+  const profileUrl = `https://uptef.com/${padDisplayId(profile.display_id)}`;
   const avatarUrl = generateUserAvatar(profile.username);
 
   // 基础 ProfilePage 结构
@@ -117,7 +121,7 @@ export interface UserPageSSRProps {
 }
 
 export default function UserPage() {
-  const params = useParams<{ userId: string }>();
+  const params = useParams<{ displayId: string }>();
   // 尝试读取 SSR 预取数据（来自 getServerSideProps）
   const ssrData = useSSRData();
   const ssrUserId = ssrData.ssrUserId;
@@ -126,7 +130,9 @@ export default function UserPage() {
   const ssrActiveBg = ssrData.ssrActiveBg as { url: string } | null | undefined;
   const ssrNotFound = ssrData.ssrNotFound;
 
-  const userId = ssrUserId || params.userId;
+  // displayId 来自 URL（纯数字），user_id 来自 SSR 数据（内部标识符）
+  const displayId = params.displayId;
+  const userId = ssrUserId || displayId;
   const navigate = useNavigate();
   const { user: currentUser } = useAuth() as { user: Profile | null };
 
@@ -458,7 +464,7 @@ export default function UserPage() {
                   )}
                   <button
                     onClick={async () => {
-                      const url = `${window.location.origin}/${profile.user_id}`;
+                      const url = `https://uptef.com/${padDisplayId(profile.display_id)}`;
                       if (navigator.share) {
                         await navigator.share({
                           title: `${profile.username} - 认知界`,

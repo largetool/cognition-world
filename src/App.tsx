@@ -32,7 +32,7 @@ export default function AppRoutes() {
       <Route path="/me" element={<MePage />} />
       <Route path="/messages" element={<MessagesPage />} />
       <Route path="/admin" element={<AdminPage />} />
-      <Route path="/example/:userId" element={<ExamplePage />} />
+      <Route path="/example/:displayId" element={<ExamplePage />} />
       <Route path="/whitepaper" element={<WhitepaperPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
@@ -40,8 +40,8 @@ export default function AppRoutes() {
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/accessibility" element={<AccessibilityPage />} />
       <Route path="/guestbook" element={<GuestbookPage />} />
-      <Route path="/:userId" element={<UserPage />} />
-      <Route path="/:userId/thought/:thoughtId" element={<ThoughtPage />} />
+      <Route path="/:displayId" element={<UserPage />} />
+      <Route path="/:displayId/thought/:thoughtId" element={<ThoughtPage />} />
 
       {/* 英文路由 */}
       <Route path="/en" element={<IndexPage />} />
@@ -59,8 +59,8 @@ export default function AppRoutes() {
       <Route path="/en/contact" element={<ContactPage />} />
       <Route path="/en/accessibility" element={<AccessibilityPage />} />
       <Route path="/en/guestbook" element={<GuestbookPage />} />
-      <Route path="/en/:userId" element={<UserPage />} />
-      <Route path="/en/:userId/thought/:thoughtId" element={<ThoughtPage />} />
+      <Route path="/en/:displayId" element={<UserPage />} />
+      <Route path="/en/:displayId/thought/:thoughtId" element={<ThoughtPage />} />
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

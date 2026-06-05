@@ -10,6 +10,14 @@ import {
 } from '../../src/utils/seo';
 import type { Profile } from '../../src/types';
 
+function padId(id: number | null): string {
+  return String(id ?? 0).padStart(9, '0');
+}
+
+function userUrl(id: number | null): string {
+  return `${APP_CONFIG.url}/example/${padId(id)}`;
+}
+
 export default function ExampleSSRPage({
   ssrUserId,
   ssrProfile,
@@ -39,8 +47,8 @@ export default function ExampleSSRPage({
         <meta property="og:title" content={`${ssrProfile.username} - ${APP_CONFIG.name}`} />
         <meta property="og:description" content={ssrMetaDescription || ''} />
         <meta property="og:type" content="profile" />
-        <meta property="og:url" content={`${APP_CONFIG.url}/example/${ssrUserId}`} />
-        <link rel="canonical" href={`${APP_CONFIG.url}/example/${ssrUserId}`} />
+        <meta property="og:url" content={`${APP_CONFIG.url}/example/${padId(ssrProfile.display_id)}`} />
+        <link rel="canonical" href={`${APP_CONFIG.url}/example/${padId(ssrProfile.display_id)}`} />
       </Head>
       <AppRoutes />
     </>
@@ -48,44 +56,45 @@ export default function ExampleSSRPage({
 }
 
 function generateUserJsonLd(profile: Profile, logs: any[]): object {
-  const profileUrl = `${APP_CONFIG.url}/example/${profile.user_id}`;
+  const pUrl = userUrl(profile.display_id);
   const profilePage = generateProfilePageSchema(profile);
   const blogPostings = logs.slice(0, 10).map((log) => {
     const posting: any = generateBlogPostingSchema(
       { content: log.content || '', created_at: log.created_at || '' },
       profile,
     );
-    posting['@id'] = `${profileUrl}/thought/${log.id}`;
-    posting.url = `${profileUrl}/thought/${log.id}`;
-    posting.isPartOf = { '@type': 'ProfilePage', '@id': profileUrl };
+    posting['@id'] = `${pUrl}/thought/${log.id}`;
+    posting.url = `${pUrl}/thought/${log.id}`;
+    posting.isPartOf = { '@type': 'ProfilePage', '@id': pUrl };
     return posting;
   });
   const breadcrumb = generateBreadcrumbList([
     { name: '认知界', url: APP_CONFIG.url },
-    { name: `${profile.username}（示例）`, url: profileUrl },
+    { name: `${profile.username}（示例）`, url: pUrl },
   ]);
   return { '@context': 'https://schema.org', '@graph': [profilePage, breadcrumb, ...blogPostings] };
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { userId } = context.params as { userId: string };
+  const displayIdParam = context.params?.displayId as string;
+  if (!displayIdParam) return { props: { ssrNotFound: true } };
 
   try {
+    const displayId = parseInt(displayIdParam, 10);
+    if (isNaN(displayId)) return { props: { ssrNotFound: true } };
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
-      .eq('user_id', userId)
+      .eq('display_id', displayId)
       .maybeSingle();
 
-    if (!profile) {
-      return { props: { ssrUserId: userId, ssrNotFound: true } };
-    }
+    if (!profile) return { props: { ssrNotFound: true } };
 
-    // 示例页只取公开日志
     const { data: logs } = await supabase
       .from('logs')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', profile.user_id)
       .order('created_at', { ascending: false })
       .limit(20);
 
@@ -95,7 +104,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     return {
       props: {
-        ssrUserId: userId,
+        ssrUserId: typedProfile.user_id,
         ssrProfile: typedProfile,
         ssrLogs,
         ssrActiveBg: activeBg,
@@ -105,6 +114,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
   } catch (err) {
     console.error('[getServerSideProps example] 获取失败:', err);
-    return { props: { ssrUserId: userId, ssrNotFound: true } };
+    return { props: { ssrNotFound: true } };
   }
 };

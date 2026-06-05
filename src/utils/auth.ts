@@ -25,6 +25,22 @@ export async function getUserById(userId: string): Promise<Profile | null> {
   return data as Profile;
 }
 
+/** 通过 display_id（数字编号）查找用户 */
+export async function getUserByDisplayId(displayId: number): Promise<Profile | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('display_id', displayId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data as Profile;
+}
+
+/** 判断字符串是否为纯数字（displayId） */
+export function isNumericDisplayId(value: string): boolean {
+  return /^\d+$/.test(value);
+}
+
 // 检查邮箱是否已存在（仅检查 profiles 表，避免安全风险）
 export async function checkEmailExists(email: string): Promise<boolean> {
   const { data: profile, error } = await supabase

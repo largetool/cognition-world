@@ -72,7 +72,7 @@ export function EditPage() {
     });
 
     if (updated) {
-      navigate(`/${targetUser.user_id}`);
+      navigate(`/${String(targetUser.display_id ?? 0).padStart(9, '0')}`);
     } else {
       setError(updateError instanceof Error ? updateError.message : '保存失败');
     }

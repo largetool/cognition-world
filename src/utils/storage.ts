@@ -663,6 +663,7 @@ export async function updateDailyPostLimit(role: 'user' | 'verified' | 'premium'
 // 获取所有用户列表（带发布统计）
 export async function getAllUsersWithStats(limit: number = 1000): Promise<Array<{
   user_id: string;
+  display_id: number | null;
   username: string;
   role: string;
   is_admin: boolean;
@@ -673,7 +674,7 @@ export async function getAllUsersWithStats(limit: number = 1000): Promise<Array<
 
  const { data, error } = await supabase
    .from('profiles')
-   .select('user_id, username, role, is_admin, is_frozen, daily_posts_count, last_post_date')
+   .select('user_id, display_id, username, role, is_admin, is_frozen, daily_posts_count, last_post_date')
    .limit(limit);
 
  if (error || !data) return [];
@@ -688,6 +689,7 @@ export async function getAllUsersWithStats(limit: number = 1000): Promise<Array<
 
  return data.map((user) => ({
    user_id: user.user_id,
+   display_id: user.display_id,
    username: user.username,
    role: user.role || 'user',
    is_admin: user.is_admin || false,
