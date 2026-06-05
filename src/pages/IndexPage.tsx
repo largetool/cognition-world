@@ -13,7 +13,7 @@ import { generateWebSiteSchema, generateOrganizationSchema, generateBreadcrumbLi
 import { t, getCurrentLanguage } from '../locales';
 import { useAuth } from '../hooks/useAuth';
 
-const heroBg = new URL('../../assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg', import.meta.url).href;
+const heroBg = '/assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg';
 
 export default function IndexPage() {
   const { user } = useAuth();

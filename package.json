@@ -1,9 +1,11 @@
 {
   "name": "portal-rebuild",
   "version": "1.0.0",
+  "private": true,
   "scripts": {
-    "dev": "webpack serve",
-    "build": "webpack --mode production",
+    "dev": "next dev -p 3266",
+    "build": "next build",
+    "start": "next start",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -13,6 +15,7 @@
     "date-fns": "^2.30.0",
     "framer-motion": "^11.16.1",
     "lucide-react": "^0.294.0",
+    "next": "^14.2.0",
     "pinyin-pro": "^3.28.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -24,6 +27,7 @@
     "@babel/preset-env": "^7.23.5",
     "@babel/preset-react": "^7.23.5",
     "@babel/preset-typescript": "^7.23.5",
+    "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "autoprefixer": "^10.4.16",

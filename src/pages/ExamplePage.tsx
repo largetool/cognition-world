@@ -8,7 +8,7 @@ import { GlassCard } from '../components/GlassCard';
 import { getInitials, APP_CONFIG } from '../types';
 import type { Profile } from '../types';
 
-const galaxyBg = new URL('../../assets/C2283395-46CF-48E8-B1EC-3813518039AE_2.jpg', import.meta.url).href;
+const galaxyBg = '/assets/C2283395-46CF-48E8-B1EC-3813518039AE_2.jpg';
 
 // 示例用户数据 - 展示虚拟身份风格
 const EXAMPLE_USER: Partial<Profile> = {

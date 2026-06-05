@@ -14,6 +14,10 @@ export function changeLanguage(lang: Language): void {
 }
 
 export function getCurrentLanguage(): Language {
+  // SSR 兼容：服务端无 localStorage/navigator，返回默认中文
+  if (typeof window === 'undefined') {
+    return 'zh';
+  }
   const saved = localStorage.getItem('language') as Language;
   if (saved && (saved === 'zh' || saved === 'en')) {
     return saved;

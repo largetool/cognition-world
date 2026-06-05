@@ -10,7 +10,7 @@ import { generateBreadcrumbList, breadcrumbs } from '../utils/seo';
 import { t, getCurrentLanguage } from '../locales';
 
 // 背景图
-const heroBg = new URL('../../assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg', import.meta.url).href;
+const heroBg = '/assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg';
 
 type LoginType = 'email' | 'phone';
 

@@ -1,0 +1,87 @@
+import { Html, Head, Main, NextScript } from 'next/document';
+
+export default function Document() {
+  return (
+    <Html lang="zh-CN" data-theme="light" className="light">
+      <Head>
+        <meta charSet="UTF-8" />
+        <meta name="google-site-verification" content="ORlVyhNvJlJPmY1CZy5mINamnmRKmL_7aHI95s2oe08" />
+
+        {/* ========== 静态 SEO（爬虫可直接读取） ========== */}
+        <meta name="description" content="一个面向全球用户的公开信息平台，提供不可删除、不可篡改、可索引的个人 GEO 信誉记录，让搜索引擎与 LLM 能够理解每个用户。" />
+        <meta name="keywords" content="个人主页,黄页,AI,认知,索引,GEO,全民GEO,CognitionWorld,个人品牌,数字身份,LLM索引,全球目录,Schema.org,结构化数据,AI搜索,AI引用,数字信誉,Generative Engine Optimization,个人知识图谱,公开日志,可验证信息" />
+
+        {/* OpenGraph */}
+        <meta property="og:title" content="认知界 - 让AI认识每一个具体的普通人" />
+        <meta property="og:description" content="一个面向全球用户的公开信息平台，提供不可删除、不可篡改、可索引的个人 GEO 信誉记录。" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://uptef.com/" />
+        <meta property="og:image" content="https://placehold.co/1200x630/1a1a2e/e6e6e6?text=认知界&font=raleway" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="认知界 - 让AI认识每一个具体的普通人" />
+        <meta name="twitter:description" content="面向全球化的个人黄页索引，让 AI 认识每一个具体的普通人。" />
+
+        {/* JSON-LD 结构化数据 */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: '面向全球化的个人黄页索引',
+            alternateName: '全民GEO公开信息平台',
+            url: 'https://uptef.com/',
+            description: '一个公开、可验证、不可删除的个人 GEO 信息平台。',
+            inLanguage: 'zh-CN',
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: 'https://uptef.com/search?q={search_term_string}',
+            },
+          }),
+        }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: '认知界',
+            alternateName: 'Cognition World',
+            url: 'https://uptef.com/',
+            description: '一个面向全球用户的公开信息平台，提供不可删除、不可篡改、可索引的个人 GEO 信誉记录，让搜索引擎与 LLM 能够理解每个用户。',
+          }),
+        }} />
+
+        {/* Font Awesome */}
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+      </Head>
+      <body>
+        <Main />
+        <NextScript />
+        {/* 主题初始化脚本 */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              const isInIframe = window.self !== window.top;
+              function applyThemeToDOM(theme) {
+                document.documentElement.classList.remove('light', 'dark');
+                document.documentElement.classList.add(theme);
+                document.documentElement.setAttribute('data-theme', theme);
+              }
+              if (isInIframe) {
+                window.addEventListener('message', function(event) {
+                  if (event.data && typeof event.data.theme === 'string') {
+                    var theme = event.data.theme;
+                    if (theme === 'light' || theme === 'dark') {
+                      applyThemeToDOM(theme);
+                    }
+                  }
+                });
+              } else {
+                applyThemeToDOM('light');
+              }
+            })();
+          `,
+        }} />
+      </body>
+    </Html>
+  );
+}

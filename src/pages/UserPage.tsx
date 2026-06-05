@@ -11,16 +11,17 @@ import { BlockedPage } from '../components/BlockedPage';
 import { useAuth } from '../hooks/useAuth';
 import { useUser } from '../hooks/useUser';
 import { useIPCheck } from '../hooks/useIPCheck';
-import { createLog, getAccountHideStatus, requestAccountHide, cancelAccountHide, requestAccountRestore, type AccountHideStatus } from '../utils/storage';
+import { createLog, getAccountHideStatus, requestAccountHide, cancelAccountHide, requestAccountRestore, type AccountHideStatus, type LogWithPublicStatus } from '../utils/storage';
 import { getUserSEO, isAdminFromProfile, getInitials, APP_CONFIG, getDefaultSEO } from '../types';
 import { supabase } from '../supabase/client';
 import { generateProfilePageSchema, generatePersonSchema, generateBlogPostingSchema } from '../utils/seo';
+import { useSSRData } from '../utils/SSRContext';
 import type { Profile } from '../types';
 import { t, getCurrentLanguage } from '../locales';
 
 const LOGS_PER_PAGE = 10;
 
-const defaultBg = new URL('../../assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg', import.meta.url).href;
+const defaultBg = '/assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg';
 
 // 生成用户头像 URL
 function generateUserAvatar(username: string): string {
@@ -106,11 +107,37 @@ function generateEnhancedProfileSchema(profile: Profile, recentLogs: LogForSEO[]
   return schema;
 }
 
+// SSR 预取数据接口 — Next.js getServerSideProps 通过此 props 传递预取数据
+export interface UserPageSSRProps {
+  ssrUserId?: string;
+  ssrProfile?: Profile | null;
+  ssrLogs?: LogWithPublicStatus[];
+  ssrActiveBg?: { url: string } | null;
+  ssrNotFound?: boolean;
+}
+
 export default function UserPage() {
-  const { userId } = useParams<{ userId: string }>();
+  const params = useParams<{ userId: string }>();
+  // 尝试读取 SSR 预取数据（来自 getServerSideProps）
+  const ssrData = useSSRData();
+  const ssrUserId = ssrData.ssrUserId;
+  const ssrProfile = ssrData.ssrProfile as Profile | undefined;
+  const ssrLogs = ssrData.ssrLogs as LogWithPublicStatus[] | undefined;
+  const ssrActiveBg = ssrData.ssrActiveBg as { url: string } | null | undefined;
+  const ssrNotFound = ssrData.ssrNotFound;
+
+  const userId = ssrUserId || params.userId;
   const navigate = useNavigate();
   const { user: currentUser } = useAuth() as { user: Profile | null };
-  const { profile, logs, activeBackground, isLoading, error, refreshLogs } = useUser(userId);
+
+  // SSR 模式：使用预取数据；客户端模式：使用 useUser hook 拉取
+  const clientUserData = useUser(ssrProfile !== undefined ? undefined : userId);
+  const profile = ssrProfile !== undefined ? ssrProfile : clientUserData.profile;
+  const logs = ssrLogs !== undefined ? ssrLogs : clientUserData.logs;
+  const activeBackground = ssrActiveBg !== undefined ? ssrActiveBg : clientUserData.activeBackground;
+  const isLoading = ssrProfile !== undefined ? false : clientUserData.isLoading;
+  const error = ssrNotFound ? '该用户不存在' : (ssrProfile !== undefined ? null : clientUserData.error);
+  const refreshLogs = clientUserData.refreshLogs;
   const { isBlocked, isLoading: ipLoading } = useIPCheck();
   const [logContent, setLogContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

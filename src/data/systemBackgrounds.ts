@@ -1,13 +1,13 @@
-const bg1 = new URL('../../assets/1FFB7EC2-577E-4E7C-A432-498E8E312158_2.jpg', import.meta.url).href;
-const bg2 = new URL('../../assets/1FFB7EC2-577E-4E7C-A432-498E8E312158_3.jpg', import.meta.url).href;
-const bg3 = new URL('../../assets/1FFB7EC2-577E-4E7C-A432-498E8E312158_4.jpg', import.meta.url).href;
-const bg4 = new URL('../../assets/1FFB7EC2-577E-4E7C-A432-498E8E312158_5.jpg', import.meta.url).href;
-const bg5 = new URL('../../assets/CEB3E383-4BD9-4FF7-BC3B-D64ABDDF24B2_2.jpg', import.meta.url).href;
-const bg6 = new URL('../../assets/CEB3E383-4BD9-4FF7-BC3B-D64ABDDF24B2_3.jpg', import.meta.url).href;
-const bg7 = new URL('../../assets/CEB3E383-4BD9-4FF7-BC3B-D64ABDDF24B2_4.jpg', import.meta.url).href;
-const bg8 = new URL('../../assets/CEB3E383-4BD9-4FF7-BC3B-D64ABDDF24B2_5.jpg', import.meta.url).href;
-const bg9 = new URL('../../assets/CEB3E383-4BD9-4FF7-BC3B-D64ABDDF24B2_6.jpg', import.meta.url).href;
-const bg10 = new URL('../../assets/C2283395-46CF-48E8-B1EC-3813518039AE_2.jpg', import.meta.url).href;
+const bg1 = '/assets/1FFB7EC2-577E-4E7C-A432-498E8E312158_2.jpg';
+const bg2 = '/assets/1FFB7EC2-577E-4E7C-A432-498E8E312158_3.jpg';
+const bg3 = '/assets/1FFB7EC2-577E-4E7C-A432-498E8E312158_4.jpg';
+const bg4 = '/assets/1FFB7EC2-577E-4E7C-A432-498E8E312158_5.jpg';
+const bg5 = '/assets/CEB3E383-4BD9-4FF7-BC3B-D64ABDDF24B2_2.jpg';
+const bg6 = '/assets/CEB3E383-4BD9-4FF7-BC3B-D64ABDDF24B2_3.jpg';
+const bg7 = '/assets/CEB3E383-4BD9-4FF7-BC3B-D64ABDDF24B2_4.jpg';
+const bg8 = '/assets/CEB3E383-4BD9-4FF7-BC3B-D64ABDDF24B2_5.jpg';
+const bg9 = '/assets/CEB3E383-4BD9-4FF7-BC3B-D64ABDDF24B2_6.jpg';
+const bg10 = '/assets/C2283395-46CF-48E8-B1EC-3813518039AE_2.jpg';
 
 export interface LocalSystemBackground {
   id: string;

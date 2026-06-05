@@ -1,4 +1,7 @@
-# 认知界 (Cognition World)
+import type { NextApiRequest, NextApiResponse } from 'next';
+
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  const content = `# 认知界 (Cognition World)
 > 面向全球用户的 GEO 公开信息平台，让 AI 认识每一个具体的普通人。
 
 ## 平台简介
@@ -26,10 +29,10 @@
 
 ## 主要页面
 - 首页：https://uptef.com/
-- 白皮书：https://uptef.com/#/whitepaper
-- 示例用户页：https://uptef.com/#/example/000000001
-- 留言板：https://uptef.com/#/guestbook
-- 关于我们：https://uptef.com/#/about
+- 白皮书：https://uptef.com/whitepaper
+- 示例用户页：https://uptef.com/example/000000001
+- 留言板：https://uptef.com/guestbook
+- 关于我们：https://uptef.com/about
 
 ## 结构化数据
 首页使用以下 Schema.org 类型：
@@ -45,7 +48,13 @@
 - BlogPosting
 
 ## 技术架构
-- 前端：React 18 + Webpack 5 + Tailwind CSS
+- 前端：Next.js (React 18 + Tailwind CSS + SSR)
 - 后端：Supabase (PostgreSQL + Auth + Storage + Edge Functions)
 - 部署：Vercel
 - 域名：uptef.com
+`;
+
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+  res.status(200).send(content);
+}
