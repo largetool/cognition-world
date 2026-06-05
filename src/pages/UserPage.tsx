@@ -41,7 +41,7 @@ function padDisplayId(id: number | null): string {
 }
 
 function generateEnhancedProfileSchema(profile: Profile, recentLogs: LogForSEO[]) {
-  const profileUrl = `https://uptef.com/${padDisplayId(profile.display_id)}`;
+  const profileUrl = `${APP_CONFIG.url}/${padDisplayId(profile.display_id)}`;
   const avatarUrl = generateUserAvatar(profile.username);
 
   // 基础 ProfilePage 结构
@@ -464,7 +464,7 @@ export default function UserPage() {
                   )}
                   <button
                     onClick={async () => {
-                      const url = `https://uptef.com/${padDisplayId(profile.display_id)}`;
+                      const url = `${APP_CONFIG.url}/${padDisplayId(profile.display_id)}`;
                       if (navigator.share) {
                         await navigator.share({
                           title: `${profile.username} - 认知界`,

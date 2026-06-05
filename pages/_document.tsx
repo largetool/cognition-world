@@ -6,24 +6,28 @@ export default function Document() {
       <Head>
         <meta charSet="UTF-8" />
         <meta name="google-site-verification" content="ORlVyhNvJlJPmY1CZy5mINamnmRKmL_7aHI95s2oe08" />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+        <meta name="googlebot" content="index, follow" />
 
-        {/* ========== 静态 SEO（爬虫可直接读取） ========== */}
+        <link rel="alternate" hrefLang="zh-CN" href="https://uptef.com/" />
+        <link rel="alternate" hrefLang="en" href="https://uptef.com/en" />
+        <link rel="alternate" hrefLang="x-default" href="https://uptef.com/" />
+
         <meta name="description" content="一个面向全球用户的公开信息平台，提供不可删除、不可篡改、可索引的个人 GEO 信誉记录，让搜索引擎与 LLM 能够理解每个用户。" />
         <meta name="keywords" content="个人主页,黄页,AI,认知,索引,GEO,全民GEO,CognitionWorld,个人品牌,数字身份,LLM索引,全球目录,Schema.org,结构化数据,AI搜索,AI引用,数字信誉,Generative Engine Optimization,个人知识图谱,公开日志,可验证信息" />
 
-        {/* OpenGraph */}
         <meta property="og:title" content="认知界 - 让AI认识每一个具体的普通人" />
         <meta property="og:description" content="一个面向全球用户的公开信息平台，提供不可删除、不可篡改、可索引的个人 GEO 信誉记录。" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://uptef.com/" />
         <meta property="og:image" content="https://uptef.com/assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg" />
+        <meta property="og:site_name" content="认知界 Cognition World" />
+        <meta property="og:locale" content="zh_CN" />
 
-        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="认知界 - 让AI认识每一个具体的普通人" />
         <meta name="twitter:description" content="面向全球化的个人黄页索引，让 AI 认识每一个具体的普通人。" />
 
-        {/* JSON-LD 结构化数据 */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             '@context': 'https://schema.org',
@@ -50,13 +54,11 @@ export default function Document() {
           }),
         }} />
 
-        {/* Font Awesome */}
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       </Head>
       <body>
         <Main />
         <NextScript />
-        {/* 主题初始化脚本 */}
         <script dangerouslySetInnerHTML={{
           __html: `
             (function() {

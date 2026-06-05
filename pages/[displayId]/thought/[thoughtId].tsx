@@ -5,7 +5,8 @@ import AppRoutes from '../../../src/App';
 import { APP_CONFIG } from '../../../src/types';
 import type { Profile } from '../../../src/types';
 
-/** 敏感字段列表 — 公开页面不得泄露 */
+const BASE_URL = 'https://uptef.com';
+
 const SENSITIVE_PROFILE_FIELDS = [
   'email',
   'is_admin',
@@ -28,7 +29,6 @@ const SENSITIVE_PROFILE_FIELDS = [
   'restored_at',
 ] as const;
 
-/** 从 profile 对象中移除敏感字段 */
 function sanitizeProfile(profile: Profile): Profile {
   const sanitized = { ...profile };
   for (const field of SENSITIVE_PROFILE_FIELDS) {
@@ -41,13 +41,38 @@ function padId(id: number | null): string {
   return String(id ?? 0).padStart(9, '0');
 }
 
+function fmtDate(dateStr: string | null): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const h = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${y}/${m}/${day} ${h}:${min}`;
+}
+
 export default function ThoughtSSRPage({
   ssrProfile,
   ssrThought,
   ssrJsonLd,
   ssrMetaDescription,
 }: any) {
-  if (!ssrProfile || !ssrThought) return <AppRoutes />;
+  if (!ssrProfile || !ssrThought) {
+    return (
+      <>
+        <Head>
+          <meta name="robots" content="noindex, follow" />
+        </Head>
+        <AppRoutes />
+      </>
+    );
+  }
+
+  const profileUrl = `${BASE_URL}/${padId(ssrProfile.display_id)}`;
+  const thoughtUrl = ssrJsonLd?.url || '';
+  const headline = ssrThought.content?.slice(0, 60) || '';
+  const displayIdStr = padId(ssrProfile.display_id);
 
   return (
     <>
@@ -60,13 +85,131 @@ export default function ThoughtSSRPage({
         </Head>
       )}
       <Head>
-        <title>{ssrThought.content?.slice(0, 60)} - {ssrProfile.username} - {APP_CONFIG.name}</title>
+        <title>{headline} - {ssrProfile.username} - {APP_CONFIG.name}</title>
         <meta name="description" content={ssrMetaDescription || ssrThought.content?.slice(0, 160) || ''} />
-        <meta property="og:title" content={`${ssrProfile.username}：「${ssrThought.content?.slice(0, 60)}」`} />
+
+        <meta property="og:title" content={`${ssrProfile.username}：「${headline}」`} />
         <meta property="og:description" content={ssrThought.content?.slice(0, 200) || ''} />
         <meta property="og:type" content="article" />
-        <link rel="canonical" href={ssrJsonLd?.url || ''} />
+        <meta property="og:url" content={thoughtUrl} />
+        <meta property="og:site_name" content="认知界 Cognition World" />
+        <meta property="og:locale" content="zh_CN" />
+        <meta property="article:author" content={ssrProfile.username} />
+        <meta property="article:published_time" content={ssrThought.created_at || ssrThought.published_at || ''} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${ssrProfile.username}：「${headline}」`} />
+        <meta name="twitter:description" content={ssrThought.content?.slice(0, 200) || ''} />
+
+        <link rel="canonical" href={thoughtUrl} />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+
+        {/* hreflang */}
+        <link rel="alternate" hrefLang="zh-CN" href={thoughtUrl} />
+        <link rel="alternate" hrefLang="en" href={`${BASE_URL}/en/${displayIdStr}/thought/${ssrThought.id}`} />
+        <link rel="alternate" hrefLang="x-default" href={thoughtUrl} />
+
+        {/* 作者链接 */}
+        <link rel="author" href={profileUrl} />
       </Head>
+
+      {/* P0: SSR 页面内容 */}
+      <main
+        id="ssr-content"
+        style={{
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+          maxWidth: '720px',
+          margin: '0 auto',
+          padding: '32px 16px',
+          color: '#e6e6e6',
+          background: '#0d0d1a',
+          lineHeight: 1.7,
+        }}
+      >
+        <nav style={{ marginBottom: 24, fontSize: 14 }}>
+          <a href={BASE_URL} style={{ color: '#a0a0b8', textDecoration: 'none' }}>
+            ← 认知界首页
+          </a>
+          {' · '}
+          <a href={profileUrl} style={{ color: '#a0a0b8', textDecoration: 'none' }}>
+            {ssrProfile.username}的主页
+          </a>
+        </nav>
+
+        <article>
+          <header style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  background: '#4f46e5',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 18,
+                  fontWeight: 700,
+                  color: '#fff',
+                }}
+              >
+                {ssrProfile.username.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <a
+                  href={profileUrl}
+                  style={{ fontSize: 15, fontWeight: 600, color: '#fff', textDecoration: 'none' }}
+                >
+                  {ssrProfile.username}
+                </a>
+                <div style={{ fontSize: 12, color: '#6b7280' }}>
+                  {fmtDate(ssrThought.created_at || ssrThought.published_at)}
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <div
+            style={{
+              background: 'rgba(255,255,255,0.04)',
+              borderRadius: 12,
+              padding: '24px 20px',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <p
+              style={{
+                fontSize: 17,
+                color: '#e6e6e6',
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                lineHeight: 1.8,
+              }}
+            >
+              {ssrThought.content || ''}
+            </p>
+          </div>
+        </article>
+
+        <div style={{ marginTop: 32, textAlign: 'center' }}>
+          <a
+            href={`${BASE_URL}/register`}
+            style={{
+              display: 'inline-block',
+              padding: '10px 28px',
+              background: '#4f46e5',
+              color: '#fff',
+              borderRadius: 8,
+              textDecoration: 'none',
+              fontSize: 14,
+              fontWeight: 500,
+            }}
+          >
+            创建你的个人页面
+          </a>
+        </div>
+      </main>
+
       <AppRoutes />
     </>
   );
@@ -96,28 +239,30 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     if (!log) return { props: { ssrNotFound: true } };
 
-    const pUrl = `${APP_CONFIG.url}/${padId(profile.display_id)}/thought/${thoughtId}`;
+    const sanitizedProfile = sanitizeProfile(profile as Profile);
+    const pUrl = `${BASE_URL}/${padId(profile.display_id)}/thought/${thoughtId}`;
     const ssrJsonLd = {
       '@context': 'https://schema.org',
       '@type': 'SocialMediaPosting',
+      '@id': pUrl,
       headline: log.content.slice(0, 60),
       articleBody: log.content,
       datePublished: log.created_at,
       author: {
         '@type': 'Person',
         name: profile.username,
-        url: `${APP_CONFIG.url}/${padId(profile.display_id)}`,
+        url: `${BASE_URL}/${padId(profile.display_id)}`,
       },
       url: pUrl,
       isPartOf: {
         '@type': 'ProfilePage',
-        url: `${APP_CONFIG.url}/${padId(profile.display_id)}`,
+        url: `${BASE_URL}/${padId(profile.display_id)}`,
       },
     };
 
     return {
       props: {
-        ssrProfile: sanitizeProfile(profile as Profile),
+        ssrProfile: sanitizedProfile,
         ssrThought: log,
         ssrJsonLd,
         ssrMetaDescription: `${profile.username} 的认知日志：${log.content.slice(0, 160)}`,

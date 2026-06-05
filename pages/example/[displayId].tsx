@@ -10,7 +10,8 @@ import {
 } from '../../src/utils/seo';
 import type { Profile } from '../../src/types';
 
-/** 敏感字段列表 — 公开页面不得泄露 */
+const BASE_URL = 'https://uptef.com';
+
 const SENSITIVE_PROFILE_FIELDS = [
   'email',
   'is_admin',
@@ -33,7 +34,6 @@ const SENSITIVE_PROFILE_FIELDS = [
   'restored_at',
 ] as const;
 
-/** 从 profile 对象中移除敏感字段 */
 function sanitizeProfile(profile: Profile): Profile {
   const sanitized = { ...profile };
   for (const field of SENSITIVE_PROFILE_FIELDS) {
@@ -46,22 +46,37 @@ function padId(id: number | null): string {
   return String(id ?? 0).padStart(9, '0');
 }
 
-function userUrl(id: number | null): string {
-  return `${APP_CONFIG.url}/example/${padId(id)}`;
+function fmtDate(dateStr: string | null): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const h = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${y}/${m}/${day} ${h}:${min}`;
 }
 
 export default function ExampleSSRPage({
-  ssrUserId,
   ssrProfile,
   ssrLogs,
   ssrJsonLd,
   ssrMetaDescription,
   ssrNotFound,
-  ssrActiveBg,
 }: any) {
   if (ssrNotFound || !ssrProfile) {
-    return <AppRoutes />;
+    return (
+      <>
+        <Head>
+          <meta name="robots" content="noindex, follow" />
+        </Head>
+        <AppRoutes />
+      </>
+    );
   }
+
+  const pUrl = `${BASE_URL}/example/${padId(ssrProfile.display_id)}`;
+  const displayIdStr = padId(ssrProfile.display_id);
 
   return (
     <>
@@ -79,16 +94,139 @@ export default function ExampleSSRPage({
         <meta property="og:title" content={`${ssrProfile.username} - ${APP_CONFIG.name}`} />
         <meta property="og:description" content={ssrMetaDescription || ''} />
         <meta property="og:type" content="profile" />
-        <meta property="og:url" content={`${APP_CONFIG.url}/example/${padId(ssrProfile.display_id)}`} />
-        <link rel="canonical" href={`${APP_CONFIG.url}/example/${padId(ssrProfile.display_id)}`} />
+        <meta property="og:url" content={pUrl} />
+        <meta property="og:site_name" content="认知界 Cognition World" />
+        <meta property="og:locale" content="zh_CN" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+
+        <link rel="canonical" href={pUrl} />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+
+        <link rel="alternate" hrefLang="zh-CN" href={pUrl} />
+        <link rel="alternate" hrefLang="en" href={`${BASE_URL}/en/example/${displayIdStr}`} />
+        <link rel="alternate" hrefLang="x-default" href={pUrl} />
       </Head>
+
+      {/* P0: SSR 页面内容 */}
+      <main
+        id="ssr-content"
+        style={{
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+          maxWidth: '720px',
+          margin: '0 auto',
+          padding: '32px 16px',
+          color: '#e6e6e6',
+          background: '#0d0d1a',
+          lineHeight: 1.7,
+        }}
+      >
+        <nav style={{ marginBottom: 24, fontSize: 14 }}>
+          <a href={BASE_URL} style={{ color: '#a0a0b8', textDecoration: 'none' }}>
+            ← 认知界首页
+          </a>
+        </nav>
+
+        <header
+          style={{
+            background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+            borderRadius: 16,
+            padding: '40px 24px',
+            marginBottom: 32,
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          <div
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 16,
+              background: '#4f46e5',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 32,
+              fontWeight: 700,
+              color: '#fff',
+              marginBottom: 16,
+            }}
+          >
+            {ssrProfile.username.charAt(0).toUpperCase()}
+          </div>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: '#fff', margin: '0 0 8px 0' }}>
+            {ssrProfile.username}
+            <span style={{ fontSize: 14, fontWeight: 400, color: '#6b7280', marginLeft: 8 }}>
+              示例
+            </span>
+          </h1>
+          {ssrProfile.tag && (
+            <p style={{ fontSize: 16, color: '#a0a0b8', margin: '0 0 8px 0' }}>
+              {ssrProfile.tag}
+            </p>
+          )}
+          {ssrProfile.slogan && (
+            <p style={{ fontSize: 16, color: '#d1d5db', maxWidth: 560, margin: '0 0 16px 0' }}>
+              {ssrProfile.slogan}
+            </p>
+          )}
+        </header>
+
+        <section>
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: '#fff', margin: '0 0 16px 0' }}>
+            认知日志
+          </h2>
+          {ssrLogs && ssrLogs.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {ssrLogs.slice(0, 20).map((log: any, i: number) => (
+                <article
+                  key={log.id || i}
+                  style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    borderRadius: 12,
+                    padding: '16px 20px',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                  }}
+                >
+                  <p style={{ fontSize: 15, color: '#e6e6e6', margin: '0 0 10px 0', whiteSpace: 'pre-wrap' }}>
+                    {log.content || ''}
+                  </p>
+                  <time dateTime={log.created_at || ''} style={{ fontSize: 12, color: '#6b7280' }}>
+                    {fmtDate(log.created_at)}
+                  </time>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p style={{ color: '#6b7280', fontSize: 14 }}>暂无公开日志</p>
+          )}
+        </section>
+
+        <div style={{ marginTop: 32, textAlign: 'center' }}>
+          <a
+            href={`${BASE_URL}/register`}
+            style={{
+              display: 'inline-block',
+              padding: '10px 28px',
+              background: '#4f46e5',
+              color: '#fff',
+              borderRadius: 8,
+              textDecoration: 'none',
+              fontSize: 14,
+              fontWeight: 500,
+            }}
+          >
+            创建你的个人页面
+          </a>
+        </div>
+      </main>
+
       <AppRoutes />
     </>
   );
 }
 
 function generateUserJsonLd(profile: Profile, logs: any[]): object {
-  const pUrl = userUrl(profile.display_id);
+  const pUrl = `${BASE_URL}/example/${padId(profile.display_id)}`;
   const profilePage = generateProfilePageSchema(profile);
   const blogPostings = logs.slice(0, 10).map((log) => {
     const posting: any = generateBlogPostingSchema(
@@ -101,7 +239,7 @@ function generateUserJsonLd(profile: Profile, logs: any[]): object {
     return posting;
   });
   const breadcrumb = generateBreadcrumbList([
-    { name: '认知界', url: APP_CONFIG.url },
+    { name: '认知界', url: BASE_URL },
     { name: `${profile.username}（示例）`, url: pUrl },
   ]);
   return { '@context': 'https://schema.org', '@graph': [profilePage, breadcrumb, ...blogPostings] };
@@ -132,14 +270,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const typedProfile = sanitizeProfile(profile as Profile);
     const ssrLogs = (logs || []).map((log: any) => ({ ...log, canDelete: false }));
-    const activeBg = typedProfile.background_image ? { url: typedProfile.background_image } : null;
 
     return {
       props: {
-        ssrUserId: typedProfile.user_id,
         ssrProfile: typedProfile,
         ssrLogs,
-        ssrActiveBg: activeBg,
         ssrJsonLd: generateUserJsonLd(typedProfile, ssrLogs),
         ssrMetaDescription: `${typedProfile.tag}。${typedProfile.slogan?.slice(0, 80) || ''}`,
       },

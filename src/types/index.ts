@@ -169,7 +169,7 @@ export const APP_CONFIG = {
   version: '1.0.0-beta',
   geoAnchor: 'Beijing, CN',
   timeAnchor: '2026.04.26',
-  url: 'https://UPTEF.com',
+  url: 'https://uptef.com',
 };
 
 /** 将 display_id 格式化为 9 位定长显示 ID */

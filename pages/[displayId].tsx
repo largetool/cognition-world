@@ -10,6 +10,9 @@ import {
 } from '../src/utils/seo';
 import type { Profile } from '../src/types';
 
+/** 统一小写域名 */
+const BASE_URL = 'https://uptef.com';
+
 /** 敏感字段列表 — 公开页面不得泄露 */
 const SENSITIVE_PROFILE_FIELDS = [
   'email',
@@ -33,7 +36,6 @@ const SENSITIVE_PROFILE_FIELDS = [
   'restored_at',
 ] as const;
 
-/** 从 profile 对象中移除敏感字段 */
 function sanitizeProfile(profile: Profile): Profile {
   const sanitized = { ...profile };
   for (const field of SENSITIVE_PROFILE_FIELDS) {
@@ -42,19 +44,27 @@ function sanitizeProfile(profile: Profile): Profile {
   return sanitized;
 }
 
-/** display_id 转 9 位定长显示 ID */
 function padId(id: number | null): string {
   return String(id ?? 0).padStart(9, '0');
 }
 
-/** 用户公开主页完整 URL */
 function userUrl(id: number | null): string {
-  return `${APP_CONFIG.url}/${padId(id)}`;
+  return `${BASE_URL}/${padId(id)}`;
+}
+
+function fmtDate(dateStr: string | null): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const h = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${y}/${m}/${day} ${h}:${min}`;
 }
 
 export default function UserSSRPage({
   ssrUserId,
-  ssrDisplayId,
   ssrProfile,
   ssrLogs,
   ssrJsonLd,
@@ -64,11 +74,25 @@ export default function UserSSRPage({
   ssrOgImage,
   ssrCanonicalUrl,
   ssrNotFound,
-  ssrActiveBg,
 }: SSRProps) {
   if (ssrNotFound || !ssrProfile) {
-    return <AppRoutes />;
+    return (
+      <>
+        <Head>
+          <meta name="robots" content="noindex, follow" />
+        </Head>
+        <AppRoutes />
+      </>
+    );
   }
+
+  const pUrl = userUrl(ssrProfile.display_id);
+  const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(ssrProfile.username)}&backgroundColor=1a1a2e&textColor=e6e6e6`;
+  const bgImage = ssrProfile.background_image || '';
+  const joinYear = ssrProfile.created_at
+    ? new Date(ssrProfile.created_at).getFullYear()
+    : '';
+  const displayIdStr = padId(ssrProfile.display_id);
 
   return (
     <>
@@ -83,20 +107,236 @@ export default function UserSSRPage({
       <Head>
         <title>{ssrOgTitle || `${ssrProfile.username} - ${APP_CONFIG.name}`}</title>
         <meta name="description" content={ssrMetaDescription || ''} />
+
+        {/* Open Graph */}
         <meta property="og:title" content={ssrOgTitle || `${ssrProfile.username} - ${APP_CONFIG.name}`} />
         <meta property="og:description" content={ssrOgDescription || ''} />
         <meta property="og:type" content="profile" />
-        <meta property="og:url" content={ssrCanonicalUrl || ''} />
-        {ssrOgImage ? (
-          <meta property="og:image" content={ssrOgImage} />
-        ) : (
-          <meta property="og:image" content={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(ssrProfile.username)}&backgroundColor=1a1a2e&textColor=e6e6e6`} />
-        )}
+        <meta property="og:url" content={pUrl} />
+        <meta property="og:image" content={ssrOgImage || avatarUrl} />
+        <meta property="og:site_name" content="认知界 Cognition World" />
+        <meta property="og:locale" content="zh_CN" />
+
+        {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={ssrOgTitle || `${ssrProfile.username} - ${APP_CONFIG.name}`} />
         <meta name="twitter:description" content={ssrOgDescription || ''} />
-        <link rel="canonical" href={ssrCanonicalUrl || ''} />
+
+        {/* SEO essentials */}
+        <link rel="canonical" href={pUrl} />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+
+        {/* hreflang */}
+        <link rel="alternate" hrefLang="zh-CN" href={pUrl} />
+        <link rel="alternate" hrefLang="en" href={`${BASE_URL}/en/${displayIdStr}`} />
+        <link rel="alternate" hrefLang="x-default" href={pUrl} />
       </Head>
+
+      {/* P0: SSR 页面内容 — 爬虫和 AI 可直接读取 */}
+      <main
+        id="ssr-content"
+        style={{
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+          maxWidth: '720px',
+          margin: '0 auto',
+          padding: '32px 16px',
+          color: '#e6e6e6',
+          background: '#0d0d1a',
+          lineHeight: 1.7,
+        }}
+      >
+        {/* 导航 */}
+        <nav style={{ marginBottom: 24, fontSize: 14 }}>
+          <a
+            href={BASE_URL}
+            style={{ color: '#a0a0b8', textDecoration: 'none' }}
+          >
+            ← 认知界首页
+          </a>
+        </nav>
+
+        {/* 用户信息卡片 */}
+        <header
+          style={{
+            background: bgImage
+              ? `linear-gradient(180deg, rgba(13,13,26,0.3) 0%, rgba(13,13,26,0.95) 80%), url(${bgImage}) center top / cover no-repeat`
+              : 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+            borderRadius: 16,
+            padding: '40px 24px',
+            marginBottom: 32,
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          {/* 头像 */}
+          <div
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 16,
+              background: '#4f46e5',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 32,
+              fontWeight: 700,
+              color: '#fff',
+              marginBottom: 16,
+            }}
+          >
+            {ssrProfile.username.charAt(0).toUpperCase()}
+          </div>
+
+          <h1
+            style={{
+              fontSize: 28,
+              fontWeight: 700,
+              color: '#fff',
+              margin: '0 0 8px 0',
+            }}
+          >
+            {ssrProfile.username}
+          </h1>
+
+          {ssrProfile.tag && (
+            <p style={{ fontSize: 16, color: '#a0a0b8', margin: '0 0 8px 0' }}>
+              {ssrProfile.tag}
+            </p>
+          )}
+
+          <div
+            style={{
+              display: 'inline-block',
+              fontSize: 12,
+              fontFamily: 'monospace',
+              color: '#6b7280',
+              background: 'rgba(255,255,255,0.06)',
+              padding: '2px 10px',
+              borderRadius: 20,
+              marginBottom: 16,
+            }}
+          >
+            ID {displayIdStr}
+          </div>
+
+          {ssrProfile.slogan && (
+            <p
+              style={{
+                fontSize: 16,
+                color: '#d1d5db',
+                maxWidth: 560,
+                margin: '0 0 16px 0',
+              }}
+            >
+              {ssrProfile.slogan}
+            </p>
+          )}
+
+          <div style={{ display: 'flex', gap: 24, fontSize: 13, color: '#9ca3af' }}>
+            {ssrProfile.location && (
+              <span>📍 {ssrProfile.location}</span>
+            )}
+            {joinYear && (
+              <span>🕐 加入于 {joinYear}</span>
+            )}
+          </div>
+        </header>
+
+        {/* 日志列表 */}
+        <section>
+          <h2
+            style={{
+              fontSize: 20,
+              fontWeight: 600,
+              color: '#fff',
+              margin: '0 0 16px 0',
+              paddingBottom: 8,
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            认知日志
+          </h2>
+
+          {ssrLogs && ssrLogs.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {ssrLogs.slice(0, 20).map((log: any, i: number) => (
+                <article
+                  key={log.id || i}
+                  style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    borderRadius: 12,
+                    padding: '16px 20px',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: 15,
+                      color: '#e6e6e6',
+                      margin: '0 0 10px 0',
+                      whiteSpace: 'pre-wrap',
+                    }}
+                  >
+                    {log.content || ''}
+                  </p>
+                  <footer style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <time
+                      dateTime={log.created_at || log.published_at || ''}
+                      style={{ fontSize: 12, color: '#6b7280' }}
+                    >
+                      {fmtDate(log.published_at || log.created_at)}
+                    </time>
+                    {log.id && (
+                      <a
+                        href={`${pUrl}/thought/${log.id}`}
+                        style={{ fontSize: 12, color: '#818cf8', textDecoration: 'none' }}
+                      >
+                        查看详情
+                      </a>
+                    )}
+                  </footer>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p style={{ color: '#6b7280', fontSize: 14 }}>
+              暂无公开日志
+            </p>
+          )}
+        </section>
+
+        {/* 底部 CTA */}
+        <div
+          style={{
+            marginTop: 32,
+            textAlign: 'center',
+            padding: '24px',
+            borderRadius: 16,
+            background: 'linear-gradient(135deg, rgba(79,70,229,0.15) 0%, rgba(79,70,229,0.05) 100%)',
+            border: '1px solid rgba(79,70,229,0.2)',
+          }}
+        >
+          <p style={{ color: '#e6e6e6', fontSize: 15, margin: '0 0 12px 0' }}>
+            快速创建个人页面，让 AI 和搜索引擎带你连接全球
+          </p>
+          <a
+            href={`${BASE_URL}/register`}
+            style={{
+              display: 'inline-block',
+              padding: '10px 28px',
+              background: '#4f46e5',
+              color: '#fff',
+              borderRadius: 8,
+              textDecoration: 'none',
+              fontSize: 14,
+              fontWeight: 500,
+            }}
+          >
+            立即注册
+          </a>
+        </div>
+      </main>
+
+      {/* 客户端 React 应用（JavaScript 启用后会接管页面） */}
       <AppRoutes />
     </>
   );
@@ -104,7 +344,6 @@ export default function UserSSRPage({
 
 interface SSRProps {
   ssrUserId?: string;
-  ssrDisplayId?: number;
   ssrProfile?: Profile | null;
   ssrLogs?: any[];
   ssrActiveBg?: { url: string } | null;
@@ -144,7 +383,7 @@ function generateUserJsonLd(profile: Profile, logs: any[]): object {
   });
 
   const breadcrumb = generateBreadcrumbList([
-    { name: '认知界', url: APP_CONFIG.url },
+    { name: '认知界', url: BASE_URL },
     { name: profile.username, url: pUrl },
   ]);
 
@@ -163,7 +402,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     let profile: Profile | null = null;
 
     if (!isNaN(displayId)) {
-      // 纯数字 → 按 display_id 查找
       const { data } = await supabase
         .from('profiles')
         .select('*')
@@ -172,14 +410,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       profile = data as Profile | null;
     }
 
-    // 如果纯数字没找到，或者不是纯数字（可能是旧格式 user_id），按 user_id 查找
     if (!profile) {
       const { data } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', param)
         .maybeSingle();
-      // 如果找到的是旧格式 user_id，301 跳转到新的 display_id URL
       if (data) {
         return {
           redirect: {
@@ -188,17 +424,17 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           },
         };
       }
-      return { props: { ssrDisplayId: displayId, ssrNotFound: true } };
+      return { props: { ssrNotFound: true } };
     }
 
     if (!profile) {
-      return { props: { ssrDisplayId: displayId, ssrNotFound: true } };
+      return { props: { ssrNotFound: true } };
     }
 
     const typedProfile = sanitizeProfile(profile as Profile);
 
     if (typedProfile.is_hidden) {
-      return { props: { ssrDisplayId: displayId, ssrNotFound: true } };
+      return { props: { ssrNotFound: true } };
     }
 
     const { data: logs } = await supabase
@@ -208,10 +444,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       .order('created_at', { ascending: false })
       .limit(100);
 
-    const activeBg = typedProfile.background_image
-      ? { url: typedProfile.background_image }
-      : null;
-
     const ssrLogs = (logs || []).map((log: any) => ({ ...log, canDelete: false }));
     const pUrl = userUrl(typedProfile.display_id);
     const ssrJsonLd = generateUserJsonLd(typedProfile, ssrLogs);
@@ -220,10 +452,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return {
       props: {
         ssrUserId: typedProfile.user_id,
-        ssrDisplayId: typedProfile.display_id,
         ssrProfile: typedProfile,
         ssrLogs,
-        ssrActiveBg: activeBg,
         ssrJsonLd,
         ssrMetaDescription,
         ssrOgTitle: `${typedProfile.username} - ${APP_CONFIG.name}`,

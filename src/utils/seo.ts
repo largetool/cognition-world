@@ -1,6 +1,8 @@
 import type { SEOData, Profile } from '../types';
 import { APP_CONFIG, userProfileWebUrl, fmtDisplayId } from '../types';
 
+const BASE_URL = 'https://uptef.com';
+
 export function generateWebSiteSchema() {
   return {
     '@context': 'https://schema.org',
