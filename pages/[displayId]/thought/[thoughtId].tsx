@@ -5,6 +5,38 @@ import AppRoutes from '../../../src/App';
 import { APP_CONFIG } from '../../../src/types';
 import type { Profile } from '../../../src/types';
 
+/** 敏感字段列表 — 公开页面不得泄露 */
+const SENSITIVE_PROFILE_FIELDS = [
+  'email',
+  'is_admin',
+  'onboarding_completed',
+  'account_status',
+  'geo_enabled',
+  'role',
+  'daily_posts_count',
+  'last_post_date',
+  'slogan_approved',
+  'is_frozen',
+  'frozen_at',
+  'frozen_reason',
+  'frozen_by',
+  'hide_status',
+  'hide_requested_at',
+  'cooling_ends_at',
+  'frozen_ends_at',
+  'hide_canceled_at',
+  'restored_at',
+] as const;
+
+/** 从 profile 对象中移除敏感字段 */
+function sanitizeProfile(profile: Profile): Profile {
+  const sanitized = { ...profile };
+  for (const field of SENSITIVE_PROFILE_FIELDS) {
+    delete (sanitized as any)[field];
+  }
+  return sanitized;
+}
+
 function padId(id: number | null): string {
   return String(id ?? 0).padStart(9, '0');
 }
@@ -85,7 +117,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     return {
       props: {
-        ssrProfile: profile,
+        ssrProfile: sanitizeProfile(profile as Profile),
         ssrThought: log,
         ssrJsonLd,
         ssrMetaDescription: `${profile.username} 的认知日志：${log.content.slice(0, 160)}`,

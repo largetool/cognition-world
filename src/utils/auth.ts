@@ -1,6 +1,38 @@
 import { supabase } from '../supabase/client';
 import type { Profile } from '../types';
 
+/** 敏感字段列表 — 公开页面不得泄露 */
+const SENSITIVE_PROFILE_FIELDS = [
+  'email',
+  'is_admin',
+  'onboarding_completed',
+  'account_status',
+  'geo_enabled',
+  'role',
+  'daily_posts_count',
+  'last_post_date',
+  'slogan_approved',
+  'is_frozen',
+  'frozen_at',
+  'frozen_reason',
+  'frozen_by',
+  'hide_status',
+  'hide_requested_at',
+  'cooling_ends_at',
+  'frozen_ends_at',
+  'hide_canceled_at',
+  'restored_at',
+] as const;
+
+/** 从 profile 对象中移除敏感字段 */
+export function sanitizeProfile(profile: Profile): Profile {
+  const sanitized = { ...profile };
+  for (const field of SENSITIVE_PROFILE_FIELDS) {
+    delete (sanitized as any)[field];
+  }
+  return sanitized;
+}
+
 // 认证状态变更监听器，自动处理清理
 export function onAuthStateChange(callback: (event: string, session: any) => void) {
   const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -22,7 +54,7 @@ export async function getUserById(userId: string): Promise<Profile | null> {
     .eq('user_id', userId)
     .maybeSingle();
   if (error || !data) return null;
-  return data as Profile;
+  return sanitizeProfile(data as Profile);
 }
 
 /** 通过 display_id（数字编号）查找用户 */
@@ -33,7 +65,7 @@ export async function getUserByDisplayId(displayId: number): Promise<Profile | n
     .eq('display_id', displayId)
     .maybeSingle();
   if (error || !data) return null;
-  return data as Profile;
+  return sanitizeProfile(data as Profile);
 }
 
 /** 判断字符串是否为纯数字（displayId） */
