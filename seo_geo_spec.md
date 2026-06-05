@@ -1,8 +1,9 @@
 # 认知界 SEO & GEO 技术规范文档
 
-> 版本: 1.0.0  
-> 更新日期: 2026-05-03  
+> 版本: 1.1.0
+> 更新日期: 2026-06-05
 > 适用平台: 认知界 (Cognition World) - 全民 GEO 公开信息平台
+> 实际域名: https://uptef.com
 
 ---
 
@@ -18,6 +19,7 @@
 8. [Sitemap 规范](#八sitemap-规范)
 9. [Robots 规范](#九robots-规范)
 10. [LLM 抓取优化规则](#十llm-抓取优化规则)
+11. [当前架构限制与改造计划](#十一当前架构限制与改造计划)
 
 ---
 
@@ -32,9 +34,9 @@ APP_CONFIG = {
   subTitle: '全民 GEO 公开信息平台',       // 副标题
   slogan: '让AI认识每一个具体的普通人',    // 宣传语
   description: '一个面向全球用户的公开信息平台，提供不可删除、不可篡改、可索引的个人 GEO 信誉记录，让搜索引擎与 LLM 能够理解每个用户。',
-  url: 'https://cognition.world',          // 主域名
-  geoAnchor: 'Beijing, CN',                // 地理锚点
-  timeAnchor: '2026.04.26',                // 时间锚点
+  url: 'https://uptef.com',                // 实际域名（更新于 2026-06-05）
+  geoAnchor: 'Beijing, CN',
+  timeAnchor: '2026.04.26',
 }
 ```
 
@@ -48,33 +50,42 @@ APP_CONFIG = {
 | description | APP_CONFIG.description | 平台描述，150字符以内 |
 | keywords | `['个人主页', '黄页', 'AI', '认知', '索引', 'GEO', '全民 GEO', 'Cognition World']` | 核心关键词列表 |
 | ogType | `website` | OpenGraph 类型 |
-| canonicalUrl | `https://cognition.world` | 规范URL |
+| canonicalUrl | `https://uptef.com` | 规范URL |
 
 ### 1.3 Meta 标签注入规则
 
-**注入方式**: 通过 SEOHead 组件在 useEffect 中动态注入
+采用**双层注入**策略：
 
-**注入的 Meta 标签列表**:
+#### 第一层：静态注入（index.html 硬编码）
 
-1. **基础 SEO 标签**
-   - `description`: 页面描述
-   - `keywords`: 关键词（逗号分隔）
+确保爬虫无需执行 JS 即可读到关键信息。
 
-2. **OpenGraph 标签**（用于社交媒体分享）
-   - `og:title`: 页面标题
-   - `og:description`: 页面描述
-   - `og:type`: 页面类型（website/profile）
-   - `og:image`: 分享图片（可选）
-   - `og:url`: 规范URL
+```html
+<title>认知界 - 让AI认识每一个具体的普通人</title>
+<meta name="description" content="一个面向全球用户的公开信息平台...">
+<meta name="keywords" content="个人主页,黄页,AI,认知,索引,GEO...">
+<link rel="canonical" href="https://uptef.com/">
 
-3. **Twitter Card 标签**
-   - `twitter:card`: `summary_large_image`
-   - `twitter:title`: 页面标题
-   - `twitter:description`: 页面描述
-   - `twitter:image`: 分享图片（可选）
+<meta property="og:title" content="认知界 - 让AI认识每一个具体的普通人">
+<meta property="og:description" content="...">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://uptef.com/">
+<meta property="og:image" content="https://placehold.co/1200x630/1a1a2e/e6e6e6?text=认知界&font=raleway">
 
-4. **Canonical 标签**
-   - `link[rel="canonical"]`: 规范URL，用于解决重复内容问题
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="认知界 - 让AI认识每一个具体的普通人">
+<meta name="twitter:description" content="面向全球化的个人黄页索引，让 AI 认识每一个具体的普通人。">
+```
+
+#### 第二层：动态注入（SEOHead 组件）
+
+通过 SEOHead 组件在 useEffect 中对每页进行补充注入：
+
+1. **基础 SEO 标签**: description, keywords
+2. **OpenGraph 标签**: og:title, og:description, og:type, og:image, og:url
+3. **Twitter Card 标签**: twitter:card, twitter:title, twitter:description, twitter:image
+4. **Canonical 标签**: link[rel="canonical"]
+5. **hreflang 标签**: 多语言版本（zh-CN, en, x-default）
 
 **注入逻辑**:
 - 如果标签已存在，更新其 content 属性
@@ -83,7 +94,7 @@ APP_CONFIG = {
 
 ### 1.4 安全降级策略
 
-当 SEO 数据不完整时，使用以下默认值:
+当 SEO 数据不完整时：
 
 ```typescript
 DEFAULT_TITLE = '认知界 - 让AI认识每一个具体的普通人'
@@ -96,58 +107,54 @@ DEFAULT_DESCRIPTION = '面向全球化的个人黄页索引，让 AI 认识每�
 
 ### 2.1 结构化数据注入方式
 
-通过 SEOHead 组件的 jsonLd 参数注入，在 useEffect 中创建 script[type="application/ld+json"] 标签。
+采用**双层注入**策略：
+
+1. **静态注入**: `index.html` 中硬编码 WebSite + Organization（首页通用，确保 AI 爬虫可读）
+2. **动态注入**: SEOHead 组件在每页的 useEffect 中补充/覆盖
 
 **注入规则**:
-- 每次注入前清除已存在的 JSON-LD 脚本（避免重复）
+- 动态注入前清除已存在的同类型 JSON-LD 脚本
 - 使用 JSON.stringify 序列化数据
 - 追加到 document.head 末尾
 
 ### 2.2 WebSite 结构化数据
 
-**适用页面**: 首页
+**适用页面**: 首页（同时静态注入 index.html）
 
-**Schema 类型**: `WebSite`
-
-**字段定义**:
-
-| 字段 | 类型 | 示例值 | 说明 |
-|------|------|--------|------|
-| @context | string | `https://schema.org` | Schema.org 上下文 |
-| @type | string | `WebSite` | 类型标识 |
-| name | string | `面向全球化的个人黄页索引` | 网站主名称 |
-| alternateName | string | `全民 GEO 公开信息平台` | 网站别名 |
-| url | string | `https://cognition.world` | 网站URL |
-| description | string | `一个公开、可验证、不可删除的个人 GEO 信息平台。` | 网站描述 |
-| inLanguage | string | `zh-CN` | 语言代码 |
-| potentialAction | object | SearchAction | 搜索操作定义 |
-
-**SearchAction 子字段**:
-- `@type`: `SearchAction`
-- `target`: `https://cognition.world/#/search?q={search_term_string}`
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "面向全球化的个人黄页索引",
+  "alternateName": "全民GEO公开信息平台",
+  "url": "https://uptef.com/",
+  "description": "一个公开、可验证、不可删除的个人 GEO 信息平台。",
+  "inLanguage": "zh-CN",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://uptef.com/#/search?q={search_term_string}"
+  }
+}
+```
 
 ### 2.3 Organization 结构化数据
 
-**适用页面**: 首页
+**适用页面**: 首页（同时静态注入 index.html）
 
-**Schema 类型**: `Organization`
-
-**字段定义**:
-
-| 字段 | 类型 | 示例值 | 说明 |
-|------|------|--------|------|
-| @type | string | `Organization` | 类型标识 |
-| name | string | `认知界` | 组织名称 |
-| url | string | `https://cognition.world` | 组织URL |
-| description | string | APP_CONFIG.description | 组织描述 |
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "认知界",
+  "alternateName": "Cognition World",
+  "url": "https://uptef.com/",
+  "description": "一个面向全球用户的公开信息平台，提供不可删除、不可篡改、可索引的个人 GEO 信誉记录，让搜索引擎与 LLM 能够理解每个用户。"
+}
+```
 
 ### 2.4 Person 结构化数据
 
 **适用页面**: 用户个人页面
-
-**Schema 类型**: `Person`
-
-**字段定义**:
 
 | 字段 | 类型 | 示例值 | 说明 |
 |------|------|--------|------|
@@ -156,28 +163,21 @@ DEFAULT_DESCRIPTION = '面向全球化的个人黄页索引，让 AI 认识每�
 | alternateName | string | `USER001` | 用户ID（备用名） |
 | jobTitle | string | `软件工程师` | 身份标签 |
 | description | string | `热爱技术，喜欢摄影...` | 个人Slogan |
-| url | string | `https://cognition.world/#/USER001` | 个人页面URL |
+| url | string | `https://uptef.com/#/USER001` | 个人页面URL |
 
 ### 2.5 ProfilePage 结构化数据
 
 **适用页面**: 用户个人页面
 
-**Schema 类型**: `ProfilePage`
-
-**字段定义**:
-
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | @type | string | `ProfilePage` |
 | mainEntity | Person | 嵌套 Person 对象 |
+| url | string | `https://uptef.com/#/{user_id}` |
 
 ### 2.6 BlogPosting 结构化数据
 
-**适用场景**: 单条认知日志（可选，用于日志详情页）
-
-**Schema 类型**: `BlogPosting`
-
-**字段定义**:
+**适用场景**: 单条认知日志（可选）
 
 | 字段 | 类型 | 示例值 | 说明 |
 |------|------|--------|------|
@@ -195,18 +195,13 @@ DEFAULT_DESCRIPTION = '面向全球化的个人黄页索引，让 AI 认识每�
 
 **生成函数**: `getUserSEO(profile)`
 
-**输入参数**:
-- profile: 用户资料对象
-
-**输出规则**:
-
 | 字段 | 生成逻辑 | 示例 |
 |------|----------|------|
 | title | `{username} - 认知界` | `张明远 - 认知界` |
-| description | `slogan` 或 `{tag} | 认知界` | `热爱技术，喜欢摄影...` |
+| description | `slogan` 或 `{tag} \| 认知界` | `热爱技术，喜欢摄影...` |
 | keywords | `[username, tag, user_id, '个人主页']` | `['张明远', '软件工程师', 'USER001', '个人主页']` |
 | ogType | `profile` | - |
-| canonicalUrl | `{APP_CONFIG.url}/#/{user_id}` | `https://cognition.world/#/USER001` |
+| canonicalUrl | `https://uptef.com/#/{user_id}` | `https://uptef.com/#/USER001` |
 
 **安全降级**:
 - 如果 profile 为 null/undefined，返回默认 SEO
@@ -214,20 +209,20 @@ DEFAULT_DESCRIPTION = '面向全球化的个人黄页索引，让 AI 认识每�
 
 ### 3.2 用户页面 JSON-LD
 
-**注入位置**: UserPage 组件
-
-**数据结构**:
 ```json
 {
   "@context": "https://schema.org",
   "@type": "ProfilePage",
+  "name": "username - 认知界",
+  "description": "个人Slogan",
+  "url": "https://uptef.com/#/USER001",
   "mainEntity": {
     "@type": "Person",
     "name": "用户名",
     "alternateName": "用户ID",
     "jobTitle": "身份标签",
     "description": "个人Slogan",
-    "url": "个人页面完整URL"
+    "url": "https://uptef.com/#/USER001"
   }
 }
 ```
@@ -240,27 +235,15 @@ DEFAULT_DESCRIPTION = '面向全球化的个人黄页索引，让 AI 认识每�
 - 显示完整结构化数据
 
 **私密页面** (is_public = false):
-- 建议搜索引擎不索引（通过 meta robots 控制，待实现）
-- 限制敏感信息展示
+- meta robots: noindex（待实现）
 
 ---
 
 ## 四、示例页面规则
 
-### 4.1 页面定位
+**URL**: `https://uptef.com/#/example/000000001`
 
-**URL 模式**: `/#/example/{display_id}`
-
-**用途**: 展示平台功能和样式，供未注册用户预览
-
-**示例用户固定数据**:
-- display_id: 1
-- user_id: `EXAMPLE001`
-- username: `张明远`
-- tag: `软件工程师`
-- location: `浙江省杭州市`
-
-### 4.2 示例页面 SEO 数据
+**SEO 数据**:
 
 | 字段 | 值 |
 |------|-----|
@@ -268,38 +251,11 @@ DEFAULT_DESCRIPTION = '面向全球化的个人黄页索引，让 AI 认识每�
 | description | `这是一个示例用户页面，展示认知界平台的个人主页样式和功能...` |
 | keywords | `['示例', '个人主页', '黄页', 'GEO', '认知界', 'Cognition World']` |
 | ogType | `profile` |
-| canonicalUrl | `https://cognition.world/#/example/000000001` |
+| canonicalUrl | `https://uptef.com/#/example/000000001` |
 
-### 4.3 示例页面 JSON-LD
+**JSON-LD**: 包含 `"example": true` 标记
 
-**特殊标记**: 包含 `example: true` 字段，标识此为示例页面
-
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "ProfilePage",
-  "name": "示例用户页面",
-  "description": "认知界平台示例用户页面",
-  "url": "https://cognition.world/#/example/000000001",
-  "example": true,
-  "mainEntity": {
-    "@type": "Person",
-    "name": "张明远",
-    "jobTitle": "软件工程师",
-    "description": "热爱技术，喜欢摄影...",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "浙江省杭州市"
-    }
-  }
-}
-```
-
-### 4.4 示例提示
-
-页面顶部必须显示示例提示横幅：
-- 文案: "此页面为示例页面，不代表真实用户。仅用于展示平台功能和样式。"
-- 样式: 琥珀色背景 (bg-amber-50)
+**示例提示**: 页面顶部显示琥珀色背景横幅："此页面为示例页面，不代表真实用户。"
 
 ---
 
@@ -307,42 +263,21 @@ DEFAULT_DESCRIPTION = '面向全球化的个人黄页索引，让 AI 认识每�
 
 ### 5.1 认知日志时间显示
 
-**显示格式**: `MM-DD HH:mm` (24小时制)
+**格式**: `MM-DD HH:mm` (24小时制)
 
-**生成方式**:
 ```typescript
 new Date(log.created_at).toLocaleString('zh-CN', {
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false
+  month: '2-digit', day: '2-digit',
+  hour: '2-digit', minute: '2-digit', hour12: false
 })
 ```
 
-**示例**: `01-10 09:30`
+### 5.2 分享功能
 
-### 5.2 日志内容结构化
-
-**单条日志 Schema** (可选实现):
-- 类型: `BlogPosting`
-- headline: 内容前60字符
-- articleBody: 完整内容
-- author: 用户 Person 对象
-- datePublished: ISO 8601 格式时间
-
-### 5.3 分享功能
-
-**分享按钮位置**: 个人页面导航栏
-
-**分享逻辑**:
 1. 优先使用 `navigator.share` API（移动端原生分享）
 2. 不支持时回退到 `navigator.clipboard.writeText`（复制链接）
 
-**分享数据**:
-- title: `{username} - 认知界`
-- text: `slogan` 或 `tag`
-- url: 当前页面完整URL
+**分享数据**: title = `{username} - 认知界`, text = slogan/tag, url = 当前页面URL
 
 ---
 
@@ -350,53 +285,26 @@ new Date(log.created_at).toLocaleString('zh-CN', {
 
 ### 6.1 数字 ID 系统
 
-**字段名**: `display_id`
-
-**格式**: 9位数字，不足前补零
-
-**示例**: `000000001`
-
-**显示方式**:
 ```typescript
 String(display_id ?? 0).padStart(9, '0')
 ```
 
-**分配规则**:
-- 按注册时间顺序递增
-- 从 0 开始（000000000）
-- 数据库序列: `display_id_seq`
-
 ### 6.2 用户 ID 系统
 
-**字段名**: `user_id`
-
-**生成规则**:
 ```typescript
-username.toUpperCase()
-  .replace(/[^A-Z0-9]/g, '')  // 移除非字母数字字符
-  .slice(0, 10)               // 截取前10位
-  || 'USER'                   // 默认值为 USER
+username.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10) || 'USER'
 ```
-
-**示例**:
-- 输入: `张明远`
-- 输出: `USER`（因中文无匹配字符，使用默认值）
-- 输入: `ZhangMing123`
-- 输出: `ZHANGMING12`
 
 ### 6.3 公开性标识
 
-**字段名**: `is_public`
-
-**显示方式**:
-- 公开: Eye 图标 + "公开" 文字
-- 私密: EyeOff 图标 + "私密" 文字
+- 公开: Eye 图标 + "公开"
+- 私密: EyeOff 图标 + "私密"
 
 ---
 
 ## 七、URL 规范
 
-### 7.1 路由结构
+### 7.1 路由结构（Hash 路由）
 
 | 路径 | 页面 | 说明 |
 |------|------|------|
@@ -406,159 +314,100 @@ username.toUpperCase()
 | `/#/me` | MePage | 个人中心（需登录） |
 | `/#/{userId}` | UserPage | 用户公开页 |
 | `/#/example/{userId}` | ExamplePage | 示例页面 |
+| `/#/whitepaper` | WhitepaperPage | 白皮书 |
+| `/#/terms` | TermsPage | 用户协议 |
+| `/#/privacy` | PrivacyPage | 隐私政策 |
+| `/#/about` | AboutPage | 关于我们 |
+| `/#/contact` | ContactPage | 联系我们 |
+| `/#/guestbook` | GuestbookPage | 留言板 |
 
 ### 7.2 URL 生成规则
 
-**用户页面 URL**:
-```
-{origin}/#/{user_id}
-```
+**用户页面**: `https://uptef.com/#/{user_id}`
+**示例**: `https://uptef.com/#/USER001`
 
-**示例**:
-- `https://cognition.world/#/USER001`
-- `https://cognition.world/#/ZHANGMING12`
+### 7.3 与 History 路由对比
 
-**Canonical URL 规则**:
-- 始终使用带 hash 的完整 URL
-- 不包含查询参数
-- 使用 HTTPS 协议
-
-### 7.3 分享 URL 生成
-
-```typescript
-const url = `${window.location.origin}/#/${profile.user_id}`;
-```
+| 特性 | Hash 路由（当前） | History 路由（待迁移） |
+|------|-----------------|---------------------|
+| URL 格式 | `/#/USER001` | `/user/USER001` |
+| Google 索引 | 有限支持 | 完全支持 |
+| Bing/百度索引 | 不支持 | 完全支持 |
+| Vercel rewrite | 不需要 | 需配置 |
 
 ---
 
 ## 八、Sitemap 规范
 
-### 8.1 静态页面
+### 8.1 Sitemap 位置
 
-必须包含的静态页面:
-- `/` (首页)
-- `/#/example/000000001` (示例页面)
+`https://uptef.com/sitemap.xml`
 
-### 8.2 动态页面
-
-用户页面动态生成:
-- 所有 `is_public = true` 的用户页面
-- URL 格式: `/#/{user_id}`
-
-### 8.3 Sitemap 格式
+### 8.2 当前内容
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://cognition.world/</loc>
-    <lastmod>2026-05-03</lastmod>
+    <loc>https://uptef.com/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://cognition.world/#/example/000000001</loc>
-    <lastmod>2026-05-03</lastmod>
-    <changefreq>monthly</changefreq>
+    <loc>https://uptef.com/#/whitepaper</loc>
+    <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
-  <!-- 动态用户页面 -->
   <url>
-    <loc>https://cognition.world/#/USER001</loc>
-    <lastmod>2026-05-03</lastmod>
-    <changefreq>weekly</changefreq>
+    <loc>https://uptef.com/#/about</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://uptef.com/#/guestbook</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://uptef.com/#/example/000000001</loc>
+    <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 </urlset>
 ```
 
-**注意**: 由于使用 Hash Router，sitemap 中的 URL 需要包含 `/#/` 路径。
+### 8.3 待实现：动态 Sitemap
+
+迁移到 SSR 后，用户页面应通过 Vercel Serverless Function 动态生成并自动提交到 Google/Bing。
 
 ---
 
 ## 九、Robots 规范
 
-### 9.1 推荐 Robots.txt
+### 9.1 Robots.txt
 
 ```
 User-agent: *
 Allow: /
-Allow: /#/example/
-
-# 公开用户页面允许索引
-Allow: /#/USER*
-
-# 登录/注册页面建议不索引
-Disallow: /#/login
-Disallow: /#/register
-Disallow: /#/me
-
-Sitemap: https://cognition.world/sitemap.xml
+Sitemap: https://uptef.com/sitemap.xml
 ```
 
-### 9.2 Meta Robots 标签
+### 9.2 Meta Robots
 
-**公开页面**:
-```html
-<meta name="robots" content="index, follow">
-```
-
-**私密页面** (待实现):
-```html
-<meta name="robots" content="noindex, follow">
-```
-
-### 9.3 可索引策略
-
-**无条件公开**:
-- 示例页面
-- 用户公开页面 (is_public = true)
-- 首页
-
-**限制访问**:
-- 个人中心 (/me) - 需登录
-- 编辑功能 - 需登录
+**公开页面**: `<meta name="robots" content="index, follow">`
+**私密页面**: `<meta name="robots" content="noindex, follow">`（待实现）
 
 ---
 
 ## 十、LLM 抓取优化规则
 
-### 10.1 内容可读性优化
+### 10.1 结构化数据
 
-**文本内容**:
-- 使用语义化 HTML 标签 (article, section, header, main)
-- 避免纯图片展示重要信息
-- 关键信息使用文字而非图标
+- 首页: `index.html` 静态注入 WebSite + Organization（AI 爬虫无需 JS 即可读取）
+- 用户页: JS 动态注入 ProfilePage + Person（**待 SSR 后对 AI 爬虫可见**）
 
-**结构化数据**:
-- 所有用户页面必须包含 JSON-LD
-- 使用标准 Schema.org 类型
-- 包含完整的人物信息 (Person)
+### 10.2 平台描述（首页 HTML 壳中已硬编码）
 
-### 10.2 LLM 友好标记
-
-**页面类型标识**:
-- 首页: `WebSite` + `Organization`
-- 用户页: `ProfilePage` + `Person`
-- 示例页: `ProfilePage` + `example: true`
-
-**关键信息提取**:
-```json
-{
-  "用户标识": "user_id",
-  "用户昵称": "username",
-  "身份标签": "tag",
-  "个人简介": "slogan",
-  "地理位置": "location",
-  "数字ID": "display_id",
-  "注册时间": "created_at",
-  "公开状态": "is_public"
-}
-```
-
-### 10.3 上下文理解优化
-
-**平台描述** (用于 LLM 理解平台性质):
 ```
 认知界是一个面向全球化的个人黄页索引平台，属于全民 GEO 公开信息平台。
 平台特点：
@@ -568,22 +417,42 @@ Sitemap: https://cognition.world/sitemap.xml
 4. 防止诈骗、滥用与虚假行为
 ```
 
-**用户页面描述模板**:
+### 10.3 用户页面描述模板（待 SSR 后生效）
+
 ```
 {username} 是认知界平台的用户，身份标签为 {tag}，
 位于 {location}，数字ID为 {display_id}。
 个人简介：{slogan}
 ```
 
-### 10.4 示例页面特殊标记
+---
 
-**示例标识**:
-- JSON-LD 中包含 `"example": true`
-- 页面顶部有明确的示例提示文案
-- 标题中包含 "示例" 关键词
+## 十一、当前架构限制与改造计划
 
-**LLM 识别建议**:
-LLM 在抓取时应识别 `example: true` 标记，将此页面归类为示例数据，不作为真实用户信息处理。
+### 11.1 现有问题
+
+| 问题 | 严重程度 | 影响 | 当前状态 |
+|------|---------|------|---------|
+| React SPA 无 SSR | 🔴 致命 | 爬虫看不到 JS 渲染的内容 | 待解决 |
+| Hash 路由 | 🟡 中等 | 非 Google 搜索引擎索引差 | 待迁移 |
+| 用户页 JSON-LD 由 JS 注入 | 🔴 致命 | AI 爬虫抓不到用户结构化数据 | 待解决 |
+| 无动态 sitemap | 🟡 中等 | 新用户不自动出现在 sitemap | 待解决 |
+
+### 11.2 短期修复（已完成 2026-06-05）
+
+- [x] Sitemap URL 格式修正为 `/#/` hash 格式
+- [x] index.html 硬编码 title、meta description、OpenGraph、Twitter Card
+- [x] index.html 硬编码 WebSite + Organization JSON-LD
+- [x] 规范文档域名从 cognition.world 改为 uptef.com
+
+### 11.3 中长期改造计划
+
+| 阶段 | 内容 | 目标 | 优先级 |
+|------|------|------|--------|
+| 一 | 改造 Next.js + SSR | 爬虫可见用户内容 | 🔴 最高 |
+| 二 | 切换到 History 路由 | 兼容所有搜索引擎 | 🟡 高 |
+| 三 | 动态生成 sitemap | 爬虫发现所有页面 | 🟡 高 |
+| 四 | 自动提交 sitemap 到 Google/Bing | 加速索引 | 🟢 中 |
 
 ---
 
@@ -591,19 +460,17 @@ LLM 在抓取时应识别 `example: true` 标记，将此页面归类为示例�
 
 | 文件 | 路径 | 说明 |
 |------|------|------|
-| SEO 工具函数 | `src/utils/seo.ts` | 所有结构化数据生成函数 |
-| SEO 组件 | `src/components/SEOHead.tsx` | Meta 标签注入组件 |
-| 类型定义 | `src/types/index.ts` | SEOData, Profile 等类型 |
-| 首页 | `src/pages/IndexPage.tsx` | 首页 SEO 实现 |
-| 用户页 | `src/pages/UserPage.tsx` | 用户页面 SEO 实现 |
-| 示例页 | `src/pages/ExamplePage.tsx` | 示例页面 SEO 实现 |
+| 首页 HTML 壳 | `index.html` | 静态 SEO/GEO 硬编码 |
+| SEO 工具函数 | `src/utils/seo.ts` | 结构化数据生成函数 |
+| SEO 组件 | `src/components/SEOHead.tsx` | JS 端 Meta 注入组件 |
+| 类型定义 | `src/types/index.ts` | SEOData, Profile, APP_CONFIG |
+| Sitemap | `public/sitemap.xml` | 站点地图 |
+| Robots | `public/robots.txt` | 爬虫规则 |
+| Vercel 配置 | `vercel.json` | 部署路由 |
 
 ## 附录 B: 更新记录
 
 | 版本 | 日期 | 更新内容 |
 |------|------|----------|
-| 1.0.0 | 2026-05-03 | 初始版本，包含完整 SEO/GEO 规范 |
-
----
-
-*本文档由 Meoo 自动生成，用于记录认知界平台的 SEO & GEO 技术实现细节。*
+| 1.0.0 | 2026-05-03 | 初始版本（cognition.world 域名） |
+| 1.1.0 | 2026-06-05 | 域名改为 uptef.com；新增首页静态 SEO/GEO 硬编码策略；新增架构限制与改造计划章节；删除过期的互动/标注内容章节 |

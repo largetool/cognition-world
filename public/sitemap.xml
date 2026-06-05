@@ -7,64 +7,50 @@
     <priority>1.0</priority>
   </url>
 
-  <!-- 主要页面 -->
+  <!-- 静态页面（使用 hash 路由） -->
   <url>
-    <loc>https://uptef.com/login</loc>
+    <loc>https://uptef.com/#/login</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://uptef.com/register</loc>
+    <loc>https://uptef.com/#/register</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.3</priority>
   </url>
-
-  <!-- 内容页面 -->
   <url>
-    <loc>https://uptef.com/whitepaper</loc>
+    <loc>https://uptef.com/#/whitepaper</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://uptef.com/terms</loc>
+    <loc>https://uptef.com/#/terms</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://uptef.com/privacy</loc>
+    <loc>https://uptef.com/#/privacy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://uptef.com/about</loc>
+    <loc>https://uptef.com/#/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://uptef.com/contact</loc>
+    <loc>https://uptef.com/#/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://uptef.com/accessibility</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://uptef.com/guestbook</loc>
+    <loc>https://uptef.com/#/guestbook</loc>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
-
-  <!-- 用户主页 - 动态生成 -->
   <url>
-    <loc>https://uptef.com/USER2F79998B000000000</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://uptef.com/YIYANCHAOREN000000000</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <loc>https://uptef.com/#/example/000000001</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
 </urlset>
