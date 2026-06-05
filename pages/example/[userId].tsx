@@ -51,7 +51,7 @@ function generateUserJsonLd(profile: Profile, logs: any[]): object {
   const profileUrl = `${APP_CONFIG.url}/example/${profile.user_id}`;
   const profilePage = generateProfilePageSchema(profile);
   const blogPostings = logs.slice(0, 10).map((log) => {
-    const posting = generateBlogPostingSchema(
+    const posting: any = generateBlogPostingSchema(
       { content: log.content || '', created_at: log.created_at || '' },
       profile,
     );

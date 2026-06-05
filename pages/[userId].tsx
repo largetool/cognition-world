@@ -105,7 +105,7 @@ function generateUserJsonLd(profile: Profile, logs: any[]): object {
 
   // BlogPosting for each log (最多取 10 条避免 JSON 过大)
   const blogPostings = logs.slice(0, 10).map((log) => {
-    const posting = generateBlogPostingSchema(
+    const posting: any = generateBlogPostingSchema(
       { content: log.content || '', created_at: log.created_at || log.published_at || '' },
       profile,
     );
