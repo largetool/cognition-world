@@ -8,9 +8,10 @@ interface IPCheckResult {
 }
 
 export function useIPCheck() {
+  const isServer = typeof window === 'undefined';
   const [result, setResult] = useState<IPCheckResult>({
     isBlocked: false,
-    isLoading: true,
+    isLoading: !isServer, // false on server so SSR data can render immediately
     clientIP: '',
   });
 
