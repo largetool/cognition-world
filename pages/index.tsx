@@ -61,6 +61,7 @@ export default function IndexPage() {
       <main
         id="ssr-content"
         style={{
+          display: 'none',
           fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
           maxWidth: '800px',
           margin: '0 auto',
@@ -196,6 +197,10 @@ export default function IndexPage() {
           时空锚点 · 2026-04-26 · 北京市延庆区
         </footer>
       </main>
+
+      <noscript>
+        <style>{`#ssr-content { display: block !important; }`}</style>
+      </noscript>
 
       <AppRoutes />
     </>
