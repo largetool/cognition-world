@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, User, Tag, MapPin, MessageSquare, Globe, Check, Mail, Lock, Eye, EyeOff, CheckCircle, Phone } from 'lucide-react';
-import { registerWithEmail, checkEmailExists } from '../utils/auth';
+import { registerWithEmail, checkEmailExists, getNextDisplayId } from '../utils/auth';
 import { supabase } from '../supabase/client';
 import { generateUserId, APP_CONFIG } from '../types';
 import { SEOHead } from '../components/SEOHead';
@@ -33,6 +33,12 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
 
+  // Google OAuth 注册模式
+  const location = useLocation();
+  const isGoogleMode = new URLSearchParams(location.search).get('from') === 'google';
+  const [googleUserLoading, setGoogleUserLoading] = useState(isGoogleMode);
+  const [googleUser, setGoogleUser] = useState<any>(null);
+
   // 验证邮箱格式
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -60,9 +66,84 @@ export default function RegisterPage() {
     }
   };
 
+  // Google OAuth 模式：加载用户信息并预填表单
+  useEffect(() => {
+    if (!isGoogleMode) return;
+    const loadGoogleUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setGoogleUser(user);
+        const name = user.user_metadata?.full_name ||
+                     user.user_metadata?.name ||
+                     (user.email ? user.email.split('@')[0] : '');
+        setFormData(prev => ({
+          ...prev,
+          username: name,
+          email: user.email || '',
+          password: '',
+          confirmPassword: '',
+        }));
+      } else {
+        // Google 会话已过期，跳回登录页
+        navigate('/login');
+      }
+      setGoogleUserLoading(false);
+    };
+    loadGoogleUser();
+  }, [isGoogleMode]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Google OAuth 新用户：已完成认证，直接创建 profile
+    if (isGoogleMode && googleUser) {
+      if (!formData.username || !formData.tag) {
+        setError('请至少填写用户名和身份标签');
+        return;
+      }
+      if (!formData.country || !formData.province || !formData.city) {
+        setError('请完整填写所在地信息（国家、省/市、城市）');
+        return;
+      }
+      if (!formData.agreeTerms) {
+        setError('请同意服务条款');
+        return;
+      }
+      setIsSubmitting(true);
+      const locationStr = formData.community
+        ? `${formData.country} ${formData.province} ${formData.city} ${formData.community}`
+        : `${formData.country} ${formData.province} ${formData.city}`;
+      const nextId = await getNextDisplayId();
+      const userId = generateUserId(formData.username, nextId);
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: googleUser.id,
+          username: formData.username,
+          user_id: userId,
+          email: googleUser.email || formData.email,
+          tag: formData.tag,
+          slogan: formData.slogan || null,
+          slogan_approved: formData.slogan ? false : null,
+          location: locationStr,
+          is_public: formData.isPublic,
+          is_hidden: false,
+          is_admin: false,
+          display_id: nextId,
+          onboarding_completed: false,
+          account_status: 'available',
+          geo_enabled: false,
+        });
+      if (insertError) {
+        setError('创建资料失败：' + (insertError.message || '请重试'));
+        setIsSubmitting(false);
+        return;
+      }
+      setRegistered(true);
+      setIsSubmitting(false);
+      return;
+    }
 
     // 验证邮箱
     if (!validateEmail(formData.email)) {
@@ -105,7 +186,8 @@ export default function RegisterPage() {
       ? `${formData.country} ${formData.province} ${formData.city} ${formData.community}`
       : `${formData.country} ${formData.province} ${formData.city}`;
 
-    const userId = generateUserId(formData.username, 0);
+    const nextId = await getNextDisplayId();
+    const userId = generateUserId(formData.username, nextId);
     const { user, error: registerError } = await registerWithEmail(
       formData.email,
       formData.password,
@@ -142,7 +224,7 @@ export default function RegisterPage() {
           is_public: formData.isPublic,
           is_hidden: false,
           is_admin: false,
-          display_id: 0,
+          display_id: nextId,
           onboarding_completed: false,
           account_status: 'available',
           geo_enabled: false
@@ -220,15 +302,15 @@ export default function RegisterPage() {
               <h1 className="text-2xl sm:text-3xl font-bold mb-2">注册成功</h1>
               <p className="text-gray-500 mb-8">您的数字身份已创建</p>
               <p className="text-sm text-gray-600 mb-6">
-                现在您可以使用邮箱和密码登录了
+                {isGoogleMode ? '您的个人资料已创建，现在可以开始使用' : '现在您可以使用邮箱和密码登录了'}
               </p>
               <motion.button
-                onClick={goToLogin}
+                onClick={() => navigate(isGoogleMode ? '/me' : '/login')}
                 className="w-full px-6 py-3 bg-[#18181B] text-white rounded-lg hover:bg-[#27272A] transition-colors"
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
               >
-                去登录
+                {isGoogleMode ? '进入我的页面' : '去登录'}
               </motion.button>
             </motion.div>
           </div>
@@ -274,8 +356,12 @@ export default function RegisterPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3">创建你的数字身份</h1>
-            <p className="text-sm sm:text-base text-gray-500">使用邮箱创建数字身份</p>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3">
+              {isGoogleMode ? '完善你的个人资料' : '创建你的数字身份'}
+            </h1>
+            <p className="text-sm sm:text-base text-gray-500">
+              {isGoogleMode ? 'Google 账号登录成功，补充以下信息完成注册' : '使用邮箱创建数字身份'}
+            </p>
           </motion.div>
 
           {/* 测试版通知 */}
@@ -297,6 +383,12 @@ export default function RegisterPage() {
             </div>
           </motion.div>
 
+          {isGoogleMode && googleUserLoading ? (
+            <div className="text-center py-16">
+              <div className="w-8 h-8 mx-auto border-2 border-gray-200 border-t-[#18181B] rounded-full animate-spin" />
+              <p className="text-gray-500 text-sm mt-4">正在验证 Google 登录...</p>
+            </div>
+          ) : (
           <motion.form
             onSubmit={handleSubmit}
             className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 shadow-sm"
@@ -305,55 +397,60 @@ export default function RegisterPage() {
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <div className="space-y-5 sm:space-y-6">
-              {/* Google 一键注册 */}
-              <button
-                type="button"
-                onClick={handleGoogleLogin}
-                className="w-full py-3 px-4 bg-white border border-gray-200 rounded-lg font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-3"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                使用 Google 快速注册
-              </button>
+              {/* Google 一键注册 — 仅普通模式显示 */}
+              {!isGoogleMode && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    className="w-full py-3 px-4 bg-white border border-gray-200 rounded-lg font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-3"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                    使用 Google 快速注册
+                  </button>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200" />
+                    </div>
+                    <div className="relative flex justify-center text-xs">
+                      <span className="bg-white px-3 text-gray-400">或填写以下信息</span>
+                    </div>
+                  </div>
+                </>
+              )}
 
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200" />
+              {/* 邮箱 — 仅普通模式 */}
+              {!isGoogleMode && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    邮箱 <span className="text-red-500">*</span>
+                    <span className="text-gray-400 text-xs ml-2">将作为登录凭证</span>
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onBlur={handleEmailBlur}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base"
+                      placeholder="请输入邮箱地址"
+                    />
+                  </div>
+                  {emailError && (
+                    <p className="text-red-500 text-xs mt-1">{emailError}</p>
+                  )}
                 </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="bg-white px-3 text-gray-400">或填写以下信息</span>
-                </div>
-              </div>
-
-              {/* 邮箱 - 必填 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  邮箱 <span className="text-red-500">*</span>
-                  <span className="text-gray-400 text-xs ml-2">将作为登录凭证</span>
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    onBlur={handleEmailBlur}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base"
-                    placeholder="请输入邮箱地址"
-                  />
-                </div>
-                {emailError && (
-                  <p className="text-red-500 text-xs mt-1">{emailError}</p>
-                )}
-              </div>
+              )}
 
               {/* 手机号 - 选填 */}
+              {!isGoogleMode && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   手机号
@@ -370,7 +467,11 @@ export default function RegisterPage() {
                   />
                 </div>
               </div>
+              )}
 
+              {/* 密码 — 仅普通模式 */}
+              {!isGoogleMode && (
+              <>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   密码 <span className="text-red-500">*</span>
@@ -420,6 +521,8 @@ export default function RegisterPage() {
                   </button>
                 </div>
               </div>
+              </>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -602,11 +705,12 @@ export default function RegisterPage() {
               ) : (
                 <>
                   <Check className="w-4 h-4" />
-                  立即创建
+                  {isGoogleMode ? '完成注册' : '立即创建'}
                 </>
               )}
             </motion.button>
 
+            {!isGoogleMode && (
             <div className="mt-6 text-center">
               <button
                 type="button"
@@ -616,7 +720,9 @@ export default function RegisterPage() {
                 已有账户？立即登录
               </button>
             </div>
+            )}
           </motion.form>
+          )}
         </div>
       </main>
     </div>

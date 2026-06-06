@@ -139,44 +139,21 @@ export async function getCurrentUser() {
       .select('*')
       .eq('id', user.id)
       .maybeSingle();
-
-    // Google OAuth 用户已认证但没有 profile → 自动创建一条基础资料
-    if (!profile && !profileError && user.email) {
-      const defaultName =
-        user.user_metadata?.full_name ||
-        user.user_metadata?.name ||
-        user.email.split('@')[0];
-      const { data: newProfile, error: insertError } = await supabase
-        .from('profiles')
-        .insert({
-          id: user.id,
-          username: defaultName,
-          user_id: defaultName,
-          email: user.email,
-          tag: '',
-          slogan: null,
-          location: '',
-          is_public: true,
-          is_hidden: false,
-          is_admin: false,
-          display_id: 0,
-          onboarding_completed: false,
-          account_status: 'available',
-          geo_enabled: false,
-        })
-        .select()
-        .maybeSingle();
-      if (!insertError && newProfile) {
-        return { user, profile: sanitizeProfile(newProfile as Profile), error: null };
-      }
-      console.warn('[auth] 自动创建 profile 失败:', insertError);
-    }
-
     return { user, profile, error: profileError };
   } catch (err) {
     console.error('获取当前用户失败:', err);
     return { user: null, profile: null, error: err as Error };
   }
+}
+
+/** 获取下一个可用的 display_id（max + 1） */
+export async function getNextDisplayId(): Promise<number> {
+  const { data } = await supabase
+    .from('profiles')
+    .select('display_id')
+    .order('display_id', { ascending: false })
+    .limit(1);
+  return (data?.[0]?.display_id ?? 0) + 1;
 }
 
 export async function updateProfile(userId: string, updates: {

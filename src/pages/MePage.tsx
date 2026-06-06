@@ -42,11 +42,16 @@ export default function MePage() {
 
     const loadData = async () => {
       try {
-        const { profile: userProfile, error: authError } = await getCurrentUser();
+        const { user: authUser, profile: userProfile, error: authError } = await getCurrentUser();
         if (!isMounted) return;
 
         if (authError || !userProfile) {
-          navigate('/login');
+          if (authUser) {
+            // Google OAuth 新用户：已认证但没有资料 → 跳到注册页补充信息
+            navigate('/register?from=google');
+          } else {
+            navigate('/login');
+          }
           return;
         }
 
