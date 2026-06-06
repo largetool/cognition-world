@@ -155,6 +155,7 @@ export async function getCurrentUser() {
           email: user.email,
           tag: '',
           slogan: null,
+          location: '',
           is_public: true,
           is_hidden: false,
           is_admin: false,
