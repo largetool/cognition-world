@@ -28,14 +28,14 @@ export function generateOrganizationSchema() {
   };
 }
 
-export function generatePersonSchema(profile: Profile) {
+export function generatePersonSchema(profile: Profile, aiDescription?: string) {
   return {
     '@type': 'Person',
     '@id': profile.user_id,
     name: profile.username,
     alternateName: profile.user_id,
     jobTitle: profile.tag,
-    description: profile.slogan,
+    description: aiDescription || profile.slogan,
     identifier: {
       '@type': 'PropertyValue',
       name: 'display_id',
@@ -63,16 +63,16 @@ export function generateBlogPostingSchema(log: { content: string; created_at: st
   };
 }
 
-export function generateProfilePageSchema(profile: Profile) {
+export function generateProfilePageSchema(profile: Profile, aiDescription?: string) {
   return {
     '@context': 'https://schema.org',
     '@type': 'ProfilePage',
     name: `${profile.username} - ${APP_CONFIG.name}`,
-    description: profile.slogan || `${profile.tag} | ${APP_CONFIG.name}`,
+    description: aiDescription || profile.slogan || `${profile.tag} | ${APP_CONFIG.name}`,
     url: userProfileWebUrl(profile.display_id),
     inLanguage: 'zh-CN',
     dateModified: profile.updated_at,
-    mainEntity: generatePersonSchema(profile),
+    mainEntity: generatePersonSchema(profile, aiDescription),
   };
 }
 

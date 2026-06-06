@@ -8,6 +8,7 @@ import {
   generateBlogPostingSchema,
   generateBreadcrumbList,
 } from '../src/utils/seo';
+import { generateUserBio } from '../src/utils/agnes';
 import type { Profile } from '../src/types';
 
 /** 统一小写域名 */
@@ -74,6 +75,7 @@ export default function UserSSRPage({
   ssrOgImage,
   ssrCanonicalUrl,
   ssrNotFound,
+  ssrGeoBio,
 }: SSRProps) {
   if (ssrNotFound || !ssrProfile) {
     return (
@@ -218,7 +220,7 @@ export default function UserSSRPage({
             ID {displayIdStr}
           </div>
 
-          {ssrProfile.slogan && (
+          {(ssrGeoBio || ssrProfile.slogan) && (
             <p
               style={{
                 fontSize: 16,
@@ -227,8 +229,25 @@ export default function UserSSRPage({
                 margin: '0 0 16px 0',
               }}
             >
-              {ssrProfile.slogan}
+              {ssrGeoBio || ssrProfile.slogan}
             </p>
+          )}
+          {ssrGeoBio && (
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                fontSize: 11,
+                color: '#4f46e5',
+                background: 'rgba(79,70,229,0.1)',
+                padding: '2px 8px',
+                borderRadius: 8,
+                marginBottom: 16,
+              }}
+            >
+              ✨ AI 生成
+            </div>
           )}
 
           <div style={{ display: 'flex', gap: 24, fontSize: 13, color: '#9ca3af' }}>
@@ -354,6 +373,7 @@ interface SSRProps {
   ssrOgDescription?: string;
   ssrOgImage?: string;
   ssrCanonicalUrl?: string;
+  ssrGeoBio?: string;
 }
 
 function generateMetaDescription(profile: Profile, logs: any[]): string {
@@ -367,9 +387,9 @@ function generateMetaDescription(profile: Profile, logs: any[]): string {
   return parts.join('。') || `${profile.username}在${APP_CONFIG.name}的个人公开主页`;
 }
 
-function generateUserJsonLd(profile: Profile, logs: any[]): object {
+function generateUserJsonLd(profile: Profile, logs: any[], aiDescription?: string): object {
   const pUrl = userUrl(profile.display_id);
-  const profilePage = generateProfilePageSchema(profile);
+  const profilePage = generateProfilePageSchema(profile, aiDescription);
 
   const blogPostings = logs.slice(0, 10).map((log) => {
     const posting: any = generateBlogPostingSchema(
@@ -446,8 +466,26 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const ssrLogs = (logs || []).map((log: any) => ({ ...log, canDelete: false }));
     const pUrl = userUrl(typedProfile.display_id);
-    const ssrJsonLd = generateUserJsonLd(typedProfile, ssrLogs);
-    const ssrMetaDescription = generateMetaDescription(typedProfile, ssrLogs);
+
+    // Agnes AI: 生成用户的 GEO 简介（Person.description）
+    let geoBio: string | undefined;
+    const logContents = (logs || []).map((l: any) => l.content || '').filter(Boolean);
+    if (logContents.length > 0) {
+      try {
+        geoBio = await generateUserBio({
+          username: typedProfile.username,
+          tag: typedProfile.tag || '',
+          slogan: typedProfile.slogan || '',
+          location: typedProfile.location || '',
+          logContents,
+        });
+      } catch (e) {
+        console.warn('[Agnes] 生成简介失败，使用 slogan 降级:', (e as Error).message);
+      }
+    }
+
+    const ssrJsonLd = generateUserJsonLd(typedProfile, ssrLogs, geoBio);
+    const ssrMetaDescription = geoBio || generateMetaDescription(typedProfile, ssrLogs);
 
     return {
       props: {
@@ -456,8 +494,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         ssrLogs,
         ssrJsonLd,
         ssrMetaDescription,
+        ssrGeoBio: geoBio || '',
         ssrOgTitle: `${typedProfile.username} - ${APP_CONFIG.name}`,
-        ssrOgDescription: ssrMetaDescription,
+        ssrOgDescription: geoBio || ssrMetaDescription,
         ssrOgImage: typedProfile.background_image || '',
         ssrCanonicalUrl: pUrl,
       },

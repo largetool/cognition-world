@@ -8,6 +8,7 @@ import {
   generateBlogPostingSchema,
   generateBreadcrumbList,
 } from '../../src/utils/seo';
+import { generateUserBio } from '../../src/utils/agnes';
 import type { Profile } from '../../src/types';
 
 const BASE_URL = 'https://uptef.com';
@@ -225,9 +226,9 @@ export default function ExampleSSRPage({
   );
 }
 
-function generateUserJsonLd(profile: Profile, logs: any[]): object {
+function generateUserJsonLd(profile: Profile, logs: any[], aiDescription?: string): object {
   const pUrl = `${BASE_URL}/example/${padId(profile.display_id)}`;
-  const profilePage = generateProfilePageSchema(profile);
+  const profilePage = generateProfilePageSchema(profile, aiDescription);
   const blogPostings = logs.slice(0, 10).map((log) => {
     const posting: any = generateBlogPostingSchema(
       { content: log.content || '', created_at: log.created_at || '' },
