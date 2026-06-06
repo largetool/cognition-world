@@ -5,7 +5,7 @@ import { formatDateTime, fmtDisplayId } from '../types';
 import type { Log } from '../types';
 
 interface LogItemProps {
-  log: Log | { id: string; content: string; created_at: string | null; user_id: string; is_public?: boolean | null; published_at?: string | null };
+  log: Log | { id: string; content: string; created_at: string | null; user_id: string; is_public?: boolean | null; published_at?: string | null; tags?: string[] | null };
   index?: number;
   displayId?: number | null;
 }
@@ -37,6 +37,20 @@ export function LogItem({ log, index = 0, displayId }: LogItemProps) {
           {log.content}
         </p>
       </div>
+
+      {/* 标签 */}
+      {log.tags && log.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {log.tags.map((tag: string, ti: number) => (
+            <span
+              key={ti}
+              className="text-xs px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400"
+            >
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* 展开/收起按钮 */}
       {needsCollapse && (

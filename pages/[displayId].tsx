@@ -76,6 +76,7 @@ export default function UserSSRPage({
   ssrCanonicalUrl,
   ssrNotFound,
   ssrGeoBio,
+  ssrKeywords,
 }: SSRProps) {
   if (ssrNotFound || !ssrProfile) {
     return (
@@ -125,6 +126,7 @@ export default function UserSSRPage({
         <meta name="twitter:description" content={ssrOgDescription || ''} />
 
         {/* SEO essentials */}
+        <meta name="keywords" content={ssrKeywords || ''} />
         <link rel="canonical" href={pUrl} />
         <meta name="robots" content="index, follow, max-image-preview:large" />
 
@@ -297,6 +299,24 @@ export default function UserSSRPage({
                   >
                     {log.content || ''}
                   </p>
+                  {log.tags && log.tags.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                      {log.tags.map((tag: string, ti: number) => (
+                        <span
+                          key={ti}
+                          style={{
+                            fontSize: 11,
+                            color: '#818cf8',
+                            background: 'rgba(79,70,229,0.12)',
+                            padding: '2px 8px',
+                            borderRadius: 6,
+                          }}
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <footer style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <time
                       dateTime={log.created_at || log.published_at || ''}
@@ -374,6 +394,30 @@ interface SSRProps {
   ssrOgImage?: string;
   ssrCanonicalUrl?: string;
   ssrGeoBio?: string;
+  ssrKeywords?: string;
+}
+
+function generateKeywords(profile: Profile, logs: any[]): string {
+  const keywords: string[] = [];
+  if (profile.username) keywords.push(profile.username);
+  if (profile.tag) keywords.push(profile.tag);
+  if (profile.location) keywords.push(profile.location);
+  // 从日志标签提取关键词
+  const tagSet = new Set<string>();
+  logs.slice(0, 10).forEach(l => {
+    if (Array.isArray(l.tags)) l.tags.forEach((t: string) => tagSet.add(t));
+  });
+  tagSet.forEach(t => keywords.push(t));
+  // 从日志内容提取关键词
+  if (logs.length > 0) {
+    logs.slice(0, 3).forEach(l => {
+      const word = (l.content || '').slice(0, 20).trim();
+      if (word) keywords.push(word);
+    });
+  }
+  // 固定 GEO/SEO 关键词
+  keywords.push('个人主页', '个人GEO', '个人SEO', '数字身份', 'AI可索引', '认知界', '公开日志');
+  return keywords.join(',');
 }
 
 function generateMetaDescription(profile: Profile, logs: any[]): string {
@@ -393,7 +437,7 @@ function generateUserJsonLd(profile: Profile, logs: any[], aiDescription?: strin
 
   const blogPostings = logs.slice(0, 10).map((log) => {
     const posting: any = generateBlogPostingSchema(
-      { content: log.content || '', created_at: log.created_at || log.published_at || '' },
+      { content: log.content || '', created_at: log.created_at || log.published_at || '', tags: log.tags || [] },
       profile,
     );
     posting['@id'] = `${pUrl}/thought/${log.id}`;
@@ -486,6 +530,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const ssrJsonLd = generateUserJsonLd(typedProfile, ssrLogs, geoBio);
     const ssrMetaDescription = geoBio || generateMetaDescription(typedProfile, ssrLogs);
+    const ssrKeywords = generateKeywords(typedProfile, ssrLogs);
 
     return {
       props: {
@@ -495,6 +540,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         ssrJsonLd,
         ssrMetaDescription,
         ssrGeoBio: geoBio || '',
+        ssrKeywords,
         ssrOgTitle: `${typedProfile.username} - ${APP_CONFIG.name}`,
         ssrOgDescription: geoBio || ssrMetaDescription,
         ssrOgImage: typedProfile.background_image || '',

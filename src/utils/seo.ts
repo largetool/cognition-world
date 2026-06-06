@@ -50,8 +50,8 @@ export function generatePersonSchema(profile: Profile, aiDescription?: string) {
   };
 }
 
-export function generateBlogPostingSchema(log: { content: string; created_at: string }, profile: Profile) {
-  return {
+export function generateBlogPostingSchema(log: { content: string; created_at: string; tags?: string[] | null }, profile: Profile) {
+  const schema: any = {
     '@type': 'BlogPosting',
     headline: log.content.slice(0, 60),
     articleBody: log.content,
@@ -61,6 +61,11 @@ export function generateBlogPostingSchema(log: { content: string; created_at: st
     },
     datePublished: log.created_at,
   };
+  // 标签 → JSON-LD about 字段，帮助 AI 理解日志主题
+  if (log.tags && log.tags.length > 0) {
+    schema.about = log.tags.map(tag => ({ '@type': 'Thing', name: tag }));
+  }
+  return schema;
 }
 
 export function generateProfilePageSchema(profile: Profile, aiDescription?: string) {
@@ -96,7 +101,7 @@ export function getDefaultSEO(): SEOData {
   return {
     title: '面向全球化的个人黄页索引｜全民 GEO 公开信息平台',
     description: APP_CONFIG.description,
-    keywords: ['个人主页', '黄页', 'AI', '认知', '索引', 'GEO', '全民 GEO', 'Cognition World'],
+    keywords: ['个人GEO', '个人SEO', 'AI可索引', '公开身份平台', '数字实体', '人本位', '个人主页', '黄页', 'AI', '认知', '索引', 'GEO', '全民 GEO', 'Cognition World'],
     ogType: 'website',
     canonicalUrl: APP_CONFIG.url,
   };
@@ -119,7 +124,7 @@ export function getUserSEO(profile: Profile | null | undefined): SEOData {
   return {
     title: `${username} - ${APP_CONFIG.name}`,
     description: slogan,
-    keywords: [username, tag, userId, '个人主页'],
+    keywords: [username, tag, userId, '个人主页', '个人GEO', '个人SEO', '数字身份', 'AI可索引', '认知界'],
     ogType: 'profile',
     canonicalUrl: userProfileWebUrl(profile.display_id),
   };

@@ -24,7 +24,7 @@ function generateThoughtSchema(log: Log, profile: Profile, displayId: number | n
   const userProfileUrl = `${APP_CONFIG.url}/${padId(displayId)}`;
   const avatarUrl = generateUserAvatar(profile.username);
 
-  return {
+  const schema: any = {
     '@context': 'https://schema.org',
     '@type': 'SocialMediaPosting',
     '@id': currentUrl,
@@ -55,6 +55,10 @@ function generateThoughtSchema(log: Log, profile: Profile, displayId: number | n
       '@id': currentUrl,
     },
   };
+  if (log.tags && log.tags.length > 0) {
+    schema.about = log.tags.map(tag => ({ '@type': 'Thing', name: tag }));
+  }
+  return schema;
 }
 
 interface Log {
@@ -62,6 +66,7 @@ interface Log {
   user_id: string;
   content: string;
   created_at: string | null;
+  tags?: string[] | null;
 }
 
 export default function ThoughtPage() {
@@ -158,7 +163,7 @@ export default function ThoughtPage() {
   const seoData = {
     title: `${profile.username}的动态 - ${APP_CONFIG.name}`,
     description: log.content.slice(0, 200),
-    keywords: [profile.username, profile.tag, '动态', '认知日志', 'GEO'],
+    keywords: [profile.username, profile.tag, '动态', '认知日志', 'GEO', '个人SEO', 'AI可索引', ...(log.tags || [])],
     ogType: 'article' as const,
     ogImage: avatarUrl,
     canonicalUrl: currentUrl,
@@ -219,6 +224,20 @@ export default function ThoughtPage() {
             <div itemProp="text" className="prose prose-lg max-w-none text-[var(--text-primary)] whitespace-pre-wrap">
               {log.content}
             </div>
+
+            {/* 标签 */}
+            {log.tags && log.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {log.tags.map((tag: string, ti: number) => (
+                  <span
+                    key={ti}
+                    className="text-xs px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-400"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* 作者信息 - 微数据 */}
             <div itemProp="author" itemScope itemType="https://schema.org/Person" className="mt-6 pt-4 border-t border-[var(--border-light)]">

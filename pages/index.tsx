@@ -31,7 +31,7 @@ export default function IndexPage() {
       <Head>
         <title>{pageTitle}</title>
         <meta name="description" content={pageDescription} />
-        <meta name="keywords" content="个人主页,黄页,AI,认知,索引,GEO,全民GEO,CognitionWorld,个人品牌,数字身份,LLM索引,全局目录,结构化数据,AI搜索,AI引用,数字信誉,Generative Engine Optimization,个人知识图谱,公开日志" />
+        <meta name="keywords" content="个人GEO,个人SEO,AI可索引,公开身份平台,数字实体,人本位,个人主页,黄页,AI,认知,索引,GEO,全民GEO,CognitionWorld,个人品牌,数字身份,LLM索引,全局目录,结构化数据,AI搜索,AI引用,数字信誉,Generative Engine Optimization,个人知识图谱,公开日志" />
 
         <meta property="og:title" content={`${APP_CONFIG.name} - ${APP_CONFIG.slogan}`} />
         <meta property="og:description" content={APP_CONFIG.description} />

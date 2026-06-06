@@ -34,6 +34,7 @@ interface LogForSEO {
   content: string;
   created_at: string | null;
   updated_at?: string | null;
+  tags?: string[] | null;
 }
 
 function padDisplayId(id: number | null): string {
@@ -86,24 +87,30 @@ function generateEnhancedProfileSchema(profile: Profile, recentLogs: LogForSEO[]
 
   // 添加最近的日志作为 BlogPosting
   if (recentLogs && recentLogs.length > 0) {
-    const blogPostings = recentLogs.map((log, index) => ({
-      '@type': 'BlogPosting',
-      '@id': `${profileUrl}#log-${log.id}`,
-      headline: log.content.slice(0, 60),
-      articleBody: log.content,
-      author: {
-        '@type': 'Person',
-        '@id': `${profileUrl}#person`,
-        name: profile.username,
-      },
-      datePublished: log.created_at,
-      dateModified: log.updated_at || log.created_at,
-      url: `${profileUrl}#log-${index}`,
-      isPartOf: {
-        '@type': 'ProfilePage',
-        '@id': profileUrl,
-      },
-    }));
+    const blogPostings = recentLogs.map((log, index) => {
+      const posting: any = {
+        '@type': 'BlogPosting',
+        '@id': `${profileUrl}#log-${log.id}`,
+        headline: log.content.slice(0, 60),
+        articleBody: log.content,
+        author: {
+          '@type': 'Person',
+          '@id': `${profileUrl}#person`,
+          name: profile.username,
+        },
+        datePublished: log.created_at,
+        dateModified: log.updated_at || log.created_at,
+        url: `${profileUrl}#log-${index}`,
+        isPartOf: {
+          '@type': 'ProfilePage',
+          '@id': profileUrl,
+        },
+      };
+      if (log.tags && log.tags.length > 0) {
+        posting.about = log.tags.map(tag => ({ '@type': 'Thing', name: tag }));
+      }
+      return posting;
+    });
 
     schema['@graph'].push(...blogPostings);
   }
@@ -146,6 +153,7 @@ export default function UserPage() {
   const refreshLogs = clientUserData.refreshLogs;
   const { isBlocked, isLoading: ipLoading } = useIPCheck();
   const [logContent, setLogContent] = useState('');
+  const [logTags, setLogTags] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -176,11 +184,17 @@ export default function UserPage() {
   const handleSubmitLog = async () => {
     if (!logContent.trim() || !profile) return;
 
+    const tags = logTags
+      .split(/[,，]/)
+      .map(t => t.trim())
+      .filter(Boolean);
+
     setIsSubmitting(true);
-    const result = await createLog(profile.user_id, logContent.trim());
+    const result = await createLog(profile.user_id, logContent.trim(), tags);
 
     if (result) {
       setLogContent('');
+      setLogTags('');
       refreshLogs();
     }
 
@@ -603,7 +617,14 @@ export default function UserPage() {
               value={logContent}
               onChange={(e) => setLogContent(e.target.value)}
               placeholder="记录你的想法..."
-              className="input-field min-h-[100px] resize-none mb-4"
+              className="input-field min-h-[100px] resize-none mb-3"
+            />
+            <input
+              type="text"
+              value={logTags}
+              onChange={(e) => setLogTags(e.target.value)}
+              placeholder="添加标签（选填，逗号分隔如：GEO, AI, 独立开发）"
+              className="input-field mb-4 text-sm"
             />
             <div className="flex justify-end">
               <motion.button

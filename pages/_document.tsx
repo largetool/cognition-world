@@ -14,7 +14,7 @@ export default function Document() {
         <link rel="alternate" hrefLang="x-default" href="https://uptef.com/" />
 
         <meta name="description" content="一个面向全球用户的公开信息平台，提供不可删除、不可篡改、可索引的个人 GEO 信誉记录，让搜索引擎与 LLM 能够理解每个用户。" />
-        <meta name="keywords" content="个人主页,黄页,AI,认知,索引,GEO,全民GEO,CognitionWorld,个人品牌,数字身份,LLM索引,全球目录,Schema.org,结构化数据,AI搜索,AI引用,数字信誉,Generative Engine Optimization,个人知识图谱,公开日志,可验证信息" />
+        <meta name="keywords" content="个人GEO,个人SEO,AI可索引,公开身份平台,数字实体,人本位,个人主页,黄页,AI,认知,索引,GEO,全民GEO,CognitionWorld,个人品牌,数字身份,LLM索引,全球目录,Schema.org,结构化数据,AI搜索,AI引用,数字信誉,Generative Engine Optimization,个人知识图谱,公开日志,可验证信息" />
 
         <meta property="og:title" content="认知界 - 让AI认识每一个具体的普通人" />
         <meta property="og:description" content="一个面向全球用户的公开信息平台，提供不可删除、不可篡改、可索引的个人 GEO 信誉记录。" />

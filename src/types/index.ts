@@ -97,7 +97,7 @@ export function getDefaultSEO(lang: string = 'zh'): SEOData {
     return {
       title: `${APP_CONFIG.nameEn} - Personal GEO Index`,
       description: 'A global personal GEO public information platform that helps AI understand each specific ordinary person.',
-      keywords: ['personal profile', 'personal GEO', 'personal SEO', 'GEO', 'SEO', 'AI search', 'Cognition World', 'generative engine optimization', 'Digital Identity', 'Personal Profile', 'LLM Index', 'Global Directory'],
+      keywords: ['personal GEO', 'personal SEO', 'AI-indexable', 'public identity platform', 'digital entity', 'human-centric', 'personal profile', 'GEO', 'SEO', 'AI search', 'Cognition World', 'generative engine optimization', 'Digital Identity', 'Personal Profile', 'LLM Index', 'Global Directory'],
       ogType: 'website',
       canonicalUrl: APP_CONFIG.url,
     };
@@ -105,7 +105,7 @@ export function getDefaultSEO(lang: string = 'zh'): SEOData {
   return {
     title: `${APP_CONFIG.name} - ${APP_CONFIG.slogan}`,
     description: APP_CONFIG.description,
-    keywords: ['个人主页', '黄页', 'AI', '认知', '索引', 'Cognition World', 'GEO', 'Digital Identity', 'Personal Profile', 'AI Search', 'LLM Index', 'Global Directory'],
+    keywords: ['个人GEO', '个人SEO', 'AI可索引', '公开身份平台', '数字实体', '人本位', '个人主页', '黄页', 'AI', '认知', '索引', 'Cognition World', 'GEO', 'Digital Identity', 'Personal Profile', 'AI Search', 'LLM Index', 'Global Directory'],
     ogType: 'website',
     canonicalUrl: APP_CONFIG.url,
   };

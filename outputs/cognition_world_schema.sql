@@ -80,7 +80,8 @@ CREATE TABLE IF NOT EXISTS public.logs (
     content text NOT NULL,
     created_at timestamp without time zone DEFAULT now(),
     is_public boolean DEFAULT false,
-    published_at timestamp with time zone
+    published_at timestamp with time zone,
+    tags text[] DEFAULT '{}'::text[]
 );
 
 -- thoughts 表

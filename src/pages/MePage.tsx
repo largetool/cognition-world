@@ -29,6 +29,7 @@ export default function MePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ tag: '', slogan: '', location: '', isPublic: true });
   const [newLogContent, setNewLogContent] = useState('');
+  const [newLogTags, setNewLogTags] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
   const [backgroundImages, setBackgroundImages] = useState<BackgroundImage[]>([]);
   const [systemBackgrounds, setSystemBackgrounds] = useState<SystemBackground[]>([]);
@@ -132,10 +133,16 @@ export default function MePage() {
         return;
       }
 
-      const newLog = await createLog(profile.user_id, newLogContent.trim());
+      const tags = newLogTags
+        .split(/[,，]/)
+        .map(t => t.trim())
+        .filter(Boolean);
+
+      const newLog = await createLog(profile.user_id, newLogContent.trim(), tags);
       if (newLog) {
         setLogs(prev => [{...newLog, created_at: newLog.created_at || new Date().toISOString()}, ...prev]);
         setNewLogContent('');
+        setNewLogTags('');
         await recordPost(profile.user_id);
       } else {
         setError('发布失败，请重试');
@@ -650,6 +657,13 @@ export default function MePage() {
                   onChange={(e) => setNewLogContent(e.target.value)}
                   className="w-full px-0 py-0 bg-transparent border-0 text-[0.9375rem] text-gray-800 placeholder:text-gray-400 focus:outline-none resize-none"
                   placeholder="分享你的想法..."
+                />
+                <input
+                  type="text"
+                  value={newLogTags}
+                  onChange={(e) => setNewLogTags(e.target.value)}
+                  className="w-full mt-3 px-0 py-0 bg-transparent border-t border-gray-100 pt-3 text-sm text-gray-500 placeholder:text-gray-300 focus:outline-none"
+                  placeholder="添加标签（选填，逗号分隔如：GEO, AI, 独立开发）"
                 />
                 <div className="flex justify-end mt-4">
                   <motion.button

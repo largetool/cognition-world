@@ -430,6 +430,7 @@ export type Database = {
           id: string
           is_public: boolean | null
           published_at: string | null
+          tags: string[] | null
           user_id: string
         }
         Insert: {
@@ -438,6 +439,7 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           published_at?: string | null
+          tags?: string[] | null
           user_id: string
         }
         Update: {
@@ -446,6 +448,7 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           published_at?: string | null
+          tags?: string[] | null
           user_id?: string
         }
         Relationships: [

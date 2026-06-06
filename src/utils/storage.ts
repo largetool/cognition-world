@@ -155,7 +155,7 @@ export async function getPublicLogs(userId: string, limit: number = 50): Promise
 }
 
 // 创建日志（10分钟后自动公开）
-export async function createLog(userId: string, content: string): Promise<Log | null> {
+export async function createLog(userId: string, content: string, tags?: string[]): Promise<Log | null> {
   // 检查用户是否被冻结
   const { data: profile } = await supabase
     .from('profiles')
@@ -176,6 +176,7 @@ export async function createLog(userId: string, content: string): Promise<Log | 
       content,
       is_public: false,
       published_at: publishedAt,
+      tags: tags || [],
     })
     .select()
     .single();
