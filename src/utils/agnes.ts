@@ -10,13 +10,11 @@ const AGNES_BASE_URL = 'https://apihub.agnes-ai.com/v1';
 const AGNES_MODEL = 'agnes-2.0-flash';
 
 function getApiKey(): string {
-  // 优先从环境变量读取
   const key = process.env.AGNES_API_KEY;
-  if (key) return key;
-
-  // 否则使用硬编码的 key（开发/降级用）
-  console.warn('[agnes] AGNES_API_KEY 未设置，使用降级 key');
-  return 'sk-jL3EUaJnpXF04B6C13468Q0RCRuuJjcUvd1qErWECjMdrLHc';
+  if (!key) {
+    throw new Error('[agnes] AGNES_API_KEY 环境变量未设置，无法调用 Agnes AI 服务');
+  }
+  return key;
 }
 
 interface AgnesResponse {

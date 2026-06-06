@@ -97,6 +97,9 @@ obj/
 .bundle/
 /vendor/
 
+# 数据库导出和敏感备忘 — 禁止提交
+outputs/
+
 # other
 .stats
 .config
