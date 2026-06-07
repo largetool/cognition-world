@@ -97,6 +97,10 @@ obj/
 .bundle/
 /vendor/
 
+# 构建产物
+.next/
+tsconfig.tsbuildinfo
+
 # 数据库导出和敏感备忘 — 禁止提交
 outputs/
 
