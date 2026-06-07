@@ -216,7 +216,7 @@ export default function ThoughtPage() {
             <div className="flex items-center gap-2 text-sm text-[var(--text-tertiary)] mb-4">
               <Clock className="w-4 h-4" />
               <time itemProp="datePublished" dateTime={log.created_at || new Date().toISOString()}>
-                {new Date(log.created_at || Date.now()).toLocaleString('zh-CN')}
+                {new Date(log.created_at || Date.now()).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
               </time>
             </div>
 

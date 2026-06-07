@@ -56,12 +56,19 @@ function userUrl(id: number | null): string {
 function fmtDate(dateStr: string | null): string {
   if (!dateStr) return '';
   const d = new Date(dateStr);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const h = String(d.getHours()).padStart(2, '0');
-  const min = String(d.getMinutes()).padStart(2, '0');
-  return `${y}/${m}/${day} ${h}:${min}`;
+  // 统一使用北京时间
+  const parts = new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Shanghai',
+    hour12: false,
+  }).formatToParts(d);
+  const vals: Record<string, string> = {};
+  parts.forEach(p => { vals[p.type] = p.value; });
+  return `${vals.year}/${vals.month}/${vals.day} ${vals.hour}:${vals.minute}`;
 }
 
 export default function UserSSRPage({

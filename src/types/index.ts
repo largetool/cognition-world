@@ -61,12 +61,16 @@ export function isIPInCIDR(ip: string, cidr: string): boolean {
   return (ipBinary & mask) === (cidrBinary & mask);
 }
 
+/** 统一时区：北京时间 (Asia/Shanghai, UTC+8) */
+const TIMEZONE = 'Asia/Shanghai';
+
 export function formatDate(date: string | Date): string {
   const d = new Date(date);
   return d.toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
+    timeZone: TIMEZONE,
   });
 }
 
@@ -78,6 +82,7 @@ export function formatDateTime(date: string | Date): string {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: TIMEZONE,
   });
 }
 

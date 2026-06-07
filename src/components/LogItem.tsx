@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { formatDateTime, fmtDisplayId } from '../types';
+import { Copy, CopyCheck } from 'lucide-react';
+import { formatDateTime, fmtDisplayId, APP_CONFIG } from '../types';
 import type { Log } from '../types';
 
 interface LogItemProps {
@@ -14,7 +15,26 @@ const MAX_PREVIEW_LENGTH = 50;
 
 export function LogItem({ log, index = 0, displayId }: LogItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
   const needsCollapse = log.content.length > MAX_PREVIEW_LENGTH;
+
+  const handleCopyLink = async () => {
+    const url = `${APP_CONFIG.url}/${fmtDisplayId(displayId ?? 0)}/thought/${log.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <motion.article
@@ -71,16 +91,26 @@ export function LogItem({ log, index = 0, displayId }: LogItemProps) {
         >
           {formatDateTime(log.published_at || log.created_at || '')}
         </time>
-        {displayId != null && (
-          <Link
-            to={`/${fmtDisplayId(displayId)}/thought/${log.id}`}
-            className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors flex items-center gap-1"
-            itemProp="url"
-            title={log.content.slice(0, 100)}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleCopyLink}
+            className="text-xs text-[var(--text-tertiary)] hover:text-[var(--accent)] transition-colors flex items-center gap-1"
+            title="复制链接"
           >
-            查看详情
-          </Link>
-        )}
+            {copied ? <CopyCheck className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? '已复制' : '复制链接'}
+          </button>
+          {displayId != null && (
+            <Link
+              to={`/${fmtDisplayId(displayId)}/thought/${log.id}`}
+              className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors flex items-center gap-1"
+              itemProp="url"
+              title={log.content.slice(0, 100)}
+            >
+              查看详情
+            </Link>
+          )}
+        </div>
       </footer>
     </motion.article>
   );
