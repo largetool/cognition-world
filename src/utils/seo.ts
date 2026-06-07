@@ -7,15 +7,11 @@ export function generateWebSiteSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: '面向全球化的个人黄页索引',
-    alternateName: '全民 GEO 公开信息平台',
+    name: '认知界 Cognition World',
+    alternateName: '面向全球化的个人黄页索引 · 全民 GEO 公开信息平台',
     url: APP_CONFIG.url,
     description: '一个公开、可验证、不可删除的个人 GEO 信息平台。',
     inLanguage: 'zh-CN',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: `${APP_CONFIG.url}/search?q={search_term_string}`,
-    },
   };
 }
 

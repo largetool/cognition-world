@@ -28,19 +28,16 @@ export default function Document() {
         <meta name="twitter:title" content="认知界 - 让AI认识每一个具体的普通人" />
         <meta name="twitter:description" content="面向全球化的个人黄页索引，让 AI 认识每一个具体的普通人。" />
 
+        {/* 全局 WebSite 结构化数据（所有页面共用，不包含 SearchAction——搜索页未实现） */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'WebSite',
-            name: '面向全球化的个人黄页索引',
-            alternateName: '全民GEO公开信息平台',
+            name: '认知界 Cognition World',
+            alternateName: '面向全球化的个人黄页索引 · 全民 GEO 公开信息平台',
             url: 'https://uptef.com/',
             description: '一个公开、可验证、不可删除的个人 GEO 信息平台。',
             inLanguage: 'zh-CN',
-            potentialAction: {
-              '@type': 'SearchAction',
-              target: 'https://uptef.com/search?q={search_term_string}',
-            },
           }),
         }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{

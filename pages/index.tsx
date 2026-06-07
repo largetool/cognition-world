@@ -2,8 +2,6 @@ import Head from 'next/head';
 import AppRoutes from '../src/App';
 import { APP_CONFIG } from '../src/types';
 import {
-  generateWebSiteSchema,
-  generateOrganizationSchema,
   generateFAQPageSchema,
   generateBreadcrumbList,
   breadcrumbs,
@@ -19,8 +17,6 @@ export default function IndexPage() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
-      generateWebSiteSchema(),
-      generateOrganizationSchema(),
       generateFAQPageSchema(HOME_FAQ),
       generateBreadcrumbList([breadcrumbs.home]),
     ],
