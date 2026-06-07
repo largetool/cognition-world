@@ -658,23 +658,6 @@ export default function MePage() {
                   className="w-full px-0 py-0 bg-transparent border-0 text-[0.9375rem] text-gray-800 placeholder:text-gray-400 focus:outline-none resize-none"
                   placeholder="分享你的想法...（完成后可添加标签，让 AI 更容易发现你）"
                 />
-                {/* 半透明标签格式提示 — 输入内容后自动淡出 */}
-                <div
-                  style={{ opacity: newLogContent.trim() ? 0 : 0.35 }}
-                  className="text-xs text-gray-400 mt-2 mb-1 transition-opacity duration-300 flex flex-wrap gap-1 items-center select-none"
-                >
-                  <span>标签示例：</span>
-                  <span className="text-indigo-400">#GEO</span>
-                  <span>,</span>
-                  <span className="text-indigo-400">#AI</span>
-                  <span>,</span>
-                  <span className="text-indigo-400">#思考</span>
-                  <span>,</span>
-                  <span className="text-indigo-400">#生活</span>
-                  <span>,</span>
-                  <span className="text-indigo-400">#技术</span>
-                  <span>（逗号分隔）</span>
-                </div>
                 <input
                   type="text"
                   value={newLogTags}

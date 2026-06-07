@@ -261,6 +261,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         url: `${BASE_URL}/${padId(profile.display_id)}`,
       },
     };
+    if (log.tags && log.tags.length > 0) {
+      ssrJsonLd.about = log.tags.map(tag => ({ '@type': 'Thing', name: tag }));
+    }
 
     return {
       props: {

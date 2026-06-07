@@ -619,23 +619,6 @@ export default function UserPage() {
               placeholder="记录你的想法...（完成后可添加标签，让 AI 更容易发现你）"
               className="input-field min-h-[100px] resize-none mb-2"
             />
-            {/* 半透明标签格式提示 — 输入内容后自动淡出 */}
-            <div
-              style={{ opacity: logContent.trim() ? 0 : 0.4 }}
-              className="text-xs text-gray-500 mb-3 transition-opacity duration-300 flex flex-wrap gap-1 items-center select-none"
-            >
-              <span>添加标签（逗号分隔，如：</span>
-              <span className="text-indigo-400">#GEO</span>
-              <span>,</span>
-              <span className="text-indigo-400">#AI</span>
-              <span>,</span>
-              <span className="text-indigo-400">#编程</span>
-              <span>,</span>
-              <span className="text-indigo-400">#思考</span>
-              <span>,</span>
-              <span className="text-indigo-400">#生活</span>
-              <span>）</span>
-            </div>
             <input
               type="text"
               value={logTags}
