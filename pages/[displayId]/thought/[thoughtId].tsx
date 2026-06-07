@@ -243,7 +243,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const sanitizedProfile = sanitizeProfile(profile as Profile);
     const pUrl = `${BASE_URL}/${padId(profile.display_id)}/thought/${thoughtId}`;
-    const ssrJsonLd = {
+    const ssrJsonLd: Record<string, any> = {
       '@context': 'https://schema.org',
       '@type': 'SocialMediaPosting',
       '@id': pUrl,
