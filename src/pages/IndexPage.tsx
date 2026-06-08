@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import Head from 'next/head';
 import { Globe, Shield, Zap, FileText } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { Navbar } from '../components/Navbar';
@@ -10,7 +9,7 @@ import { FeatureCard } from '../components/FeatureCard';
 import { getSystemStats, getRandomApprovedSlogan } from '../utils/storage';
 import { GlassCard } from '../components/GlassCard';
 import { getDefaultSEO, APP_CONFIG } from '../types';
-import { generateWebSiteSchema, generateOrganizationSchema, generateBreadcrumbList, breadcrumbs, generateFAQPageSchema, HOME_FAQ } from '../utils/seo';
+import { generateBreadcrumbList, breadcrumbs, HOME_FAQ } from '../utils/seo';
 import { t, getCurrentLanguage } from '../locales';
 import { useAuth } from '../hooks/useAuth';
 
@@ -72,19 +71,10 @@ export default function IndexPage() {
         jsonLd={{
           '@context': 'https://schema.org',
           '@graph': [
-            generateWebSiteSchema(),
-            generateOrganizationSchema(),
             generateBreadcrumbList([breadcrumbs.home]),
           ],
         }}
       />
-      {/* SSR FAQPage JSON-LD —— 解决 Google 搜索结果中展示 FAQ 富文本片段 */}
-      <Head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(generateFAQPageSchema(HOME_FAQ)) }}
-        />
-      </Head>
       <Navbar user={user} transparent />
 
       <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
