@@ -16,6 +16,7 @@ interface LogData {
   is_public?: boolean | null;
   canDelete?: boolean;
   published_at?: string | null;
+  tags?: string[] | null;
 }
 import { SEOHead } from '../components/SEOHead';
 import { generateProfilePageSchema, generatePersonSchema } from '../utils/seo';
@@ -765,6 +766,18 @@ export default function MePage() {
                       <p className="text-[0.9375rem] text-gray-800 leading-relaxed whitespace-pre-wrap">
                         {log.content}
                       </p>
+                      {log.tags && log.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-3">
+                          {log.tags.map((tag: string, ti: number) => (
+                            <span
+                              key={ti}
+                              className="text-xs px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600 font-medium"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </motion.article>
                   ))}
                 </div>

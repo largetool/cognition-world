@@ -32,7 +32,7 @@ export default function AppRoutes() {
       <Route path="/me" element={<MePage />} />
       <Route path="/messages" element={<MessagesPage />} />
       <Route path="/admin" element={<AdminPage />} />
-      <Route path="/example/:displayId" element={<ExamplePage />} />
+      <Route path="/example/sample" element={<ExamplePage />} />
       <Route path="/whitepaper" element={<WhitepaperPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />

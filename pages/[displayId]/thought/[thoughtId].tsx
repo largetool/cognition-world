@@ -119,6 +119,7 @@ export default function ThoughtSSRPage({
       <main
         id="ssr-content"
         style={{
+          display: 'none',
           fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
           maxWidth: '720px',
           margin: '0 auto',
@@ -211,6 +212,10 @@ export default function ThoughtSSRPage({
           </a>
         </div>
       </main>
+
+      <noscript>
+        <style>{`#ssr-content { display: block !important; }`}</style>
+      </noscript>
 
       <AppRoutes />
     </>

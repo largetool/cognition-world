@@ -147,6 +147,7 @@ export default function UserSSRPage({
       <main
         id="ssr-content"
         style={{
+          display: 'none',
           fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
           maxWidth: '720px',
           margin: '0 auto',
@@ -381,6 +382,10 @@ export default function UserSSRPage({
           </a>
         </div>
       </main>
+
+      <noscript>
+        <style>{`#ssr-content { display: block !important; }`}</style>
+      </noscript>
 
       {/* 客户端 React 应用（JavaScript 启用后会接管页面） */}
       <AppRoutes />

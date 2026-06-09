@@ -22,8 +22,8 @@ const EXAMPLE_USER: Partial<Profile> = {
   is_hidden: false,
   is_admin: false,
   display_id: 1,
-  created_at: '2024-01-15T08:30:00Z',
-  updated_at: '2024-12-20T14:20:00Z',
+  created_at: '2026-05-01T08:30:00Z',
+  updated_at: '2026-06-01T14:20:00Z',
 };
 
 // 示例认知日志
@@ -31,27 +31,27 @@ const EXAMPLE_LOGS = [
   {
     id: 'log-1',
     content: '今天完成了一个复杂的算法优化项目，性能提升了40%，很有成就感！',
-    created_at: '2025-01-10T09:30:00Z',
+    created_at: '2026-06-08T09:30:00Z',
   },
   {
     id: 'log-2',
-    content: '周末去西湖边拍了些照片，秋天的杭州真的很美，银杏叶黄了，湖面波光粼粼。',
-    created_at: '2025-01-08T16:45:00Z',
+    content: '周末去西湖边拍了些照片，六月的杭州真的很美，荷花开了，湖面波光粼粼。',
+    created_at: '2026-06-05T16:45:00Z',
   },
   {
     id: 'log-3',
     content: '读完了《黑客与画家》，对技术创造力和艺术的关系有了新的理解。',
-    created_at: '2025-01-05T20:15:00Z',
+    created_at: '2026-06-02T20:15:00Z',
   },
   {
     id: 'log-4',
     content: '第一次尝试做红烧肉，虽然卖相一般，但味道还不错，继续练习！',
-    created_at: '2025-01-03T12:00:00Z',
+    created_at: '2026-05-25T12:00:00Z',
   },
   {
     id: 'log-5',
-    content: '新年愿望：希望今年能去更多的地方旅行，认识更多有趣的人。',
-    created_at: '2025-01-01T00:01:00Z',
+    content: '加入认知界，希望在这里记录我的技术成长和生活感悟。',
+    created_at: '2026-05-20T00:01:00Z',
   },
 ];
 
@@ -64,7 +64,7 @@ export default function ExamplePage() {
     description: '这是一个示例用户页面，展示认知界平台的个人主页样式和功能。面向全球化的个人黄页索引，让 AI 认识每一个具体的普通人。',
     keywords: ['示例', '个人主页', '黄页', 'GEO', '认知界', 'Cognition World'],
     ogType: 'profile' as const,
-    canonicalUrl: `${APP_CONFIG.url}/example/000000001`,
+    canonicalUrl: `${APP_CONFIG.url}/example/sample`,
   };
 
   const jsonLd = {
@@ -72,7 +72,7 @@ export default function ExamplePage() {
     '@type': 'ProfilePage',
     name: `${profile.username} - ${APP_CONFIG.name}`,
     description: profile.slogan || `${profile.tag} | ${APP_CONFIG.name}`,
-    url: `${APP_CONFIG.url}/example/000000001`,
+    url: `${APP_CONFIG.url}/example/sample`,
     inLanguage: 'zh-CN',
     example: true,
     geoRegion: APP_CONFIG.geoAnchor,
@@ -100,7 +100,7 @@ export default function ExamplePage() {
         addressRegion: 'Zhejiang',
         addressCountry: 'CN',
       },
-      url: `${APP_CONFIG.url}/example/000000001`,
+      url: `${APP_CONFIG.url}/example/sample`,
       sameAs: [],
     },
   };
@@ -134,7 +134,7 @@ export default function ExamplePage() {
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={async () => {
-                      const url = `${window.location.origin}/#/example/000000001`;
+                      const url = `${window.location.origin}/#/example/sample`;
                       if (navigator.share) {
                         await navigator.share({
                           title: '示例用户 - 认知界',
@@ -253,7 +253,7 @@ export default function ExamplePage() {
                   {log.content}
                 </p>
                 <div className="mt-2 text-xs text-[var(--text-tertiary)]">
-                  {new Date(log.created_at).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })}
+                  {new Date(log.created_at).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Shanghai', hour12: false })}
                 </div>
               </motion.div>
             ))}
