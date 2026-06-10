@@ -7,6 +7,7 @@ const STATIC_PAGES = [
   { loc: 'https://uptef.com/privacy', changefreq: 'monthly', priority: '0.4' },
   { loc: 'https://uptef.com/about', changefreq: 'monthly', priority: '0.6' },
   { loc: 'https://uptef.com/guestbook', changefreq: 'daily', priority: '0.5' },
+  { loc: 'https://uptef.com/example/sample', changefreq: 'monthly', priority: '0.6' },
 ];
 
 function generateSitemapXml(userUrls: string[]): string {
