@@ -15,11 +15,11 @@ const EXAMPLE_USER = {
 };
 
 const EXAMPLE_LOGS = [
-  { id: 'log-1', content: '今天完成了一个复杂的算法优化项目，性能提升了40%，很有成就感！', created_at: '2026-06-08T09:30:00Z' },
-  { id: 'log-2', content: '周末去西湖边拍了些照片，六月的杭州真的很美，荷花开了，湖面波光粼粼。', created_at: '2026-06-05T16:45:00Z' },
-  { id: 'log-3', content: '读完了《黑客与画家》，对技术创造力和艺术的关系有了新的理解。', created_at: '2026-06-02T20:15:00Z' },
-  { id: 'log-4', content: '第一次尝试做红烧肉，虽然卖相一般，但味道还不错，继续练习！', created_at: '2026-05-25T12:00:00Z' },
-  { id: 'log-5', content: '加入认知界，希望在这里记录我的技术成长和生活感悟。', created_at: '2026-05-20T00:01:00Z' },
+  { id: 'log-1', content: '今天完成了一个复杂的算法优化项目，性能提升了40%，很有成就感！', created_at: '2026-06-08T09:30:00Z', tags: ['编程', '算法', '效率'] },
+  { id: 'log-2', content: '周末去西湖边拍了些照片，六月的杭州真的很美，荷花开了，湖面波光粼粼。', created_at: '2026-06-05T16:45:00Z', tags: ['生活', '摄影', '杭州'] },
+  { id: 'log-3', content: '读完了《黑客与画家》，对技术创造力和艺术的关系有了新的理解。', created_at: '2026-06-02T20:15:00Z', tags: ['阅读', '技术', '创造力'] },
+  { id: 'log-4', content: '第一次尝试做红烧肉，虽然卖相一般，但味道还不错，继续练习！', created_at: '2026-05-25T12:00:00Z', tags: ['生活', '烹饪'] },
+  { id: 'log-5', content: '加入认知界，希望在这里记录我的技术成长和生活感悟。', created_at: '2026-05-20T00:01:00Z', tags: ['认知界', 'GEO'] },
 ];
 
 function padId(id: number | null): string {
@@ -68,6 +68,7 @@ export default function ExampleSampleSSRPage() {
         datePublished: log.created_at,
         url: `${pUrl}/thought/${log.id}`,
         isPartOf: { '@type': 'ProfilePage', '@id': pUrl },
+        ...(log.tags && log.tags.length > 0 ? { about: log.tags.map(tag => ({ '@type': 'Thing', name: tag })) } : {}),
       })),
     ],
   };
@@ -160,6 +161,15 @@ export default function ExampleSampleSSRPage() {
                 <p style={{ fontSize: 15, color: '#e6e6e6', margin: '0 0 10px 0', whiteSpace: 'pre-wrap' }}>
                   {log.content}
                 </p>
+                {(log as any).tags && (log as any).tags.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                    {(log as any).tags.map((tag: string, ti: number) => (
+                      <span key={ti} style={{ fontSize: 11, color: '#818cf8', background: 'rgba(79,70,229,0.12)', padding: '2px 8px', borderRadius: 6 }}>
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <time style={{ fontSize: 12, color: '#6b7280' }}>{fmtDate(log.created_at)}</time>
               </article>
             ))}
