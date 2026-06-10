@@ -110,6 +110,7 @@ export interface LogWithPublicStatus {
   is_public?: boolean | null;
   published_at?: string | null;
   canDelete?: boolean;
+  tags?: string[] | null;
 }
 
 // 获取用户日志（包含公开状态）
@@ -138,7 +139,7 @@ export async function getUserLogs(userId: string, currentUserId?: string, isAdmi
   });
 }
 
-// 获取公开日志（用于首页展示等）
+// 获取公开日志（用于首页展示等 — 仅返回已过10分钟冷却期的）
 export async function getPublicLogs(userId: string, limit: number = 50): Promise<LogWithPublicStatus[]> {
   const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
@@ -182,6 +183,7 @@ export async function createLog(userId: string, content: string, tags?: string[]
     .single();
 
   if (error) { console.error('Error creating log:', error); return null; }
+
   return data;
 }
 
