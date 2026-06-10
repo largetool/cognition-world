@@ -241,7 +241,7 @@ export default function IndexPage() {
                 </div>
                 <div>
                   <dt className="font-semibold text-[var(--accent)] mb-1">上线时间</dt>
-                  <dd className="text-[var(--text-primary)]">2026 年 4 月</dd>
+                  <dd className="text-[var(--text-primary)]">2026 年 6 月</dd>
                 </div>
               </dl>
             </GlassCard>

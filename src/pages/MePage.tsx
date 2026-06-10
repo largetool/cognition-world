@@ -741,7 +741,7 @@ export default function MePage() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.6 }}
             >
-              时空锚点 · 2026-04-26 · 北京市延庆区
+              时空锚点 · 2026-06-01 · 北京市延庆区
             </motion.div>
           </div>
         </main>

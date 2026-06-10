@@ -190,7 +190,7 @@ export default function IndexPage() {
         </section>
 
         <footer style={{ textAlign: 'center', marginTop: 48, fontSize: 12, color: '#4b5563' }}>
-          时空锚点 · 2026-04-26 · 北京市延庆区
+          时空锚点 · 2026-06-01 · 北京市延庆区
         </footer>
       </main>
 

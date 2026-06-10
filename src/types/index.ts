@@ -173,7 +173,7 @@ export const APP_CONFIG = {
   description: '一个面向全球用户的公开信息平台，提供不可删除、不可篡改、可索引的个人 GEO 信誉记录，让搜索引擎与 LLM 能够理解每个用户。',
   version: '1.0.0-beta',
   geoAnchor: 'Beijing, CN',
-  timeAnchor: '2026.04.26',
+  timeAnchor: '2026.06.01',
   url: 'https://uptef.com',
 };
 

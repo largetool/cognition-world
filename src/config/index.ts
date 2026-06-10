@@ -12,7 +12,7 @@ export const CONFIG = {
     description: '面向全球化的个人黄页索引，让 AI 认识每一个具体的普通人',
     version: '1.0.0',
     geoAnchor: '北京市延庆区',
-    timeAnchor: '2026-04-26',
+    timeAnchor: '2026-06-01',
   },
   security: {
     defaultBlacklist: [],
