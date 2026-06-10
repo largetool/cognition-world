@@ -25,7 +25,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 ## 网站结构与内容类型
 
 ### 1. 用户个人主页
-路径：/{displayId}（如 /000000001）
+路径：/{displayId}（如 000000001）
 描述索引每个用户的公开身份主页
 内容：用户名、身份标签、所在地、个人Slogan、认知日志列表、AI 生成简介
 JSON-LD：ProfilePage + Person + BlogPosting
@@ -97,7 +97,7 @@ JSON-LD：WebSite + Organization + FAQPage
 
 - 首页：https://uptef.com/
 - 白皮书：https://uptef.com/whitepaper
-- 示例用户页：https://uptef.com/example/000000001
+- 示例用户页：https://uptef.com/example/sample
 - 留言板：https://uptef.com/guestbook
 - 关于我们：https://uptef.com/about
 - 用户协议：https://uptef.com/terms

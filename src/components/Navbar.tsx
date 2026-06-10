@@ -54,7 +54,7 @@ export function Navbar({ user, transparent = false }: NavbarProps) {
             )}
 
             <Link
-              to="/example/000000001"
+              to="/example/sample"
               className="px-4 py-2 rounded-lg text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
             >
               示例
