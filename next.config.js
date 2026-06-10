@@ -2,6 +2,17 @@
 const nextConfig = {
   reactStrictMode: true,
 
+  // 旧 sitemap.xml 301 重定向到动态 API
+  async redirects() {
+    return [
+      {
+        source: '/sitemap.xml',
+        destination: '/api/sitemap',
+        permanent: true,
+      },
+    ];
+  },
+
   // 图片/静态资源
   images: {
     domains: ['nbgsichilfrjsopnnvia.supabase.co'],

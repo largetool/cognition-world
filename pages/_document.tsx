@@ -7,7 +7,6 @@ export default function Document() {
         <meta charSet="UTF-8" />
         <meta name="google-site-verification" content="ORlVyhNvJlJPmY1CZy5mINamnmRKmL_7aHI95s2oe08" />
         <meta name="msvalidate.01" content="1B96BAC6CA69BDB19B5F05326D020D93" />
-        <meta name="robots" content="index, follow, max-image-preview:large" />
         <meta name="googlebot" content="index, follow" />
 
         <link rel="alternate" hrefLang="zh-CN" href="https://uptef.com/" />
