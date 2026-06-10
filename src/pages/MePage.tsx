@@ -680,55 +680,6 @@ export default function MePage() {
               </div>
             </motion.div>
 
-            {/* 最新动态区域 */}
-            <motion.section
-              className="mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.42 }}
-            >
-              <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-900">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center mr-2">
-                  <Clock className="w-4 h-4 text-amber-600" />
-                </div>
-                最新动态
-              </h3>
-              <div className="rounded-2xl p-5 bg-white/60 backdrop-blur-xl border border-white/80 shadow-lg shadow-slate-200/50">
-                {logs.length > 0 ? (
-                  <div className="space-y-4">
-                    {logs.slice(0, 3).map((log, idx) => (
-                      <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl bg-white/50 backdrop-blur-sm border border-white/60">
-                        <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                          idx === 0 ? 'bg-rose-400' : idx === 1 ? 'bg-amber-400' : 'bg-emerald-400'
-                        }`} />
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-700 font-medium">
-                            {log.content.substring(0, 50)}{log.content.length > 50 ? '...' : ''}
-                          </p>
-                          <time className="text-xs text-gray-400 mt-1">
-                            {(() => {
-                              const dateStr = log.created_at;
-                              const date = dateStr ? new Date(dateStr) : new Date('2025-05-01');
-                              if (isNaN(date.getTime())) return '2025-05-01';
-                              return date.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-                            })()}
-                          </time>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <Send className="w-5 h-5 text-gray-400" />
-                    </div>
-                    <p className="text-sm text-gray-400">
-                      还没有动态，去发布你的第一条想法吧
-                    </p>
-                  </div>
-                )}
-              </div>
-            </motion.section>
 
             {logs.length > 0 && (
               <motion.div
