@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, User } from 'lucide-react';
+import { ArrowLeft, Clock, User, ThumbsUp, Flag } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { Footer } from '../components/Footer';
 import { supabase } from '../supabase/client';
 import { getUserSEO, APP_CONFIG, getDefaultSEO } from '../types';
 import { generateProfilePageSchema, generateBreadcrumbList, breadcrumbs } from '../utils/seo';
 import { t, getCurrentLanguage } from '../locales';
+import { getLikes, hasUserLiked, toggleLike } from '../utils/storage';
+import { getCurrentUser } from '../utils/auth';
 import type { Profile } from '../types';
 
 // 生成用户头像 URL
@@ -75,6 +77,12 @@ export default function ThoughtPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentUser, setCurrentUser] = useState<{ user_id: string } | null>(null);
+
+  // 点赞
+  const [likeCount, setLikeCount] = useState(0);
+  const [liked, setLiked] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -90,6 +98,10 @@ export default function ThoughtPage() {
         setIsLoading(false);
         return;
       }
+
+      // 获取当前登录用户
+      const { user: authUser, profile: userProfile } = await getCurrentUser();
+      if (userProfile) setCurrentUser({ user_id: userProfile.user_id });
 
       // 先通过 display_id 获取用户
       const { data: profileData } = await supabase
@@ -120,11 +132,31 @@ export default function ThoughtPage() {
 
       setLog(logData);
       setProfile(profileData);
+
+      // 加载点赞数据
+      const count = await getLikes(thoughtId, 'log');
+      setLikeCount(count);
+      if (userProfile) {
+        const userLiked = await hasUserLiked(thoughtId, 'log', userProfile.user_id);
+        setLiked(userLiked);
+      }
+
       setIsLoading(false);
     };
 
     loadData();
   }, [displayId, thoughtId]);
+
+  const handleToggleLike = async () => {
+    if (!currentUser || likeLoading) return;
+    setLikeLoading(true);
+    const result = await toggleLike(thoughtId!, 'log', currentUser.user_id);
+    if (!result.error) {
+      setLiked(result.liked);
+      setLikeCount(result.count);
+    }
+    setLikeLoading(false);
+  };
 
   if (isLoading) {
     return (
@@ -238,6 +270,36 @@ export default function ThoughtPage() {
                 ))}
               </div>
             )}
+
+            {/* 操作按钮 */}
+            <div className="flex items-center gap-4 mt-4 pt-4 border-t border-[var(--border-light)]">
+              {/* 点赞按钮 */}
+              {currentUser && (
+                <button
+                  onClick={handleToggleLike}
+                  disabled={likeLoading}
+                  className={`text-sm transition-colors flex items-center gap-1.5 ${
+                    liked ? 'text-blue-500' : 'text-[var(--text-tertiary)] hover:text-blue-500'
+                  }`}
+                  title={liked ? '取消点赞' : '点赞'}
+                >
+                  <ThumbsUp className={`w-4 h-4 ${liked ? 'fill-blue-500' : ''}`} />
+                  <span>{liked ? '已点赞' : '点赞'}</span>
+                  {likeCount > 0 && <span className="text-xs opacity-70">({likeCount})</span>}
+                </button>
+              )}
+              {/* 举报按钮 - 非自己的内容可举报 */}
+              {currentUser && log.user_id !== currentUser.user_id && (
+                <button
+                  onClick={() => alert('如需举报，请到用户页面点击举报按钮')}
+                  className="text-sm text-[var(--text-tertiary)] hover:text-red-500 transition-colors flex items-center gap-1"
+                  title="举报"
+                >
+                  <Flag className="w-4 h-4" />
+                  <span>举报</span>
+                </button>
+              )}
+            </div>
 
             {/* 作者信息 - 微数据 */}
             <div itemProp="author" itemScope itemType="https://schema.org/Person" className="mt-6 pt-4 border-t border-[var(--border-light)]">

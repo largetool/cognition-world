@@ -8,7 +8,7 @@ import { APP_CONFIG } from '../types';
 import { supabase, supabaseUrl } from '../supabase/client';
 import { generateBreadcrumbList, breadcrumbs } from '../utils/seo';
 import { t, getCurrentLanguage } from '../locales';
-import { getLikes, hasUserLiked, toggleLike } from '../utils/storage';
+import { getLikes, hasUserLiked, toggleLike, moderateContent, isUserExemptFromReview } from '../utils/storage';
 
 // 获取 Edge Function URL
 function getEdgeFunctionUrl(): string {
@@ -158,6 +158,17 @@ export default function GuestbookPage() {
     setError('');
 
     try {
+      // AI 审核
+      const exempt = await isUserExemptFromReview(user.id);
+      if (!exempt) {
+        const modResult = await moderateContent(newMessage.trim());
+        if (!modResult.passed) {
+          setError(modResult.description ? `内容审核未通过：${modResult.description}` : '内容包含违规信息');
+          setSubmitting(false);
+          return;
+        }
+      }
+
       const session = (await supabase.auth.getSession()).data.session;
       const authHeaders = session ? { Authorization: `Bearer ${session.access_token}` } : {};
 

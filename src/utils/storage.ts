@@ -1043,3 +1043,90 @@ export async function toggleLike(targetId: string, targetType: 'log' | 'guestboo
 
   return { liked: !existing, count: count ?? 0 };
 }
+
+// ========== 内容审核 ==========
+
+export interface ModerationCheckResult {
+  passed: boolean;
+  suggestion?: string;
+  label?: string | null;
+  description?: string | null;
+  error?: string;
+}
+
+/**
+ * 调用阿里云安全护栏审核文本
+ * 客户端通过 /api/moderation/check 调用，服务端通过 aliyunModeration 直接调用
+ */
+export async function moderateContent(content: string): Promise<ModerationCheckResult> {
+  try {
+    // 调用服务器端 API
+    const baseUrl = window.location.origin;
+    const response = await fetch(`${baseUrl}/api/moderation/check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content }),
+    });
+
+    if (!response.ok) {
+      // API 不可用时，允许通过（避免阻断用户正常使用）
+      console.warn('[审核] API 请求失败，已放行:', response.status);
+      return { passed: true, error: `审核服务暂时不可用（${response.status}），已自动放行` };
+    }
+
+    const result = await response.json();
+    return {
+      passed: result.passed,
+      suggestion: result.suggestion,
+      label: result.label,
+      description: result.description,
+    };
+  } catch (err: any) {
+    // 网络异常时放行
+    console.warn('[审核] 网络异常，已放行:', err.message);
+    return { passed: true, error: '审核服务网络异常，已自动放行' };
+  }
+}
+
+/**
+ * 带审核的日志发布
+ * 1. 检查是否白名单用户（免审）
+ * 2. 非白名单用户先调 AI 审核
+ * 3. 审核通过（或异常放行）才写入数据库
+ *
+ * 返回结果包含审核状态，前端可根据需要展示
+ */
+export async function createLogWithModeration(
+  userId: string,
+  content: string,
+  tags?: string[],
+): Promise<{ success: boolean; error?: string; moderated?: boolean; rejected?: boolean; reason?: string; log?: Log }> {
+  // 1. 检查是否免审用户
+  const exempt = await isUserExemptFromReview(userId);
+
+  if (!exempt) {
+    // 2. 调用 AI 审核
+    const moderationResult = await moderateContent(content);
+
+    if (!moderationResult.passed) {
+      return {
+        success: false,
+        rejected: true,
+        reason: moderationResult.description || '内容包含违规信息',
+        error: '内容审核未通过',
+      };
+    }
+  }
+
+  // 3. 审核通过（或免审），创建日志
+  const log = await createLog(userId, content, tags);
+  if (!log) {
+    return { success: false, error: '日志创建失败' };
+  }
+
+  return {
+    success: true,
+    log,
+    moderated: !exempt,
+  };
+}

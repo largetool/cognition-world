@@ -11,7 +11,7 @@ import { BlockedPage } from '../components/BlockedPage';
 import { useAuth } from '../hooks/useAuth';
 import { useUser } from '../hooks/useUser';
 import { useIPCheck } from '../hooks/useIPCheck';
-import { createLog, getAccountHideStatus, requestAccountHide, cancelAccountHide, requestAccountRestore, type AccountHideStatus, type LogWithPublicStatus } from '../utils/storage';
+import { createLog, createLogWithModeration, getAccountHideStatus, requestAccountHide, cancelAccountHide, requestAccountRestore, isUserExemptFromReview, type AccountHideStatus, type LogWithPublicStatus } from '../utils/storage';
 import { getUserSEO, isAdminFromProfile, getInitials, APP_CONFIG, getDefaultSEO } from '../types';
 import { supabase } from '../supabase/client';
 import { generateProfilePageSchema, generatePersonSchema, generateBlogPostingSchema } from '../utils/seo';
@@ -155,6 +155,7 @@ export default function UserPage() {
   const [logContent, setLogContent] = useState('');
   const [logTags, setLogTags] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [logError, setLogError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
   // 举报相关状态
@@ -190,12 +191,18 @@ export default function UserPage() {
       .filter(Boolean);
 
     setIsSubmitting(true);
-    const result = await createLog(profile.user_id, logContent.trim(), tags);
 
-    if (result) {
+    // 带 AI 审核的发布
+    const result = await createLogWithModeration(profile.user_id, logContent.trim(), tags);
+
+    if (result.success) {
       setLogContent('');
       setLogTags('');
       refreshLogs();
+    } else if (result.rejected) {
+      setLogError(result.reason || '内容包含违规信息，请修改后重新发布');
+    } else {
+      setLogError(result.error || '发布失败，请稍后重试');
     }
 
     setIsSubmitting(false);
@@ -626,6 +633,11 @@ export default function UserPage() {
               placeholder="添加标签（选填，逗号分隔如：GEO, AI, 独立开发）"
               className="input-field mb-4 text-sm"
             />
+            {logError && (
+              <div className="mb-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                {logError}
+              </div>
+            )}
             <div className="flex justify-end">
               <motion.button
                 whileHover={{ scale: 1.02 }}

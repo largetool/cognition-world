@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Calendar, Eye, EyeOff, LogOut, User, Edit3, X, Save, Send, Clock, Image, CheckCircle, AlertCircle, Check, Share2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Eye, EyeOff, LogOut, User, Edit3, X, Save, Send, Clock, Image, CheckCircle, AlertCircle, Check, Share2, ThumbsUp } from 'lucide-react';
 import { getCurrentUser, logout, updateProfile } from '../utils/auth';
-import { getUserLogs, createLog, getUserBackgroundImages, selectSystemBackground, getActiveBackgroundImage, checkCanPost, recordPost } from '../utils/storage';
+import { getUserLogs, createLogWithModeration, getUserBackgroundImages, selectSystemBackground, getActiveBackgroundImage, checkCanPost, recordPost, getLikes, hasUserLiked, toggleLike } from '../utils/storage';
 import { localSystemBackgrounds } from '../data/systemBackgrounds';
 import type { Profile, SystemBackground, BackgroundImage } from '../types';
 
@@ -39,6 +39,10 @@ export default function MePage() {
   const [activeBgUrl, setActiveBgUrl] = useState<string | null>(null);
   const [bgError, setBgError] = useState(false);
 
+  // 点赞
+  const [logLikes, setLogLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
+  const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
+
   useEffect(() => {
     let isMounted = true;
 
@@ -72,7 +76,10 @@ export default function MePage() {
 
         if (!isMounted) return;
 
-        setLogs(userLogs as LogData[]);
+        const logsData = userLogs as LogData[];
+        setLogs(logsData);
+        // 加载点赞数据
+        loadLogLikes(logsData);
         setBackgroundImages(bgImages);
 
         const savedBgUrl = userProfile.background_image;
@@ -139,14 +146,17 @@ export default function MePage() {
         .map(t => t.trim())
         .filter(Boolean);
 
-      const newLog = await createLog(profile.user_id, newLogContent.trim(), tags);
-      if (newLog) {
-        setLogs(prev => [{...newLog, created_at: newLog.created_at || new Date().toISOString()}, ...prev]);
+      // 带 AI 审核的发布
+      const result = await createLogWithModeration(profile.user_id, newLogContent.trim(), tags);
+      if (result.rejected) {
+        setError(result.reason || '内容包含违规信息，请修改后重新发布');
+      } else if (result.success && result.log) {
+        setLogs(prev => [{...result.log!, created_at: result.log!.created_at || new Date().toISOString()}, ...prev]);
         setNewLogContent('');
         setNewLogTags('');
         await recordPost(profile.user_id);
       } else {
-        setError('发布失败，请重试');
+        setError(result.error || '发布失败，请重试');
       }
     } catch (err) {
       setError('发布出错，请稍后重试');
@@ -193,6 +203,30 @@ export default function MePage() {
   }
 
   if (!profile) return null;
+
+  // 点赞相关
+  const loadLogLikes = async (logs: LogData[]) => {
+    const likeData: Record<string, { count: number; liked: boolean }> = {};
+    await Promise.all(logs.map(async (log) => {
+      const count = await getLikes(log.id, 'log');
+      const liked = await hasUserLiked(log.id, 'log', profile.user_id);
+      likeData[log.id] = { count, liked };
+    }));
+    setLogLikes(likeData);
+  };
+
+  const handleToggleLogLike = async (logId: string) => {
+    if (likeLoading[logId]) return;
+    setLikeLoading(prev => ({ ...prev, [logId]: true }));
+    const result = await toggleLike(logId, 'log', profile.user_id);
+    if (!result.error) {
+      setLogLikes(prev => ({
+        ...prev,
+        [logId]: { count: result.count, liked: result.liked }
+      }));
+    }
+    setLikeLoading(prev => ({ ...prev, [logId]: false }));
+  };
 
   const pageTitle = `${profile.username} | 认知界`;
   const pageDescription = profile.slogan || `${profile.username} — ${profile.tag}`;
@@ -729,6 +763,20 @@ export default function MePage() {
                           ))}
                         </div>
                       )}
+                      {/* 底部操作栏 */}
+                      <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
+                        <button
+                          onClick={() => handleToggleLogLike(log.id)}
+                          disabled={likeLoading[log.id]}
+                          className={`text-xs transition-colors flex items-center gap-1 ${
+                            logLikes[log.id]?.liked ? 'text-blue-500' : 'text-gray-400 hover:text-blue-500'
+                          }`}
+                          title={logLikes[log.id]?.liked ? '取消点赞' : '点赞'}
+                        >
+                          <ThumbsUp className={`w-3.5 h-3.5 ${logLikes[log.id]?.liked ? 'fill-blue-500' : ''}`} />
+                          {logLikes[log.id]?.count > 0 && <span>{logLikes[log.id].count}</span>}
+                        </button>
+                      </div>
                     </motion.article>
                   ))}
                 </div>
