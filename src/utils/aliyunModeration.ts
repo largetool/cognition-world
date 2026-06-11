@@ -2,6 +2,7 @@
 // 阿里云 AI 安全护栏（Guardrails）审核客户端
 // API: MultiModalGuard
 // 文档: https://help.aliyun.com/zh/icp-filing/basic-icp-service/product-overview/...
+// 版本: v1.0 - 2026-06-11
 // ============================================
 
 import crypto from 'crypto';
