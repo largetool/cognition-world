@@ -132,38 +132,44 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'reports') THEN
     CREATE POLICY "登录用户可举报" ON public.reports FOR INSERT WITH CHECK (auth.uid() = reporter_id);
     CREATE POLICY "管理员可查看" ON public.reports FOR SELECT
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND is_admin = true));
+    USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid()::text AND is_admin = true));
     CREATE POLICY "管理员可更新" ON public.reports FOR UPDATE
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND is_admin = true));
+    USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid()::text AND is_admin = true));
   END IF;
 END$$;
 
 -- --- notifications ---
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'notifications') THEN
-    CREATE POLICY "所有人可读通知" ON public.notifications FOR SELECT USING (true);
-    CREATE POLICY "仅管理员可写通知" ON public.notifications FOR ALL
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'notifications') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'notifications') THEN
+      CREATE POLICY "所有人可读通知" ON public.notifications FOR SELECT USING (true);
+      CREATE POLICY "仅管理员可写通知" ON public.notifications FOR ALL
+      USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+    END IF;
   END IF;
 END$$;
 
 -- --- system_messages ---
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'system_messages') THEN
-    CREATE POLICY "所有人可读" ON public.system_messages FOR SELECT USING (true);
-    CREATE POLICY "仅管理员可写" ON public.system_messages FOR ALL
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'system_messages') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'system_messages') THEN
+      CREATE POLICY "所有人可读" ON public.system_messages FOR SELECT USING (true);
+      CREATE POLICY "仅管理员可写" ON public.system_messages FOR ALL
+      USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+    END IF;
   END IF;
 END$$;
 
 -- --- messages (旧留言表) ---
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'messages') THEN
-    CREATE POLICY "所有人可读" ON public.messages FOR SELECT USING (true);
-    CREATE POLICY "登录用户可写" ON public.messages FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'messages') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'messages') THEN
+      CREATE POLICY "所有人可读" ON public.messages FOR SELECT USING (true);
+      CREATE POLICY "登录用户可写" ON public.messages FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+    END IF;
   END IF;
 END$$;
 
@@ -183,47 +189,57 @@ END$$;
 -- --- edit_tokens ---
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'edit_tokens') THEN
-    CREATE POLICY "用户可管理自己的令牌" ON public.edit_tokens FOR ALL
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND user_id = edit_tokens.user_id));
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'edit_tokens') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'edit_tokens') THEN
+      CREATE POLICY "用户可管理自己的令牌" ON public.edit_tokens FOR ALL
+      USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND user_id = edit_tokens.user_id));
+    END IF;
   END IF;
 END$$;
 
 -- --- ip_blacklist ---
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'ip_blacklist') THEN
-    CREATE POLICY "所有人可读" ON public.ip_blacklist FOR SELECT USING (true);
-    CREATE POLICY "仅管理员可管理" ON public.ip_blacklist FOR ALL
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'ip_blacklist') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'ip_blacklist') THEN
+      CREATE POLICY "所有人可读" ON public.ip_blacklist FOR SELECT USING (true);
+      CREATE POLICY "仅管理员可管理" ON public.ip_blacklist FOR ALL
+      USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+    END IF;
   END IF;
 END$$;
 
 -- --- background_images ---
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'background_images') THEN
-    CREATE POLICY "所有人可读已审核" ON public.background_images FOR SELECT USING (status = 'approved');
-    CREATE POLICY "用户可管理自己的" ON public.background_images FOR ALL
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND user_id = background_images.user_id));
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'background_images') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'background_images') THEN
+      CREATE POLICY "所有人可读已审核" ON public.background_images FOR SELECT USING (status = 'approved');
+      CREATE POLICY "用户可管理自己的" ON public.background_images FOR ALL
+      USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND user_id = background_images.user_id));
+    END IF;
   END IF;
 END$$;
 
 -- --- system_backgrounds ---
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'system_backgrounds') THEN
-    CREATE POLICY "所有人可读" ON public.system_backgrounds FOR SELECT USING (true);
-    CREATE POLICY "仅管理员可管理" ON public.system_backgrounds FOR ALL
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'system_backgrounds') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'system_backgrounds') THEN
+      CREATE POLICY "所有人可读" ON public.system_backgrounds FOR SELECT USING (true);
+      CREATE POLICY "仅管理员可管理" ON public.system_backgrounds FOR ALL
+      USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+    END IF;
   END IF;
 END$$;
 
 -- --- password_resets ---
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'password_resets') THEN
-    CREATE POLICY "所有人可用" ON public.password_resets FOR ALL USING (true);
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'password_resets') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'password_resets') THEN
+      CREATE POLICY "所有人可用" ON public.password_resets FOR ALL USING (true);
+    END IF;
   END IF;
 END$$;
 
