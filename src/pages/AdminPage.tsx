@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle, XCircle, Trash2, Shield, Image as ImageIcon, Upload, MessageSquare, Settings, Save, Globe, AlertTriangle, Flag, Lock, Unlock, Eye, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Trash2, Shield, Image as ImageIcon, Upload, MessageSquare, Settings, Save, Globe, AlertTriangle, Flag, Lock, Unlock, Eye, X, UserPlus, Search } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { GlassCard } from '../components/GlassCard';
 import { useAuth } from '../hooks/useAuth';
-import { getPendingBackgroundImages, approveBackgroundImage, rejectBackgroundImage, getSystemBackgrounds, getMessageBoardConfig, updateMessageBoardConfig, getSitemapMode, setSitemapMode, getSitemapStats, type SitemapMode, getAllUsersWithStats, updateUserRole, getDailyPostLimit, updateDailyPostLimit, getPendingSlogans, approveSlogan, isUserGuestbookEnabled, setUserGuestbookEnabled, freezeUser, unfreezeUser } from '../utils/storage';
+import { getPendingBackgroundImages, approveBackgroundImage, rejectBackgroundImage, getSystemBackgrounds, getMessageBoardConfig, updateMessageBoardConfig, getSitemapMode, setSitemapMode, getSitemapStats, type SitemapMode, getAllUsersWithStats, updateUserRole, getDailyPostLimit, updateDailyPostLimit, getPendingSlogans, approveSlogan, isUserGuestbookEnabled, setUserGuestbookEnabled, freezeUser, unfreezeUser, getTrustedUsers, setTrustedUser, removeTrustedUser } from '../utils/storage';
 import { getAllBlacklist, addToBlacklist, removeFromBlacklist } from '../utils/ip';
 import { getDefaultSEO, isAdminFromProfile } from '../types';
 import type { Profile, BackgroundImage, IPBlacklist, SystemBackground } from '../types';
@@ -17,7 +17,7 @@ export function AdminPage() {
  const navigate = useNavigate();
  const { user, isLoading: authLoading } = useAuth() as { user: Profile | null; isLoading: boolean };
  const fileInputRef = useRef<HTMLInputElement>(null);
- const [activeTab, setActiveTab] = useState<'images' | 'blacklist' | 'system' | 'messages' | 'sitemap' | 'users' | 'slogans' | 'reports'>('images');
+ const [activeTab, setActiveTab] = useState<'images' | 'blacklist' | 'system' | 'messages' | 'sitemap' | 'users' | 'slogans' | 'reports' | 'whitelist'>('images');
  const [globalMessageBoardEnabled, setGlobalMessageBoardEnabled] = useState(true);
  const [messageRateLimit, setMessageRateLimit] = useState(10);
  const [captchaRequired, setCaptchaRequired] = useState(false);
@@ -86,6 +86,13 @@ export function AdminPage() {
  const [reviewNotes, setReviewNotes] = useState('');
  const [isReviewing, setIsReviewing] = useState(false);
 
+ // 白名单管理
+ const [trustedUsers, setTrustedUsers] = useState<Array<{ user_id: string; username: string; is_admin: boolean }>>([]);
+ const [searchUsername, setSearchUsername] = useState('');
+ const [searchResults, setSearchResults] = useState<Array<{ user_id: string; username: string; is_admin: boolean; is_trusted: boolean }>>([]);
+ const [isSearching, setIsSearching] = useState(false);
+ const [isLoadingTrusted, setIsLoadingTrusted] = useState(false);
+
  useEffect(() => {
  if (authLoading) return;
  const checkAuth = async () => {
@@ -135,6 +142,14 @@ export function AdminPage() {
  ]);
  setPostLimits({ user: userLimit, verified: verifiedLimit, premium: premiumLimit });
     setIsLoading(false);
+  };
+
+  // 加载白名单
+  const loadTrustedUsers = async () => {
+    setIsLoadingTrusted(true);
+    const users = await getTrustedUsers();
+    setTrustedUsers(users);
+    setIsLoadingTrusted(false);
   };
 
   // 加载举报列表
@@ -357,6 +372,7 @@ export function AdminPage() {
  { key: 'users', icon: Shield, label: '用户权限' },
               { key: 'slogans', icon: MessageSquare, label: 'Slogan审核', count: pendingSlogans.length },
               { key: 'reports', icon: Flag, label: '举报管理' },
+              { key: 'whitelist', icon: CheckCircle, label: '免审白名单' },
             ].map((tab) => (
  <button
  key={tab.key}
@@ -909,6 +925,137 @@ export function AdminPage() {
  )}
  </GlassCard>
  )}
+            {activeTab === 'whitelist' && (
+              <GlassCard>
+                <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5" />免审白名单管理
+                </h2>
+                <p className="text-sm text-[var(--text-secondary)] mb-6">
+                  白名单用户发布日志可跳过内容审核（节省 API 费用）。管理员默认免审。
+                </p>
+
+                {/* 已信任用户列表 */}
+                <div className="mb-8">
+                  <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">当前白名单用户</h3>
+                  {isLoadingTrusted ? (
+                    <div className="text-center py-6">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[var(--accent)] mx-auto" />
+                    </div>
+                  ) : trustedUsers.length > 0 ? (
+                    <div className="space-y-2">
+                      {trustedUsers.map((u) => (
+                        <div key={u.user_id} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-secondary)]">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                              <span className="text-indigo-600 font-bold text-sm">{u.username.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <div>
+                              <span className="font-medium text-[var(--text-primary)]">{u.username}</span>
+                              {u.is_admin && (
+                                <span className="ml-2 px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-xs">管理员</span>
+                              )}
+                            </div>
+                          </div>
+                          {!u.is_admin && (
+                            <button
+                              onClick={async () => {
+                                const result = await removeTrustedUser(u.user_id);
+                                if (result.success) {
+                                  loadTrustedUsers();
+                                } else {
+                                  alert('移除失败：' + result.error);
+                                }
+                              }}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors text-sm"
+                            >
+                              <XCircle className="w-4 h-4" />移出白名单
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-[var(--text-tertiary)] text-center py-4">暂无白名单用户</p>
+                  )}
+                </div>
+
+                {/* 搜索并添加用户 */}
+                <div>
+                  <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">添加用户到白名单</h3>
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="text"
+                      value={searchUsername}
+                      onChange={(e) => setSearchUsername(e.target.value)}
+                      placeholder="输入用户名搜索..."
+                      className="flex-1 px-4 py-2 rounded-lg border border-[var(--border-light)] bg-white text-sm"
+                    />
+                    <button
+                      onClick={async () => {
+                        if (!searchUsername.trim()) return;
+                        setIsSearching(true);
+                        const { data, error } = await (supabase as any)
+                          .from('profiles')
+                          .select('user_id, username, is_admin, is_trusted')
+                          .ilike('username', `%${searchUsername.trim()}%`)
+                          .limit(10);
+                        if (error) {
+                          console.error('搜索用户失败:', error);
+                          setSearchResults([]);
+                        } else {
+                          setSearchResults(data || []);
+                        }
+                        setIsSearching(false);
+                      }}
+                      disabled={isSearching || !searchUsername.trim()}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50 text-sm"
+                    >
+                      <Search className="w-4 h-4" />搜索
+                    </button>
+                  </div>
+
+                  {searchResults.length > 0 && (
+                    <div className="space-y-2">
+                      {searchResults.map((u) => (
+                        <div key={u.user_id} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-secondary)]">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                              <span className="text-gray-600 font-bold text-sm">{u.username.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <span className="text-[var(--text-primary)]">{u.username}</span>
+                            {u.is_admin && <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-xs">管理员</span>}
+                            {u.is_trusted && <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs">已信任</span>}
+                          </div>
+                          {!u.is_trusted ? (
+                            <button
+                              onClick={async () => {
+                                const result = await setTrustedUser(u.user_id);
+                                if (result.success) {
+                                  setSearchResults(searchResults.map(r => r.user_id === u.user_id ? { ...r, is_trusted: true } : r));
+                                  loadTrustedUsers();
+                                } else {
+                                  alert('添加失败：' + result.error);
+                                }
+                              }}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-colors text-sm"
+                            >
+                              <UserPlus className="w-4 h-4" />加入白名单
+                            </button>
+                          ) : (
+                            <span className="text-sm text-green-600 flex items-center gap-1">
+                              <CheckCircle className="w-4 h-4" />已在白名单
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {searchResults.length === 0 && !isSearching && searchUsername.trim() && (
+                    <p className="text-sm text-[var(--text-tertiary)] text-center py-4">未找到匹配的用户</p>
+                  )}
+                </div>
+              </GlassCard>
+            )}
  </motion.div>
  </div>
  </div>

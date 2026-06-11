@@ -671,13 +671,14 @@ export async function getAllUsersWithStats(limit: number = 1000): Promise<Array<
   role: string;
   is_admin: boolean;
   is_frozen: boolean;
+  is_trusted: boolean;
   today_posts: number;
 }>> {
  const today = new Date().toISOString().split('T')[0];
 
  const { data, error } = await supabase
    .from('profiles')
-   .select('user_id, display_id, username, role, is_admin, is_frozen, daily_posts_count, last_post_date')
+   .select('user_id, display_id, username, role, is_admin, is_frozen, is_trusted, daily_posts_count, last_post_date')
    .limit(limit);
 
  if (error || !data) return [];
@@ -697,6 +698,7 @@ export async function getAllUsersWithStats(limit: number = 1000): Promise<Array<
    role: user.role || 'user',
    is_admin: user.is_admin || false,
    is_frozen: user.is_frozen || false,
+   is_trusted: user.is_trusted || false,
    today_posts: postCountMap.get(user.user_id) || 0,
  }));
 }
@@ -919,4 +921,68 @@ export async function checkAndTransitionAccountHide(): Promise<{ success: boolea
   const data = await response.json();
   if (!response.ok) return { success: false };
   return { success: true, transitioned: data.transitioned };
+}
+
+// ==================== 白名单（免审用户）管理 ====================
+
+/**
+ * 获取所有免审用户列表
+ */
+export async function getTrustedUsers(): Promise<Array<{
+  user_id: string;
+  username: string;
+  is_admin: boolean;
+}>> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('user_id, username, is_admin, is_trusted')
+    .eq('is_trusted', true)
+    .limit(100);
+
+  if (error) { console.error('获取白名单失败:', error); return []; }
+  return (data || []).map((u: any) => ({
+    user_id: u.user_id,
+    username: u.username,
+    is_admin: u.is_admin || false,
+  }));
+}
+
+/**
+ * 将用户加入免审白名单
+ */
+export async function setTrustedUser(userId: string): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ is_trusted: true })
+    .eq('user_id', userId);
+
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+/**
+ * 将用户移出免审白名单
+ */
+export async function removeTrustedUser(userId: string): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ is_trusted: false })
+    .eq('user_id', userId);
+
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+/**
+ * 检查用户是否免审（管理员或白名单用户）
+ */
+export async function isUserExemptFromReview(userId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('is_admin, is_trusted')
+    .eq('user_id', userId)
+    .single();
+
+  if (error || !data) return false;
+  return data.is_admin === true || data.is_trusted === true;
 }
