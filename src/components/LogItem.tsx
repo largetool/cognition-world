@@ -1,22 +1,45 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Copy, CopyCheck } from 'lucide-react';
+import { Copy, CopyCheck, ThumbsUp } from 'lucide-react';
 import { formatDateTime, fmtDisplayId, APP_CONFIG } from '../types';
+import { getLikes, hasUserLiked, toggleLike } from '../utils/storage';
 import type { Log } from '../types';
 
 interface LogItemProps {
   log: Log | { id: string; content: string; created_at: string | null; user_id: string; is_public?: boolean | null; published_at?: string | null; tags?: string[] | null };
   index?: number;
   displayId?: number | null;
+  currentUser?: { user_id: string } | null;
 }
 
 const MAX_PREVIEW_LENGTH = 50;
 
-export function LogItem({ log, index = 0, displayId }: LogItemProps) {
+export function LogItem({ log, index = 0, displayId, currentUser }: LogItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [liked, setLiked] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
   const needsCollapse = log.content.length > MAX_PREVIEW_LENGTH;
+
+  useEffect(() => {
+    getLikes(log.id, 'log').then(setLikeCount);
+    if (currentUser) {
+      hasUserLiked(log.id, 'log', currentUser.user_id).then(setLiked);
+    }
+  }, [log.id, currentUser]);
+
+  const handleLike = async () => {
+    if (!currentUser || likeLoading) return;
+    setLikeLoading(true);
+    const result = await toggleLike(log.id, 'log', currentUser.user_id);
+    if (!result.error) {
+      setLiked(result.liked);
+      setLikeCount(result.count);
+    }
+    setLikeLoading(false);
+  };
 
   const handleCopyLink = async () => {
     const url = `${APP_CONFIG.url}/${fmtDisplayId(displayId ?? 0)}/thought/${log.id}`;
@@ -82,7 +105,7 @@ export function LogItem({ log, index = 0, displayId }: LogItemProps) {
         </button>
       )}
 
-      {/* 时间和链接 - 使用语义化 time 标签 */}
+      {/* 时间和操作按钮 */}
       <footer className="mt-2 flex items-center justify-between">
         <time
           itemProp="datePublished"
@@ -92,6 +115,20 @@ export function LogItem({ log, index = 0, displayId }: LogItemProps) {
           {formatDateTime(log.published_at || log.created_at || '')}
         </time>
         <div className="flex items-center gap-3">
+          {/* 点赞按钮 */}
+          {currentUser && (
+            <button
+              onClick={handleLike}
+              disabled={likeLoading}
+              className={`text-xs transition-colors flex items-center gap-1 ${
+                liked ? 'text-blue-500' : 'text-[var(--text-tertiary)] hover:text-blue-500'
+              }`}
+              title={liked ? '取消点赞' : '点赞'}
+            >
+              <ThumbsUp className={`w-3.5 h-3.5 ${liked ? 'fill-blue-500' : ''}`} />
+              {likeCount > 0 && <span>{likeCount}</span>}
+            </button>
+          )}
           <button
             onClick={handleCopyLink}
             className="text-xs text-[var(--text-tertiary)] hover:text-[var(--accent)] transition-colors flex items-center gap-1"

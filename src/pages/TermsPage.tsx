@@ -107,15 +107,15 @@ export default function TermsPage() {
                   <li>平台保留拒绝服务的权利</li>
                 </ul>
 
-                <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">账户不可注销</h3>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                  <p className="text-red-800 font-medium mb-2">用户账户不可注销，不可删除。</p>
-                  <p className="text-red-700">
-                    你的账户是你所有公开发言的身份锚点。如果允许删除账户，用户就可以通过"删除—重建"的方式逃避责任、清洗历史记录。因此，认知界不提供账户注销功能。如因法律法规要求确需删除账户，平台将在依法处理的同时，保留你的公开发言记录作为公开信息存档。
+                <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">账户与历史记录</h3>
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                  <p className="text-amber-800 font-medium mb-2">账户不可注销，但留底可恢复。</p>
+                  <p className="text-amber-700">
+                    你的账户是你所有公开发言的身份锚点。认知界不提供账户注销功能，但你随时可以停止使用。如果你之后重新注册同一账户，你的历史信息（公开发言、互动记录等）将自动恢复关联。如因法律法规要求确需删除个人数据，请联系我们，平台将依法处理。
                   </p>
                 </div>
                 <p className="text-[var(--text-secondary)] mb-6">
-                  如果你不希望继续使用认知界，可以申请隐藏账户（见下方"账户隐藏规则"）。但你的账户本身将永久存在。
+                  如果你不希望继续使用认知界，可以申请隐藏账户（见下方"账户隐藏规则"）。隐藏后你的历史数据保留，再次启用时可恢复。
                 </p>
 
                 <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">账户隐藏规则</h3>
@@ -171,15 +171,15 @@ export default function TermsPage() {
               <section className="mb-10">
                 <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">三、内容发布规则</h2>
 
-                <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">不可删除、不可篡改</h3>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                  <p className="text-red-800 font-medium">
-                    成功发布的内容永久保存，不可删除、不可篡改。这是本平台的核心原则。
+                <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">删除与保存规则</h3>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <p className="text-blue-800 font-medium mb-2">发布后10分钟内可删除，超过10分钟永久保存。</p>
+                  <p className="text-blue-700">
+                    认知界的原则是让每一句话都值得被负责。内容发布后10分钟内可自行删除，超过10分钟后内容永久保存，不可删除、不可篡改。
                   </p>
                 </div>
-                <p className="text-[var(--text-secondary)] mb-2 font-medium">例外：</p>
                 <ul className="list-disc pl-6 text-[var(--text-secondary)] mb-6 space-y-2">
-                  <li>留言板消息发布 10 分钟内可自行删除，超过 10 分钟后永久保存</li>
+                  <li>留言板消息发布10分钟内可自行删除</li>
                   <li>违规内容平台有权标记和隐藏，但原始数据保留审计记录</li>
                   <li>用户可以申请隐藏账户（详见第二条"账户隐藏规则"），但数据不删除</li>
                 </ul>
@@ -277,7 +277,7 @@ export default function TermsPage() {
 
               <section className="mb-10">
                 <p className="text-[var(--text-secondary)] leading-relaxed">
-                  认知界不是一个传统的社交平台。我们不圈养用户，不贩卖流量。我们的规则只有一个目的：让真实的人被真实地看见。所有条款都围绕这个目的设计——信息不可删除，是让每一句话都值得被负责；账户不可注销，是让每一个人都值得被信任。
+                  认知界不是一个传统的社交平台。我们不圈养用户，不贩卖流量。我们的规则只有一个目的：让真实的人被真实地看见。所有条款都围绕这个目的设计——发布10分钟后不可删除，是让每一句话都值得被负责；账户不可注销但留底可恢复，是让每一个人都值得被信任。
                 </p>
               </section>
 

@@ -986,3 +986,60 @@ export async function isUserExemptFromReview(userId: string): Promise<boolean> {
   if (error || !data) return false;
   return data.is_admin === true || data.is_trusted === true;
 }
+
+// ========== 点赞相关 ==========
+
+/** 获取某个内容的所有点赞 */
+export async function getLikes(targetId: string, targetType: 'log' | 'guestbook_message'): Promise<number> {
+  const { count, error } = await supabase
+    .from('post_likes')
+    .select('*', { count: 'exact', head: true })
+    .eq('target_id', targetId)
+    .eq('target_type', targetType);
+  return count ?? 0;
+}
+
+/** 当前用户是否已点赞 */
+export async function hasUserLiked(targetId: string, targetType: 'log' | 'guestbook_message', userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('post_likes')
+    .select('id')
+    .eq('target_id', targetId)
+    .eq('target_type', targetType)
+    .eq('user_id', userId)
+    .maybeSingle();
+  return data !== null;
+}
+
+/** 切换点赞状态（返回新的状态：已点赞/未点赞） */
+export async function toggleLike(targetId: string, targetType: 'log' | 'guestbook_message', userId: string): Promise<{ liked: boolean; count: number; error?: string }> {
+  const { data: existing } = await supabase
+    .from('post_likes')
+    .select('id')
+    .eq('target_id', targetId)
+    .eq('target_type', targetType)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase
+      .from('post_likes')
+      .delete()
+      .eq('id', existing.id);
+    if (error) return { liked: false, count: 0, error: error.message };
+  } else {
+    const { error } = await supabase
+      .from('post_likes')
+      .insert({ target_id: targetId, target_type: targetType, user_id: userId });
+    if (error) return { liked: false, count: 0, error: error.message };
+  }
+
+  // 获取最新点赞数
+  const { count } = await supabase
+    .from('post_likes')
+    .select('*', { count: 'exact', head: true })
+    .eq('target_id', targetId)
+    .eq('target_type', targetType);
+
+  return { liked: !existing, count: count ?? 0 };
+}

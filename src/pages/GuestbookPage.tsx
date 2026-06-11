@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, MessageSquare, Send, Lock, Clock, User, Flag, X, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Send, Lock, Clock, User, Flag, X, AlertTriangle, ThumbsUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SEOHead } from '../components/SEOHead';
 import { Footer } from '../components/Footer';
@@ -8,6 +8,7 @@ import { APP_CONFIG } from '../types';
 import { supabase, supabaseUrl } from '../supabase/client';
 import { generateBreadcrumbList, breadcrumbs } from '../utils/seo';
 import { t, getCurrentLanguage } from '../locales';
+import { getLikes, hasUserLiked, toggleLike } from '../utils/storage';
 
 // 获取 Edge Function URL
 function getEdgeFunctionUrl(): string {
@@ -68,6 +69,10 @@ export default function GuestbookPage() {
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
 
+  // 点赞相关状态
+  const [likes, setLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
+  const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
+
   // 获取留言列表
   const fetchMessages = async () => {
     try {
@@ -81,12 +86,42 @@ export default function GuestbookPage() {
       const result = await response.json();
       if (result.success) {
         setMessages(result.data);
+        // 异步加载点赞数据
+        loadLikesForMessages(result.data, user?.id);
       }
     } catch (err) {
       console.error('获取留言失败:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  // 加载所有留言的点赞数据
+  const loadLikesForMessages = async (msgs: GuestbookMessage[], currentUserId?: string) => {
+    const likeData: Record<string, { count: number; liked: boolean }> = {};
+    await Promise.all(msgs.map(async (msg) => {
+      const count = await getLikes(msg.id, 'guestbook_message');
+      let liked = false;
+      if (currentUserId) {
+        liked = await hasUserLiked(msg.id, 'guestbook_message', currentUserId);
+      }
+      likeData[msg.id] = { count, liked };
+    }));
+    setLikes(likeData);
+  };
+
+  // 切换点赞
+  const handleToggleLike = async (messageId: string) => {
+    if (!user || likeLoading[messageId]) return;
+    setLikeLoading(prev => ({ ...prev, [messageId]: true }));
+    const result = await toggleLike(messageId, 'guestbook_message', user.id);
+    if (!result.error) {
+      setLikes(prev => ({
+        ...prev,
+        [messageId]: { count: result.count, liked: result.liked }
+      }));
+    }
+    setLikeLoading(prev => ({ ...prev, [messageId]: false }));
   };
 
   // 检查用户资格
@@ -371,6 +406,20 @@ export default function GuestbookPage() {
                         <p className="text-sm">{message.content}</p>
                       </div>
                       <div className={`flex items-center gap-2 mt-1 ${message.user_id === user?.id ? 'justify-end' : ''}`}>
+                        {/* 点赞按钮 - 所有人都可点赞 */}
+                        {user && (
+                          <button
+                            onClick={() => handleToggleLike(message.id)}
+                            disabled={likeLoading[message.id]}
+                            className={`text-xs transition-colors flex items-center gap-0.5 ${
+                              likes[message.id]?.liked ? 'text-blue-500' : 'text-gray-400 hover:text-blue-500'
+                            }`}
+                            title={likes[message.id]?.liked ? '取消点赞' : '点赞'}
+                          >
+                            <ThumbsUp className={`w-3 h-3 ${likes[message.id]?.liked ? 'fill-blue-500' : ''}`} />
+                            {likes[message.id]?.count > 0 && <span>{likes[message.id].count}</span>}
+                          </button>
+                        )}
                         <p className="text-xs text-[var(--text-tertiary)]">
                           {formatDistanceToNow(message.created_at)}
                         </p>

@@ -669,7 +669,7 @@ export default function UserPage() {
                 {paginatedLogs.map((log, index) => (
                   <div key={log.id} className="relative group" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
                     <meta itemProp="position" content={String((currentPage - 1) * LOGS_PER_PAGE + index + 1)} />
-                    <LogItem log={log} index={index} displayId={profile?.display_id} />
+                    <LogItem log={log} index={index} displayId={profile?.display_id} currentUser={currentUser} />
                     {/* 举报按钮 - 仅对非自己的日志显示 */}
                     {currentUser && log.user_id !== currentUser.user_id && (
                       <button
@@ -680,7 +680,7 @@ export default function UserPage() {
                           user_id: log.user_id,
                           username: profile?.username || '未知用户'
                         })}
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50"
+                        className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
                         title="举报"
                       >
                         <Flag className="w-4 h-4" />
