@@ -7,6 +7,8 @@ import { getUserLogs, createLogWithModeration, getUserBackgroundImages, selectSy
 import { localSystemBackgrounds } from '../data/systemBackgrounds';
 import type { Profile, SystemBackground, BackgroundImage } from '../types';
 
+const defaultBg = '/assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg';
+
 // 日志数据类型
 interface LogData {
   id: string;
@@ -33,7 +35,7 @@ export default function MePage() {
   const [newLogTags, setNewLogTags] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
   const [backgroundImages, setBackgroundImages] = useState<BackgroundImage[]>([]);
-  const [systemBackgrounds, setSystemBackgrounds] = useState<SystemBackground[]>([]);
+  const [systemBackgrounds, setSystemBackgrounds] = useState<SystemBackground[]>(localSystemBackgrounds);
   const [showBgSettings, setShowBgSettings] = useState(false);
   const [selectedBgId, setSelectedBgId] = useState<string | null>(null);
   const [activeBgUrl, setActiveBgUrl] = useState<string | null>(null);
@@ -90,6 +92,10 @@ export default function MePage() {
           const activeBg = await getActiveBackgroundImage(userProfile.user_id);
           if (isMounted && activeBg?.url) {
             setActiveBgUrl(activeBg.url);
+            setBgError(false);
+          } else if (isMounted) {
+            // 没有设置背景图时使用默认背景
+            setActiveBgUrl(defaultBg);
             setBgError(false);
           }
         }

@@ -250,7 +250,10 @@ export default function RegisterPage() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: 'https://uptef.com/me' },
+        options: {
+          redirectTo: 'https://uptef.com/me',
+          queryParams: { prompt: 'select_account' },
+        },
       });
       if (error) setError(error.message);
     } catch (err) {
