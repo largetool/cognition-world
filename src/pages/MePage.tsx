@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Calendar, Eye, EyeOff, LogOut, User, Edit3, X, Save, Send, Clock, Image, CheckCircle, AlertCircle, Check, Share2, ThumbsUp } from 'lucide-react';
 import { getCurrentUser, logout, updateProfile } from '../utils/auth';
+import { supabase } from '../supabase/client';
 import { getUserLogs, createLogWithModeration, getUserBackgroundImages, selectSystemBackground, getActiveBackgroundImage, checkCanPost, recordPost, getLikes, hasUserLiked, toggleLike } from '../utils/storage';
 import { localSystemBackgrounds } from '../data/systemBackgrounds';
 import type { Profile, SystemBackground, BackgroundImage } from '../types';
@@ -64,6 +65,12 @@ export default function MePage() {
         }
 
         setProfile(userProfile);
+
+        // 同步 auth_user_id（新用户首次登录自动填充）
+        supabase.rpc('sync_my_auth_id').then(({ error }) => {
+          if (error) console.warn('同步auth_user_id失败:', error);
+        });
+
         setEditForm({
           tag: userProfile.tag,
           slogan: userProfile.slogan || '',

@@ -304,8 +304,17 @@ export default function RegisterPage() {
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold mb-2">注册成功</h1>
               <p className="text-gray-500 mb-8">您的数字身份已创建</p>
+              {!isGoogleMode && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-left">
+                  <p className="text-sm text-amber-800 font-medium mb-1">⚠️ 需要确认邮箱才能登录</p>
+                  <p className="text-sm text-amber-700">
+                    已向您的注册邮箱发送了一封确认邮件。请去邮箱点击确认链接，然后才能登录。
+                    <br />没收到？检查垃圾邮件箱。
+                  </p>
+                </div>
+              )}
               <p className="text-sm text-gray-600 mb-6">
-                {isGoogleMode ? '您的个人资料已创建，现在可以开始使用' : '现在您可以使用邮箱和密码登录了'}
+                {isGoogleMode ? '您的个人资料已创建，现在可以开始使用' : '确认邮箱后即可登录'}
               </p>
               <motion.button
                 onClick={() => navigate(isGoogleMode ? '/me' : '/login')}
