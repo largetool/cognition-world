@@ -1080,6 +1080,10 @@ export type Database = {
         Args: { "": unknown[] }
         Returns: number
       }
+      sync_my_auth_id: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
