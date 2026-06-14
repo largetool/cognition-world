@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Calendar, Eye, EyeOff, LogOut, User, Edit3, X, Save, Send, Clock, Image, CheckCircle, AlertCircle, Check, Share2, ThumbsUp } from 'lucide-react';
 import { getCurrentUser, logout, updateProfile } from '../utils/auth';
 import { supabase } from '../supabase/client';
-import { getUserLogs, createLogWithModeration, getUserBackgroundImages, selectSystemBackground, getActiveBackgroundImage, checkCanPost, recordPost, getLikes, hasUserLiked, toggleLike } from '../utils/storage';
+import { getUserLogs, createLogWithModeration, getUserBackgroundImages, selectSystemBackground, getActiveBackgroundImage, checkCanPost, recordPost, getLikes, hasUserLiked, toggleLike, deleteLog } from '../utils/storage';
 import { localSystemBackgrounds } from '../data/systemBackgrounds';
 import type { Profile, SystemBackground, BackgroundImage } from '../types';
 
@@ -79,7 +79,7 @@ export default function MePage() {
         });
 
         const [userLogs, bgImages] = await Promise.all([
-          getUserLogs(userProfile.user_id),
+          getUserLogs(userProfile.user_id, userProfile.user_id, userProfile.is_admin || false),
           getUserBackgroundImages(userProfile.user_id)
         ]);
 
@@ -178,6 +178,16 @@ export default function MePage() {
       setIsPublishing(false);
     }
   }, [profile, newLogContent]);
+
+  const handleDeleteLog = useCallback(async (logId: string) => {
+    if (!profile) return;
+    const result = await deleteLog(logId, profile.user_id, profile.is_admin || false);
+    if (result.success) {
+      setLogs(prev => prev.filter(l => l.id !== logId));
+    } else {
+      setError(result.error || '删除失败');
+    }
+  }, [profile]);
 
   const handleSave = useCallback(async () => {
     if (!profile) return;
@@ -778,17 +788,29 @@ export default function MePage() {
                       )}
                       {/* 底部操作栏 */}
                       <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
-                        <button
-                          onClick={() => handleToggleLogLike(log.id)}
-                          disabled={likeLoading[log.id]}
-                          className={`text-xs transition-colors flex items-center gap-1 ${
-                            logLikes[log.id]?.liked ? 'text-blue-500' : 'text-gray-400 hover:text-blue-500'
-                          }`}
-                          title={logLikes[log.id]?.liked ? '取消点赞' : '点赞'}
-                        >
-                          <ThumbsUp className={`w-3.5 h-3.5 ${logLikes[log.id]?.liked ? 'fill-blue-500' : ''}`} />
-                          {logLikes[log.id]?.count > 0 && <span>{logLikes[log.id].count}</span>}
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => handleToggleLogLike(log.id)}
+                            disabled={likeLoading[log.id]}
+                            className={`text-xs transition-colors flex items-center gap-1 ${
+                              logLikes[log.id]?.liked ? 'text-blue-500' : 'text-gray-400 hover:text-blue-500'
+                            }`}
+                            title={logLikes[log.id]?.liked ? '取消点赞' : '点赞'}
+                          >
+                            <ThumbsUp className={`w-3.5 h-3.5 ${logLikes[log.id]?.liked ? 'fill-blue-500' : ''}`} />
+                            {logLikes[log.id]?.count > 0 && <span>{logLikes[log.id].count}</span>}
+                          </button>
+                          {log.canDelete && (
+                            <button
+                              onClick={() => handleDeleteLog(log.id)}
+                              className="text-xs text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1"
+                              title="删除（发布后10分钟内可删除）"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                              删除
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </motion.article>
                   ))}

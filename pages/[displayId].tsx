@@ -71,6 +71,13 @@ function fmtDate(dateStr: string | null): string {
   return `${vals.year}/${vals.month}/${vals.day} ${vals.hour}:${vals.minute}`;
 }
 
+/** 判断是否为爬虫/AI 索引机器人 */
+function isCrawler(userAgent: string | undefined): boolean {
+  if (!userAgent) return false;
+  const botPattern = /bot|crawler|spider|googlebot|bingbot|slurp|baiduspider|yandexbot|duckduckbot|facebookexternalhit|twitterbot|linkedinbot|whatsapp|chatgpt|claude|anthropic|perplexity/i;
+  return botPattern.test(userAgent);
+}
+
 export default function UserSSRPage({
   ssrUserId,
   ssrProfile,
@@ -84,6 +91,7 @@ export default function UserSSRPage({
   ssrNotFound,
   ssrGeoBio,
   ssrKeywords,
+  ssrIsCrawler,
 }: SSRProps) {
   if (ssrNotFound || !ssrProfile) {
     return (
@@ -143,251 +151,249 @@ export default function UserSSRPage({
         <link rel="alternate" hrefLang="x-default" href={pUrl} />
       </Head>
 
-      {/* P0: SSR 页面内容 — 爬虫和 AI 可直接读取 */}
-      <main
-        id="ssr-content"
-        style={{
-          display: 'none',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-          maxWidth: '720px',
-          margin: '0 auto',
-          padding: '32px 16px',
-          color: '#e6e6e6',
-          background: '#0d0d1a',
-          lineHeight: 1.7,
-        }}
-      >
-        {/* 导航 */}
-        <nav style={{ marginBottom: 24, fontSize: 14 }}>
-          <a
-            href={BASE_URL}
-            style={{ color: '#a0a0b8', textDecoration: 'none' }}
-          >
-            ← 认知界首页
-          </a>
-        </nav>
-
-        {/* 用户信息卡片 */}
-        <header
+      {/* 爬虫/机器人：渲染可读的 HTML 内容供索引 */}
+      {/* 人类用户：不渲染，只由下文的 AppRoutes 提供交互界面 */}
+      {ssrIsCrawler && (
+        <main
+          id="ssr-content"
           style={{
-            background: bgImage
-              ? `linear-gradient(180deg, rgba(13,13,26,0.3) 0%, rgba(13,13,26,0.95) 80%), url(${bgImage}) center top / cover no-repeat`
-              : 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-            borderRadius: 16,
-            padding: '40px 24px',
-            marginBottom: 32,
-            border: '1px solid rgba(255,255,255,0.08)',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+            maxWidth: '720px',
+            margin: '0 auto',
+            padding: '32px 16px',
+            color: '#e6e6e6',
+            background: '#0d0d1a',
+            lineHeight: 1.7,
           }}
         >
-          {/* 头像 */}
-          <div
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: 16,
-              background: '#4f46e5',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 32,
-              fontWeight: 700,
-              color: '#fff',
-              marginBottom: 16,
-            }}
-          >
-            {ssrProfile.username.charAt(0).toUpperCase()}
-          </div>
-
-          <h1
-            style={{
-              fontSize: 28,
-              fontWeight: 700,
-              color: '#fff',
-              margin: '0 0 8px 0',
-            }}
-          >
-            {ssrProfile.username}
-          </h1>
-
-          {ssrProfile.tag && (
-            <p style={{ fontSize: 16, color: '#a0a0b8', margin: '0 0 8px 0' }}>
-              {ssrProfile.tag}
-            </p>
-          )}
-
-          <div
-            style={{
-              display: 'inline-block',
-              fontSize: 12,
-              fontFamily: 'monospace',
-              color: '#6b7280',
-              background: 'rgba(255,255,255,0.06)',
-              padding: '2px 10px',
-              borderRadius: 20,
-              marginBottom: 16,
-            }}
-          >
-            ID {displayIdStr}
-          </div>
-
-          {(ssrGeoBio || ssrProfile.slogan) && (
-            <p
-              style={{
-                fontSize: 16,
-                color: '#d1d5db',
-                maxWidth: 560,
-                margin: '0 0 16px 0',
-              }}
+          {/* 导航 */}
+          <nav style={{ marginBottom: 24, fontSize: 14 }}>
+            <a
+              href={BASE_URL}
+              style={{ color: '#a0a0b8', textDecoration: 'none' }}
             >
-              {ssrGeoBio || ssrProfile.slogan}
-            </p>
-          )}
-          {ssrGeoBio && (
+              ← 认知界首页
+            </a>
+          </nav>
+
+          {/* 用户信息卡片 */}
+          <header
+            style={{
+              background: bgImage
+                ? `linear-gradient(180deg, rgba(13,13,26,0.3) 0%, rgba(13,13,26,0.95) 80%), url(${bgImage}) center top / cover no-repeat`
+                : 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+              borderRadius: 16,
+              padding: '40px 24px',
+              marginBottom: 32,
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            {/* 头像 */}
             <div
               style={{
-                display: 'inline-flex',
+                width: 80,
+                height: 80,
+                borderRadius: 16,
+                background: '#4f46e5',
+                display: 'flex',
                 alignItems: 'center',
-                gap: 4,
-                fontSize: 11,
-                color: '#4f46e5',
-                background: 'rgba(79,70,229,0.1)',
-                padding: '2px 8px',
-                borderRadius: 8,
+                justifyContent: 'center',
+                fontSize: 32,
+                fontWeight: 700,
+                color: '#fff',
                 marginBottom: 16,
               }}
             >
-              ✨ AI 生成
+              {ssrProfile.username.charAt(0).toUpperCase()}
             </div>
-          )}
 
-          <div style={{ display: 'flex', gap: 24, fontSize: 13, color: '#9ca3af' }}>
-            {ssrProfile.location && (
-              <span>📍 {ssrProfile.location}</span>
+            <h1
+              style={{
+                fontSize: 28,
+                fontWeight: 700,
+                color: '#fff',
+                margin: '0 0 8px 0',
+              }}
+            >
+              {ssrProfile.username}
+            </h1>
+
+            {ssrProfile.tag && (
+              <p style={{ fontSize: 16, color: '#a0a0b8', margin: '0 0 8px 0' }}>
+                {ssrProfile.tag}
+              </p>
             )}
-            {joinYear && (
-              <span>🕐 加入于 {joinYear}</span>
+
+            <div
+              style={{
+                display: 'inline-block',
+                fontSize: 12,
+                fontFamily: 'monospace',
+                color: '#6b7280',
+                background: 'rgba(255,255,255,0.06)',
+                padding: '2px 10px',
+                borderRadius: 20,
+                marginBottom: 16,
+              }}
+            >
+              ID {displayIdStr}
+            </div>
+
+            {(ssrGeoBio || ssrProfile.slogan) && (
+              <p
+                style={{
+                  fontSize: 16,
+                  color: '#d1d5db',
+                  maxWidth: 560,
+                  margin: '0 0 16px 0',
+                }}
+              >
+                {ssrGeoBio || ssrProfile.slogan}
+              </p>
             )}
-          </div>
-        </header>
+            {ssrGeoBio && (
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 11,
+                  color: '#4f46e5',
+                  background: 'rgba(79,70,229,0.1)',
+                  padding: '2px 8px',
+                  borderRadius: 8,
+                  marginBottom: 16,
+                }}
+              >
+                ✨ AI 生成
+              </div>
+            )}
 
-        {/* 日志列表 */}
-        <section>
-          <h2
-            style={{
-              fontSize: 20,
-              fontWeight: 600,
-              color: '#fff',
-              margin: '0 0 16px 0',
-              paddingBottom: 8,
-              borderBottom: '1px solid rgba(255,255,255,0.08)',
-            }}
-          >
-            认知日志
-          </h2>
+            <div style={{ display: 'flex', gap: 24, fontSize: 13, color: '#9ca3af' }}>
+              {ssrProfile.location && (
+                <span>📍 {ssrProfile.location}</span>
+              )}
+              {joinYear && (
+                <span>🕐 加入于 {joinYear}</span>
+              )}
+            </div>
+          </header>
 
-          {ssrLogs && ssrLogs.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {ssrLogs.slice(0, 20).map((log: any, i: number) => (
-                <article
-                  key={log.id || i}
-                  style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    borderRadius: 12,
-                    padding: '16px 20px',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                  }}
-                >
-                  <p
+          {/* 日志列表 */}
+          <section>
+            <h2
+              style={{
+                fontSize: 20,
+                fontWeight: 600,
+                color: '#fff',
+                margin: '0 0 16px 0',
+                paddingBottom: 8,
+                borderBottom: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              认知日志
+            </h2>
+
+            {ssrLogs && ssrLogs.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {ssrLogs.slice(0, 20).map((log: any, i: number) => (
+                  <article
+                    key={log.id || i}
                     style={{
-                      fontSize: 15,
-                      color: '#e6e6e6',
-                      margin: '0 0 10px 0',
-                      whiteSpace: 'pre-wrap',
+                      background: 'rgba(255,255,255,0.04)',
+                      borderRadius: 12,
+                      padding: '16px 20px',
+                      border: '1px solid rgba(255,255,255,0.06)',
                     }}
                   >
-                    {log.content || ''}
-                  </p>
-                  {log.tags && log.tags.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
-                      {log.tags.map((tag: string, ti: number) => (
-                        <span
-                          key={ti}
-                          style={{
-                            fontSize: 11,
-                            color: '#818cf8',
-                            background: 'rgba(79,70,229,0.12)',
-                            padding: '2px 8px',
-                            borderRadius: 6,
-                          }}
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <footer style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <time
-                      dateTime={log.created_at || log.published_at || ''}
-                      style={{ fontSize: 12, color: '#6b7280' }}
+                    <p
+                      style={{
+                        fontSize: 15,
+                        color: '#e6e6e6',
+                        margin: '0 0 10px 0',
+                        whiteSpace: 'pre-wrap',
+                      }}
                     >
-                      {fmtDate(log.published_at || log.created_at)}
-                    </time>
-                    {log.id && (
-                      <a
-                        href={`${pUrl}/thought/${log.id}`}
-                        style={{ fontSize: 12, color: '#818cf8', textDecoration: 'none' }}
-                      >
-                        查看详情
-                      </a>
+                      {log.content || ''}
+                    </p>
+                    {log.tags && log.tags.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                        {log.tags.map((tag: string, ti: number) => (
+                          <span
+                            key={ti}
+                            style={{
+                              fontSize: 11,
+                              color: '#818cf8',
+                              background: 'rgba(79,70,229,0.12)',
+                              padding: '2px 8px',
+                              borderRadius: 6,
+                            }}
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
                     )}
-                  </footer>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <p style={{ color: '#6b7280', fontSize: 14 }}>
-              暂无公开日志
-            </p>
-          )}
-        </section>
+                    <footer style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <time
+                        dateTime={log.created_at || log.published_at || ''}
+                        style={{ fontSize: 12, color: '#6b7280' }}
+                      >
+                        {fmtDate(log.published_at || log.created_at)}
+                      </time>
+                      {log.id && (
+                        <a
+                          href={`${pUrl}/thought/${log.id}`}
+                          style={{ fontSize: 12, color: '#818cf8', textDecoration: 'none' }}
+                        >
+                          查看详情
+                        </a>
+                      )}
+                    </footer>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p style={{ color: '#6b7280', fontSize: 14 }}>
+                暂无公开日志
+              </p>
+            )}
+          </section>
 
-        {/* 底部 CTA */}
-        <div
-          style={{
-            marginTop: 32,
-            textAlign: 'center',
-            padding: '24px',
-            borderRadius: 16,
-            background: 'linear-gradient(135deg, rgba(79,70,229,0.15) 0%, rgba(79,70,229,0.05) 100%)',
-            border: '1px solid rgba(79,70,229,0.2)',
-          }}
-        >
-          <p style={{ color: '#e6e6e6', fontSize: 15, margin: '0 0 12px 0' }}>
-            快速创建个人页面，让 AI 和搜索引擎带你连接全球
-          </p>
-          <a
-            href={`${BASE_URL}/register`}
+          {/* 底部 CTA */}
+          <div
             style={{
-              display: 'inline-block',
-              padding: '10px 28px',
-              background: '#4f46e5',
-              color: '#fff',
-              borderRadius: 8,
-              textDecoration: 'none',
-              fontSize: 14,
-              fontWeight: 500,
+              marginTop: 32,
+              textAlign: 'center',
+              padding: '24px',
+              borderRadius: 16,
+              background: 'linear-gradient(135deg, rgba(79,70,229,0.15) 0%, rgba(79,70,229,0.05) 100%)',
+              border: '1px solid rgba(79,70,229,0.2)',
             }}
           >
-            立即注册
-          </a>
-        </div>
-      </main>
+            <p style={{ color: '#e6e6e6', fontSize: 15, margin: '0 0 12px 0' }}>
+              快速创建个人页面，让 AI 和搜索引擎带你连接全球
+            </p>
+            <a
+              href={`${BASE_URL}/register`}
+              style={{
+                display: 'inline-block',
+                padding: '10px 28px',
+                background: '#4f46e5',
+                color: '#fff',
+                borderRadius: 8,
+                textDecoration: 'none',
+                fontSize: 14,
+                fontWeight: 500,
+              }}
+            >
+              立即注册
+            </a>
+          </div>
+        </main>
+      )}
 
-      <noscript>
-        <style>{`#ssr-content { display: block !important; }`}</style>
-      </noscript>
-
-      {/* 客户端 React 应用（JavaScript 启用后会接管页面） */}
+      {/* 客户端 React 应用（对所有用户渲染，JS 启用后接管交互） */}
       <AppRoutes />
     </>
   );
@@ -407,6 +413,7 @@ interface SSRProps {
   ssrCanonicalUrl?: string;
   ssrGeoBio?: string;
   ssrKeywords?: string;
+  ssrIsCrawler?: boolean;
 }
 
 function generateKeywords(profile: Profile, logs: any[]): string {
@@ -544,6 +551,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const ssrMetaDescription = geoBio || generateMetaDescription(typedProfile, ssrLogs);
     const ssrKeywords = generateKeywords(typedProfile, ssrLogs);
 
+    // 检测是否为爬虫
+    const userAgent = context.req?.headers['user-agent'];
+    const ssrIsCrawler = isCrawler(userAgent);
+
     return {
       props: {
         ssrUserId: typedProfile.user_id,
@@ -557,6 +568,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         ssrOgDescription: geoBio || ssrMetaDescription,
         ssrOgImage: typedProfile.background_image || '',
         ssrCanonicalUrl: pUrl,
+        ssrIsCrawler,
       },
     };
   } catch (err) {
