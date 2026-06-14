@@ -172,8 +172,6 @@ BEGIN
 END;
 $$;
 
-RAISE NOTICE '✓ sync_my_auth_id 函数已更新：id = auth.uid() 精确匹配';
-
 -- 验证关键表的策略
 SELECT tablename, policyname, cmd, qual
 FROM pg_policies
