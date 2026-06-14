@@ -89,10 +89,13 @@ BEGIN
   IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'system_backgrounds') THEN
     -- 保留管理员管理权
     DROP POLICY IF EXISTS "仅管理员可管理" ON public.system_backgrounds;
+    DROP POLICY IF EXISTS "仅管理员可写" ON public.system_backgrounds;
     CREATE POLICY "仅管理员可写" ON public.system_backgrounds FOR INSERT
       WITH CHECK (public.is_admin_user(auth.uid()));
+    DROP POLICY IF EXISTS "仅管理员可更新" ON public.system_backgrounds;
     CREATE POLICY "仅管理员可更新" ON public.system_backgrounds FOR UPDATE
       USING (public.is_admin_user(auth.uid()));
+    DROP POLICY IF EXISTS "仅管理员可删除" ON public.system_backgrounds;
     CREATE POLICY "仅管理员可删除" ON public.system_backgrounds FOR DELETE
       USING (public.is_admin_user(auth.uid()));
 
