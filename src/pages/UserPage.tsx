@@ -285,7 +285,7 @@ export default function UserPage() {
   // 登录后同步 auth_user_id（fire-and-forget，确保 RLS 点赞策略能找到匹配）
   useEffect(() => {
     if (currentUser) {
-      supabase.rpc('sync_my_auth_id').catch(() => {});
+      supabase.rpc('sync_my_auth_id').then(undefined, () => {});
     }
   }, [currentUser]);
 
