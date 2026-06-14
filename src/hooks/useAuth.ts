@@ -76,8 +76,10 @@ export function useAuth() {
 
       if (event === 'SIGNED_IN' && session?.user) {
         setSession(prev => ({ ...prev, isLoading: true }));
-        // 同步 auth_user_id（fire-and-forget）
-        supabase.rpc('sync_my_auth_id').then(undefined, () => {});
+        try {
+          // 先同步 auth_user_id（await，确保 RLS 能找到匹配）
+          await supabase.rpc('sync_my_auth_id');
+        } catch (_) { /* 同步失败不阻塞登录 */ }
         try {
           const { profile } = await getCurrentUser();
           // 检查并转换冷静期到冻结期
