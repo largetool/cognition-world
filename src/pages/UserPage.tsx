@@ -13,7 +13,7 @@ import { useUser } from '../hooks/useUser';
 import { useIPCheck } from '../hooks/useIPCheck';
 import { createLog, createLogWithModeration, getAccountHideStatus, requestAccountHide, cancelAccountHide, requestAccountRestore, isUserExemptFromReview, type AccountHideStatus, type LogWithPublicStatus } from '../utils/storage';
 import { getUserSEO, isAdminFromProfile, getInitials, APP_CONFIG, getDefaultSEO } from '../types';
-import { supabase } from '../supabase/client';
+import { supabase, supabaseUrl } from '../supabase/client';
 import { generateProfilePageSchema, generatePersonSchema, generateBlogPostingSchema } from '../utils/seo';
 import { useSSRData } from '../utils/SSRContext';
 import type { Profile } from '../types';
@@ -240,7 +240,7 @@ export default function UserPage() {
       const session = (await supabase.auth.getSession()).data.session;
       const authHeaders = session ? { Authorization: `Bearer ${session.access_token}` } : {};
 
-      const edgeUrl = (supabase as any).supabaseUrl?.replace(/\/sb-api$/, '') || '';
+      const edgeUrl = supabaseUrl;
       const response = await fetch(`${edgeUrl}/functions/v1/reports`, {
         method: 'POST',
         headers: {
@@ -281,6 +281,13 @@ export default function UserPage() {
       });
     }
   }, [isCurrentUser]);
+
+  // 登录后同步 auth_user_id（fire-and-forget，确保 RLS 点赞策略能找到匹配）
+  useEffect(() => {
+    if (currentUser) {
+      supabase.rpc('sync_my_auth_id').catch(() => {});
+    }
+  }, [currentUser]);
 
   // 打开隐藏账户弹窗
   const openHideModal = () => {

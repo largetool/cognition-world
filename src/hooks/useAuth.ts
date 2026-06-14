@@ -76,6 +76,8 @@ export function useAuth() {
 
       if (event === 'SIGNED_IN' && session?.user) {
         setSession(prev => ({ ...prev, isLoading: true }));
+        // 同步 auth_user_id（fire-and-forget）
+        supabase.rpc('sync_my_auth_id').catch(() => {});
         try {
           const { profile } = await getCurrentUser();
           // 检查并转换冷静期到冻结期

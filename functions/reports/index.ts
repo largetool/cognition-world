@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 serve(async (req: Request) => {
+  // 预检请求 — CORS 必需
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -16,33 +17,57 @@ serve(async (req: Request) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
-    );
 
     const url = new URL(req.url);
 
-    // === POST /report ===
-    if (req.method === "POST" && url.pathname.endsWith("/report")) {
-      const { reportedMessageId, messageTable, messageContent, reportedUserId, reason } = await req.json();
-
-      if (!reportedMessageId || !messageTable || !messageContent || !reportedUserId || !reason) {
-        return new Response(JSON.stringify({ error: "缺少必要信息" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
-      }
-
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // ==================== 用户提交举报 ====================
+    // 前端 POST 到 /functions/v1/reports → 路由根路径
+    if (req.method === "POST" && (url.pathname.endsWith("/report") || url.pathname === "/" || url.pathname === "")) {
+      // 验证登录
+      const token = req.headers.get("authorization")?.replace("Bearer ", "") || "";
+      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
       if (authError || !user) {
         return new Response(JSON.stringify({ error: "请先登录" }), {
           status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
 
+      const { reported_message_id, message_table, message_content, reported_user_id, reason } = await req.json();
+
+      if (!reported_message_id || !message_table || !message_content || !reported_user_id || !reason) {
+        return new Response(JSON.stringify({ error: "缺少必要信息" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      if (!["guestbook_messages", "user_messages", "logs", "profiles"].includes(message_table)) {
+        return new Response(JSON.stringify({ error: "无效的 message_table" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      if (reason.length > 200) {
+        return new Response(JSON.stringify({ error: "举报原因不能超过 200 字" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      // 查被举报用户的 UUID（前端传来的是 user_id 显示 ID → 转成 auth.users UUID）
+      const { data: targetProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("auth_user_id, user_id")
+        .eq("user_id", reported_user_id)
+        .maybeSingle();
+
+      const targetUuid = targetProfile?.auth_user_id;
+      if (!targetUuid) {
+        return new Response(JSON.stringify({ error: "被举报用户不存在" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
       // 不能举报自己
-      if (user.id === reportedUserId) {
+      if (user.id === targetUuid) {
         return new Response(JSON.stringify({ error: "不能举报自己的内容" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
@@ -53,7 +78,7 @@ serve(async (req: Request) => {
         .from("reports")
         .select("id")
         .eq("reporter_id", user.id)
-        .eq("reported_message_id", reportedMessageId)
+        .eq("reported_message_id", reported_message_id)
         .maybeSingle();
 
       if (existing) {
@@ -78,23 +103,29 @@ serve(async (req: Request) => {
 
       const { error: insertError } = await supabaseAdmin.from("reports").insert({
         reporter_id: user.id,
-        reported_message_id: reportedMessageId,
-        message_table: messageTable,
-        message_content: messageContent,
-        reported_user_id: reportedUserId,
+        reported_message_id,
+        message_table,
+        message_content,
+        reported_user_id: targetUuid,  // 用 UUID，不是显示 ID
         reason: reason.trim(),
       });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error("[Reports] 插入失败:", insertError.message);
+        return new Response(JSON.stringify({ error: "举报提交失败" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
-    // === GET /list?status=pending（管理员专用） ===
+    // ==================== 管理员：查看举报列表 ====================
     if (req.method === "GET" && url.pathname.endsWith("/list")) {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      const token = req.headers.get("authorization")?.replace("Bearer ", "") || "";
+      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
       if (authError || !user) {
         return new Response(JSON.stringify({ error: "未授权" }), {
           status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -102,7 +133,7 @@ serve(async (req: Request) => {
       }
 
       const { data: profile } = await supabaseAdmin
-        .from("profiles").select("is_admin").eq("user_id", user.id).single();
+        .from("profiles").select("is_admin").eq("auth_user_id", user.id).single();
       if (!profile?.is_admin) {
         return new Response(JSON.stringify({ error: "仅管理员可查看" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -125,7 +156,7 @@ serve(async (req: Request) => {
       });
     }
 
-    // === POST /review（管理员审核） ===
+    // ==================== 管理员：审核举报 ====================
     if (req.method === "POST" && url.pathname.endsWith("/review")) {
       const { reportId, status, notes, freezeUser } = await req.json();
 
@@ -135,7 +166,8 @@ serve(async (req: Request) => {
         });
       }
 
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      const token = req.headers.get("authorization")?.replace("Bearer ", "") || "";
+      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
       if (authError || !user) {
         return new Response(JSON.stringify({ error: "未授权" }), {
           status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -143,7 +175,7 @@ serve(async (req: Request) => {
       }
 
       const { data: adminProfile } = await supabaseAdmin
-        .from("profiles").select("is_admin").eq("user_id", user.id).single();
+        .from("profiles").select("is_admin").eq("auth_user_id", user.id).single();
       if (!adminProfile?.is_admin) {
         return new Response(JSON.stringify({ error: "仅管理员可审核" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -151,12 +183,6 @@ serve(async (req: Request) => {
       }
 
       // 更新举报状态
-      const { data: report } = await supabaseAdmin
-        .from("reports")
-        .select("reported_user_id")
-        .eq("id", reportId)
-        .single();
-
       await supabaseAdmin.from("reports").update({
         status,
         admin_notes: notes || null,
@@ -165,32 +191,20 @@ serve(async (req: Request) => {
       }).eq("id", reportId);
 
       // 确认违规时，如果需要，冻结被举报者
-      if (status === "confirmed" && freezeUser && report) {
-        await supabaseAdmin.from("profiles").update({
-          is_frozen: true,
-          frozen_at: new Date().toISOString(),
-          frozen_reason: `举报确认：${notes || "违规内容"}`,
-          frozen_by: user.id,
-        }).eq("user_id", report.reported_user_id);
-      }
-
-      // 确认违规时，删除被举报的内容（软删除）
-      if (status === "confirmed" && report) {
-        const { data: targetReport } = await supabaseAdmin
+      if (status === "confirmed" && freezeUser) {
+        const { data: report } = await supabaseAdmin
           .from("reports")
-          .select("message_table, reported_message_id")
+          .select("reported_user_id")
           .eq("id", reportId)
           .single();
 
-        if (targetReport) {
-          const table = targetReport.message_table;
-          const msgId = targetReport.reported_message_id;
-
-          if (table === "guestbook_messages" || table === "user_messages") {
-            await supabaseAdmin.from(table).update({ is_deleted: true }).eq("id", msgId);
-          } else if (table === "logs") {
-            await supabaseAdmin.from("logs").delete().eq("id", msgId);
-          }
+        if (report) {
+          await supabaseAdmin.from("profiles").update({
+            is_frozen: true,
+            frozen_at: new Date().toISOString(),
+            frozen_reason: `举报确认：${notes || "违规内容"}`,
+            frozen_by: user.id,
+          }).eq("auth_user_id", report.reported_user_id);
         }
       }
 
