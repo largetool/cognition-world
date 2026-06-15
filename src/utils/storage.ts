@@ -1,5 +1,5 @@
 // @ts-nocheck — Supabase 生成类型 vs 实际数据库存在差异，跳过逐行修复
-import { supabase, supabaseUrl } from '../supabase/client';
+import { supabase, supabaseUrl, supabaseAnonKey } from '../supabase/client';
 import { decode } from 'base64-arraybuffer';
 import type { BackgroundImage, Log, SystemBackground } from '../types';
 
@@ -114,29 +114,50 @@ export interface LogWithPublicStatus {
 }
 
 // 获取用户日志（包含公开状态）
+// 注意：直接用 fetch 而非 supabase 客户端，避开 supabase-js v2.107.0 内部 TDZ bug
 export async function getUserLogs(userId: string, currentUserId?: string, isAdmin?: boolean): Promise<LogWithPublicStatus[]> {
-  const { data, error } = await supabase
-    .from('logs')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(100);
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
 
-  if (error) { console.error('Error fetching logs:', error); return []; }
+    const params = new URLSearchParams({
+      select: '*',
+      user_id: `eq.${userId}`,
+      order: 'created_at.desc',
+      limit: '100',
+    });
 
-  const now = new Date();
-  return (data || []).map(log => {
-    const createdAt = new Date(log.created_at || '');
-    const tenMinutesLater = new Date(createdAt.getTime() + 10 * 60 * 1000);
-    const isPublic = log.is_public === true || now >= tenMinutesLater;
-    const canDelete = isAdmin === true || (currentUserId === userId && now < tenMinutesLater);
+    const response = await fetch(`${supabaseUrl}/rest/v1/logs?${params.toString()}`, {
+      headers: {
+        'apikey': supabaseAnonKey,
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+    });
 
-    return {
-      ...log,
-      is_public: isPublic,
-      canDelete,
-    };
-  });
+    if (!response.ok) {
+      console.error('[getUserLogs] HTTP', response.status, '— RLS 可能阻止了查询');
+      return [];
+    }
+
+    const data = await response.json();
+
+    const now = new Date();
+    return (Array.isArray(data) ? data : []).map((log: any) => {
+      const createdAt = new Date(log.created_at || '');
+      const tenMinutesLater = new Date(createdAt.getTime() + 10 * 60 * 1000);
+      const isPublic = log.is_public === true || now >= tenMinutesLater;
+      const canDelete = isAdmin === true || (currentUserId === userId && now < tenMinutesLater);
+
+      return {
+        ...log,
+        is_public: isPublic,
+        canDelete,
+      };
+    });
+  } catch (e) {
+    console.error('[getUserLogs] fetch error:', e);
+    return [];
+  }
 }
 
 // 获取公开日志（用于首页展示等 — 仅返回已过10分钟冷却期的）
