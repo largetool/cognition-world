@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Profile, BackgroundImage } from '../types';
+import { getUserById, getUserByDisplayId, isNumericDisplayId } from '../utils/auth';
+import { getUserLogs, getUserBackgroundImages, getActiveBackgroundImage } from '../utils/storage';
 
 interface LogWithPublicStatus {
   id: string;
@@ -10,8 +12,6 @@ interface LogWithPublicStatus {
   published_at?: string | null;
   canDelete?: boolean;
 }
-import { getUserById, getUserByDisplayId, isNumericDisplayId } from '../utils/auth';
-import { getUserLogs, getUserBackgroundImages, getActiveBackgroundImage } from '../utils/storage';
 
 interface UserData {
   profile: Profile | null;

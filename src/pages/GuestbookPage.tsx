@@ -9,13 +9,13 @@ import { supabase, supabaseUrl } from '../supabase/client';
 import { generateBreadcrumbList, breadcrumbs } from '../utils/seo';
 import { t, getCurrentLanguage } from '../locales';
 import { getLikes, hasUserLiked, toggleLike, moderateContent, isUserExemptFromReview } from '../utils/storage';
+import { useAuth } from '../hooks/useAuth';
 
 // 获取 Edge Function URL
 function getEdgeFunctionUrl(): string {
   const url = supabaseUrl;
   return url.replace(/\/sb-api$/, '');
 }
-import { useAuth } from '../hooks/useAuth';
 
 // 格式化相对时间
 function formatDistanceToNow(dateString: string): string {

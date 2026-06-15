@@ -1,5 +1,6 @@
 import type { Database } from '../supabase/types';
 import type { LocalSystemBackground } from '../data/systemBackgrounds';
+import { pinyin } from 'pinyin-pro';
 
 export type Profile = Database['public']['Tables']['profiles']['Row'];
 export type Log = Database['public']['Tables']['logs']['Row'];
@@ -31,8 +32,6 @@ export function isAdminFromProfile(profile: Profile | null): boolean {
   if (!profile) return false;
   return profile.is_admin === true;
 }
-
-import { pinyin } from 'pinyin-pro';
 
 export function generateUserId(username: string, displayId: number): string {
   const py = pinyin(username, { toneType: 'none', type: 'array' })

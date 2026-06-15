@@ -7,6 +7,9 @@ import { supabase } from '../supabase/client';
 import { getUserLogs, createLogWithModeration, getUserBackgroundImages, selectSystemBackground, getActiveBackgroundImage, checkCanPost, recordPost, getLikes, hasUserLiked, toggleLike, deleteLog } from '../utils/storage';
 import { localSystemBackgrounds } from '../data/systemBackgrounds';
 import type { Profile, SystemBackground, BackgroundImage } from '../types';
+import { SEOHead } from '../components/SEOHead';
+import { generateProfilePageSchema, generatePersonSchema } from '../utils/seo';
+import BottomNav from '../components/BottomNav';
 
 const defaultBg = '/assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg';
 
@@ -21,9 +24,6 @@ interface LogData {
   published_at?: string | null;
   tags?: string[] | null;
 }
-import { SEOHead } from '../components/SEOHead';
-import { generateProfilePageSchema, generatePersonSchema } from '../utils/seo';
-import BottomNav from '../components/BottomNav';
 
 export default function MePage() {
   const navigate = useNavigate();
