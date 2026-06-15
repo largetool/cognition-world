@@ -11,7 +11,7 @@ import { getPendingBackgroundImages, approveBackgroundImage, rejectBackgroundIma
 import { getAllBlacklist, addToBlacklist, removeFromBlacklist } from '../utils/ip';
 import { getDefaultSEO, isAdminFromProfile } from '../types';
 import type { Profile, BackgroundImage, IPBlacklist, SystemBackground } from '../types';
-import { supabase } from '../supabase/client';
+import { supabase, supabaseUrl } from '../supabase/client';
 
 export function AdminPage() {
  const navigate = useNavigate();
@@ -156,7 +156,7 @@ export function AdminPage() {
   const loadReports = async () => {
     setIsLoadingReports(true);
     try {
-      const edgeUrl = (supabase as any).supabaseUrl?.replace(/\/sb-api$/, '') || '';
+      const edgeUrl = supabaseUrl;
       const session = (await supabase.auth.getSession()).data.session;
       const authHeaders = session ? { Authorization: `Bearer ${session.access_token}` } : {};
 
@@ -197,7 +197,7 @@ export function AdminPage() {
 
     setIsReviewing(true);
     try {
-      const edgeUrl = (supabase as any).supabaseUrl?.replace(/\/sb-api$/, '') || '';
+      const edgeUrl = supabaseUrl;
       const session = (await supabase.auth.getSession()).data.session;
       const authHeaders = session ? { Authorization: `Bearer ${session.access_token}` } : {};
 
