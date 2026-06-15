@@ -1,6 +1,5 @@
 import type { Database } from '../supabase/types';
 import type { LocalSystemBackground } from '../data/systemBackgrounds';
-import { pinyin } from 'pinyin-pro';
 
 export type Profile = Database['public']['Tables']['profiles']['Row'];
 export type Log = Database['public']['Tables']['logs']['Row'];
@@ -31,14 +30,6 @@ export interface SEOData {
 export function isAdminFromProfile(profile: Profile | null): boolean {
   if (!profile) return false;
   return profile.is_admin === true;
-}
-
-export function generateUserId(username: string, displayId: number): string {
-  const py = pinyin(username, { toneType: 'none', type: 'array' })
-    .join('')
-    .toUpperCase();
-  const paddedId = String(displayId).padStart(9, '0');
-  return `${py}${paddedId}`;
 }
 
 export function generateVirtualEmail(phone: string): string {
