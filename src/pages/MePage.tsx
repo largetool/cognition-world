@@ -5,7 +5,6 @@ import { ArrowLeft, MapPin, Calendar, Eye, EyeOff, LogOut, User, Edit3, X, Save,
 import { getCurrentUser, logout, updateProfile } from '../utils/auth';
 import { supabase } from '../supabase/client';
 import { createLogWithModeration, getUserBackgroundImages, selectSystemBackground, getActiveBackgroundImage, checkCanPost, recordPost, getLikes, hasUserLiked, toggleLike, deleteLog } from '../utils/storage';
-import { getLogsDirect } from '../utils/getLogsDirect';
 import { localSystemBackgrounds } from '../data/systemBackgrounds';
 import type { Profile, SystemBackground, BackgroundImage } from '../types';
 import { SEOHead } from '../components/SEOHead';
@@ -13,6 +12,54 @@ import { generateProfilePageSchema, generatePersonSchema } from '../utils/seo';
 import BottomNav from '../components/BottomNav';
 
 const defaultBg = '/assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg';
+
+/** 零依赖获取日志（避开 webpack chunk TDZ） */
+async function getLogsDirectInline(
+  userId: string,
+  currentUserId?: string,
+  isAdmin?: boolean
+): Promise<any[]> {
+  const SUPABASE_URL = 'https://nbgsichilfrjsopnnvia.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iZ3NpY2hpbGZyanNvcG5udmlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMTE1MjMsImV4cCI6MjA5NTg4NzUyM30.fWr-ZoDhirVgsKGsL8BWeP36iQ235GuQ4iF_GYK0RH0';
+
+  let token: string | null = null;
+  try {
+    const raw = localStorage.getItem('sb-' + SUPABASE_URL.replace('https://', '') + '-auth-token');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      token = parsed?.access_token || null;
+    }
+  } catch (_) {}
+
+  const params = new URLSearchParams({
+    select: '*',
+    user_id: `eq.${userId}`,
+    order: 'created_at.desc',
+    limit: '100',
+  });
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/logs?${params.toString()}`, {
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    console.error('[getLogsDirect] HTTP', res.status);
+    return [];
+  }
+
+  const data = await res.json();
+  const now = new Date();
+  return (Array.isArray(data) ? data : []).map((log: any) => {
+    const ct = new Date(log.created_at || '');
+    const tenMin = new Date(ct.getTime() + 10 * 60 * 1000);
+    const isPublic = log.is_public === true || now >= tenMin;
+    const canDelete = isAdmin === true || (currentUserId === userId && now < tenMin);
+    return { ...log, is_public: isPublic, canDelete };
+  });
+}
 
 // 日志数据类型
 interface LogData {
@@ -81,7 +128,7 @@ export default function MePage() {
         // 每个数据源独立加载，单个失败不阻塞其他
         let logsData: LogData[] = [];
         try {
-          const userLogs = await getLogsDirect(userProfile.user_id, userProfile.user_id, userProfile.is_admin || false);
+          const userLogs = await getLogsDirectInline(userProfile.user_id, userProfile.user_id, userProfile.is_admin || false);
           if (isMounted) {
             logsData = userLogs as LogData[];
             setLogs(logsData);
