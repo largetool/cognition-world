@@ -56,7 +56,6 @@ export default function MePage() {
 
         if (authError || !userProfile) {
           if (authUser) {
-            // Google OAuth 新用户：已认证但没有资料 → 跳到注册页补充信息
             navigate('/register?from=google');
           } else {
             navigate('/login');
@@ -78,30 +77,49 @@ export default function MePage() {
           isPublic: userProfile.is_public ?? true
         });
 
-        const [userLogs, bgImages] = await Promise.all([
-          getUserLogs(userProfile.user_id, userProfile.user_id, userProfile.is_admin || false),
-          getUserBackgroundImages(userProfile.user_id)
-        ]);
+        // 每个数据源独立加载，单个失败不阻塞其他
+        let logsData: LogData[] = [];
+        try {
+          const userLogs = await getUserLogs(userProfile.user_id, userProfile.user_id, userProfile.is_admin || false);
+          if (isMounted) {
+            logsData = userLogs as LogData[];
+            setLogs(logsData);
+            loadLogLikes(logsData);
+          }
+        } catch (stepErr) {
+          console.warn('[MePage] getUserLogs failed:', stepErr);
+        }
+
+        try {
+          const bgImages = await getUserBackgroundImages(userProfile.user_id);
+          if (isMounted) {
+            setBackgroundImages(bgImages);
+          }
+        } catch (stepErr) {
+          console.warn('[MePage] getUserBackgroundImages failed:', stepErr);
+        }
 
         if (!isMounted) return;
 
-        const logsData = userLogs as LogData[];
-        setLogs(logsData);
-        // 加载点赞数据
-        loadLogLikes(logsData);
-        setBackgroundImages(bgImages);
-
-        const savedBgUrl = userProfile.background_image;
-        if (savedBgUrl) {
-          setActiveBgUrl(savedBgUrl);
-          setBgError(false);
-        } else {
-          const activeBg = await getActiveBackgroundImage(userProfile.user_id);
-          if (isMounted && activeBg?.url) {
-            setActiveBgUrl(activeBg.url);
+        // 背景图
+        try {
+          const savedBgUrl = userProfile.background_image;
+          if (savedBgUrl) {
+            setActiveBgUrl(savedBgUrl);
             setBgError(false);
-          } else if (isMounted) {
-            // 没有设置背景图时使用默认背景
+          } else {
+            const activeBg = await getActiveBackgroundImage(userProfile.user_id);
+            if (isMounted && activeBg?.url) {
+              setActiveBgUrl(activeBg.url);
+              setBgError(false);
+            } else if (isMounted) {
+              setActiveBgUrl(defaultBg);
+              setBgError(false);
+            }
+          }
+        } catch (stepErr) {
+          console.warn('[MePage] activeBackground failed:', stepErr);
+          if (isMounted) {
             setActiveBgUrl(defaultBg);
             setBgError(false);
           }
@@ -109,7 +127,7 @@ export default function MePage() {
 
         setSystemBackgrounds(localSystemBackgrounds);
       } catch (err) {
-        console.error('Load data error:', err);
+        console.error('[MePage] Load data error:', err);
         if (isMounted) {
           setError('加载数据失败');
         }
