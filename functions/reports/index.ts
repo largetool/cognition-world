@@ -22,7 +22,7 @@ serve(async (req: Request) => {
 
     // ==================== 用户提交举报 ====================
     // 前端 POST 到 /functions/v1/reports → 路由根路径
-    if (req.method === "POST" && (url.pathname.endsWith("/report") || url.pathname === "/" || url.pathname === "")) {
+    if (req.method === "POST" && (url.pathname.endsWith("/reports") || url.pathname.endsWith("/report") || url.pathname === "/" || url.pathname === "")) {
       // 验证登录
       const token = req.headers.get("authorization")?.replace("Bearer ", "") || "";
       const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);

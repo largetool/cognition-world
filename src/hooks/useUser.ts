@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Profile, BackgroundImage } from '../types';
 import { getUserById, getUserByDisplayId, isNumericDisplayId } from '../utils/auth';
-import { getUserLogs, getUserBackgroundImages, getActiveBackgroundImage } from '../utils/storage';
+import { getUserBackgroundImages, getActiveBackgroundImage } from '../utils/storage';
+import { getLogsDirect } from '../utils/getLogsDirect';
 
 interface LogWithPublicStatus {
   id: string;
@@ -78,7 +79,7 @@ export function useUser(userId: string | undefined) {
       }
 
       const [logs, backgrounds, activeBg] = await Promise.all([
-        getUserLogs(profile.user_id),
+        getLogsDirect(profile.user_id),
         getUserBackgroundImages(profile.user_id),
         getActiveBackgroundImage(profile.user_id),
       ]);
@@ -118,7 +119,7 @@ export function useUser(userId: string | undefined) {
   const refreshLogs = useCallback(async () => {
     if (!data.profile) return;
     try {
-      const logs = await getUserLogs(data.profile.user_id);
+      const logs = await getLogsDirect(data.profile.user_id);
       setData(prev => ({ ...prev, logs }));
     } catch (err) {
       console.error('Failed to refresh logs:', err);

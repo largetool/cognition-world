@@ -156,35 +156,25 @@ BEGIN
 
   RAISE NOTICE '✓ conversations 表 RLS 已修复';
 
-  -- ============================================
-  -- 9. sync_my_auth_id 函数 — 简化为 000003 原版
-  --    核心：只要 auth_user_id IS NULL 就填充
-  --    SECURITY DEFINER 绕过 RLS
-  -- ============================================
-  CREATE OR REPLACE FUNCTION public.sync_my_auth_id()
-  RETURNS BOOLEAN
-  SECURITY DEFINER
-  LANGUAGE plpgsql
-  AS $$
-  BEGIN
-    UPDATE public.profiles
-    SET auth_user_id = auth.uid()
-    WHERE auth_user_id IS NULL
-      AND auth.uid() IS NOT NULL;
-    RETURN FOUND;
-  END;
-  $$;
-
-  RAISE NOTICE '✓ sync_my_auth_id 函数已恢复（000003 原版）';
-
-  -- ============================================
-  -- 验证
-  -- ============================================
-  RAISE NOTICE '============================================';
-  RAISE NOTICE '所有 RLS 策略已回到 000003 简洁方案！';
-  RAISE NOTICE '============================================';
-
 END $$;
+
+-- ============================================
+-- 9. sync_my_auth_id 函数 — 简化为 000003 原版
+--    不能放在 DO 块内，单独执行
+-- ============================================
+CREATE OR REPLACE FUNCTION public.sync_my_auth_id()
+RETURNS BOOLEAN
+SECURITY DEFINER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  UPDATE public.profiles
+  SET auth_user_id = auth.uid()
+  WHERE auth_user_id IS NULL
+    AND auth.uid() IS NOT NULL;
+  RETURN FOUND;
+END;
+$$;
 
 -- 验证关键表的策略
 SELECT tablename, policyname, cmd, qual

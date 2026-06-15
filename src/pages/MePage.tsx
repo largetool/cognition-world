@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Calendar, Eye, EyeOff, LogOut, User, Edit3, X, Save, Send, Clock, Image, CheckCircle, AlertCircle, Check, Share2, ThumbsUp } from 'lucide-react';
 import { getCurrentUser, logout, updateProfile } from '../utils/auth';
 import { supabase } from '../supabase/client';
-import { getUserLogs, createLogWithModeration, getUserBackgroundImages, selectSystemBackground, getActiveBackgroundImage, checkCanPost, recordPost, getLikes, hasUserLiked, toggleLike, deleteLog } from '../utils/storage';
+import { createLogWithModeration, getUserBackgroundImages, selectSystemBackground, getActiveBackgroundImage, checkCanPost, recordPost, getLikes, hasUserLiked, toggleLike, deleteLog } from '../utils/storage';
+import { getLogsDirect } from '../utils/getLogsDirect';
 import { localSystemBackgrounds } from '../data/systemBackgrounds';
 import type { Profile, SystemBackground, BackgroundImage } from '../types';
 import { SEOHead } from '../components/SEOHead';
@@ -80,7 +81,7 @@ export default function MePage() {
         // 每个数据源独立加载，单个失败不阻塞其他
         let logsData: LogData[] = [];
         try {
-          const userLogs = await getUserLogs(userProfile.user_id, userProfile.user_id, userProfile.is_admin || false);
+          const userLogs = await getLogsDirect(userProfile.user_id, userProfile.user_id, userProfile.is_admin || false);
           if (isMounted) {
             logsData = userLogs as LogData[];
             setLogs(logsData);
