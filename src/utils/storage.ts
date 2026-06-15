@@ -114,11 +114,22 @@ export interface LogWithPublicStatus {
 }
 
 // 获取用户日志（包含公开状态）
-// 注意：直接用 fetch 而非 supabase 客户端，避开 supabase-js v2.107.0 内部 TDZ bug
+// 注意：完全绕过 supabase 客户端（v2.107.0 内部有 TDZ bug），
+// 从 localStorage 读 token，用原生 fetch 调用 REST API
 export async function getUserLogs(userId: string, currentUserId?: string, isAdmin?: boolean): Promise<LogWithPublicStatus[]> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
+    // 从 localStorage 获取 Supabase session token（避免调用 supabase.auth 任何方法）
+    let token: string | null = null;
+    try {
+      // Supabase v2 存储格式：sb-{project_ref}-auth-token
+      const ss = localStorage.getItem('sb-nbgsichilfrjsopnnvia.supabase.co-auth-token');
+      if (ss) {
+        const parsed = JSON.parse(ss);
+        token = parsed?.access_token || null;
+      }
+    } catch {
+      // localStorage 不可用时忽略
+    }
 
     const params = new URLSearchParams({
       select: '*',
