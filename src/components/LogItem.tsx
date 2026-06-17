@@ -139,7 +139,7 @@ export function LogItem({ log, index = 0, displayId, currentUser, onDelete }: Lo
             {copied ? '已复制' : '复制链接'}
           </button>
           {/* 删除按钮（可删除状态 + 有 onDelete 回调时显示） */}
-          {log.canDelete && onDelete && (
+          {'canDelete' in log && log.canDelete && onDelete && (
             <button
               onClick={() => onDelete(log.id)}
               className="text-xs text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1"
