@@ -11,7 +11,7 @@ import { BlockedPage } from '../components/BlockedPage';
 import { useAuth } from '../hooks/useAuth';
 import { useUser } from '../hooks/useUser';
 import { useIPCheck } from '../hooks/useIPCheck';
-import { createLog, createLogWithModeration, getAccountHideStatus, requestAccountHide, cancelAccountHide, requestAccountRestore, isUserExemptFromReview, type AccountHideStatus, type LogWithPublicStatus } from '../utils/storage';
+import { createLog, createLogWithModeration, getAccountHideStatus, requestAccountHide, cancelAccountHide, requestAccountRestore, isUserExemptFromReview, deleteLog, type AccountHideStatus, type LogWithPublicStatus } from '../utils/storage';
 import { getUserSEO, isAdminFromProfile, getInitials, APP_CONFIG, getDefaultSEO } from '../types';
 import { supabase, supabaseUrl } from '../supabase/client';
 import { generateProfilePageSchema, generatePersonSchema, generateBlogPostingSchema } from '../utils/seo';
@@ -360,6 +360,18 @@ export default function UserPage() {
     setHideSubmitting(false);
   };
 
+  // 管理员/所有者删除日志
+  const handleDeleteLog = async (logId: string) => {
+    if (!profile || !currentUser) return;
+    if (!confirm('确定要删除此日志？')) return;
+    const result = await deleteLog(logId, profile.user_id, currentUser.is_admin || false);
+    if (result.success) {
+      refreshLogs();
+    } else {
+      alert('删除失败：' + result.error);
+    }
+  };
+
   if (ipLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -688,7 +700,7 @@ export default function UserPage() {
                 {paginatedLogs.map((log, index) => (
                   <div key={log.id} className="relative group" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
                     <meta itemProp="position" content={String((currentPage - 1) * LOGS_PER_PAGE + index + 1)} />
-                    <LogItem log={log} index={index} displayId={profile?.display_id} currentUser={currentUser} />
+                    <LogItem log={log} index={index} displayId={profile?.display_id} currentUser={currentUser} onDelete={handleDeleteLog} />
                     {/* 举报按钮 - 仅对非自己的日志显示 */}
                     {currentUser && log.user_id !== currentUser.user_id && (
                       <button

@@ -1,21 +1,22 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Copy, CopyCheck, ThumbsUp } from 'lucide-react';
+import { Copy, CopyCheck, ThumbsUp, X } from 'lucide-react';
 import { formatDateTime, fmtDisplayId, APP_CONFIG } from '../types';
 import { getLikes, hasUserLiked, toggleLike } from '../utils/storage';
 import type { Log } from '../types';
 
 interface LogItemProps {
-  log: Log | { id: string; content: string; created_at: string | null; user_id: string; is_public?: boolean | null; published_at?: string | null; tags?: string[] | null };
+  log: Log | { id: string; content: string; created_at: string | null; user_id: string; is_public?: boolean | null; published_at?: string | null; tags?: string[] | null; canDelete?: boolean };
   index?: number;
   displayId?: number | null;
   currentUser?: { user_id: string } | null;
+  onDelete?: (logId: string) => void;
 }
 
 const MAX_PREVIEW_LENGTH = 50;
 
-export function LogItem({ log, index = 0, displayId, currentUser }: LogItemProps) {
+export function LogItem({ log, index = 0, displayId, currentUser, onDelete }: LogItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
@@ -137,6 +138,17 @@ export function LogItem({ log, index = 0, displayId, currentUser }: LogItemProps
             {copied ? <CopyCheck className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             {copied ? '已复制' : '复制链接'}
           </button>
+          {/* 删除按钮（可删除状态 + 有 onDelete 回调时显示） */}
+          {log.canDelete && onDelete && (
+            <button
+              onClick={() => onDelete(log.id)}
+              className="text-xs text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1"
+              title="删除此日志"
+            >
+              <X className="w-3.5 h-3.5" />
+              删除
+            </button>
+          )}
           {displayId != null && (
             <Link
               to={`/${fmtDisplayId(displayId)}/thought/${log.id}`}
