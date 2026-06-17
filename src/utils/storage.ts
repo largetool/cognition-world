@@ -778,6 +778,17 @@ export async function approveSlogan(userId: string): Promise<{ success: boolean;
   return { success: true };
 }
 
+// 拒绝 Slogan（清空并标记为不展示）
+export async function rejectSlogan(userId: string): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ slogan_approved: true, slogan: '' })
+    .eq('user_id', userId);
+
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
 // 获取已审核通过的随机 Slogan
 export async function getRandomApprovedSlogan(): Promise<{ username: string; slogan: string } | null> {
   const { data, error } = await supabase

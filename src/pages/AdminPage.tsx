@@ -7,7 +7,7 @@ import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { GlassCard } from '../components/GlassCard';
 import { useAuth } from '../hooks/useAuth';
-import { getPendingBackgroundImages, approveBackgroundImage, rejectBackgroundImage, getSystemBackgrounds, getMessageBoardConfig, updateMessageBoardConfig, getSitemapMode, setSitemapMode, getSitemapStats, type SitemapMode, getAllUsersWithStats, updateUserRole, getDailyPostLimit, updateDailyPostLimit, getPendingSlogans, approveSlogan, isUserGuestbookEnabled, setUserGuestbookEnabled, freezeUser, unfreezeUser, getTrustedUsers, setTrustedUser, removeTrustedUser } from '../utils/storage';
+import { getPendingBackgroundImages, approveBackgroundImage, rejectBackgroundImage, getSystemBackgrounds, getMessageBoardConfig, updateMessageBoardConfig, getSitemapMode, setSitemapMode, getSitemapStats, type SitemapMode, getAllUsersWithStats, updateUserRole, getDailyPostLimit, updateDailyPostLimit, getPendingSlogans, approveSlogan, rejectSlogan, isUserGuestbookEnabled, setUserGuestbookEnabled, freezeUser, unfreezeUser, getTrustedUsers, setTrustedUser, removeTrustedUser } from '../utils/storage';
 import { getAllBlacklist, addToBlacklist, removeFromBlacklist } from '../utils/ip';
 import { getDefaultSEO, isAdminFromProfile } from '../types';
 import type { Profile, BackgroundImage, IPBlacklist, SystemBackground } from '../types';
@@ -675,7 +675,7 @@ export function AdminPage() {
    {u.username !== 'admin' && (
      <button
        onClick={async () => {
-         const msg = \`⚠️ 确定要永久删除用户 "\${u.username}"（ID: \${String(u.display_id ?? 0).padStart(9, '0')}）吗？\n\n此操作不可撤销！\n该用户的所有日志、点赞、留言和上传的背景图将一并删除。\`;
+         const msg = `⚠️ 确定要永久删除用户 "${u.username}"（ID: ${String(u.display_id ?? 0).padStart(9, '0')}）吗？\n\n此操作不可撤销！\n该用户的所有日志、点赞、留言和上传的背景图将一并删除。`;
          if (!confirm(msg)) return;
          if (!confirm('⚠️ 再次确认：删除后无法恢复，确定继续？')) return;
          const { data, error } = await supabase.rpc('admin_delete_user', { target_user_id: u.user_id });
@@ -683,7 +683,7 @@ export function AdminPage() {
          if (error || result?.error) {
            alert('删除失败：' + (result?.error || error?.message || '未知错误'));
          } else {
-           alert(\`用户 "\${u.username}" 已删除\`);
+           alert(`用户 "${u.username}" 已删除`);
            loadData();
          }
        }}
@@ -931,8 +931,9 @@ export function AdminPage() {
  <span>待审核：{pendingSlogans.length - currentSloganIndex} 条</span>
  <span>进度：{currentSloganIndex + 1} / {pendingSlogans.length}</span>
  </div>
- <div className="grid grid-cols-4 gap-3">
+ <div className="grid grid-cols-5 gap-2">
  <button onClick={async () => { const result = await approveSlogan(pendingSlogans[currentSloganIndex].user_id); if (result.success) { setCurrentSloganIndex(prev => prev + 1); } else { alert('审核失败：' + result.error); } }} className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors"><CheckCircle className="w-4 h-4" /><span>展示</span></button>
+ <button onClick={async () => { if (!confirm(`确定拒绝并清空 "${pendingSlogans[currentSloganIndex].username}" 的 Slogan？`)) return; const result = await rejectSlogan(pendingSlogans[currentSloganIndex].user_id); if (result.success) { setCurrentSloganIndex(prev => prev + 1); } else { alert('拒绝失败：' + result.error); } }} className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"><XCircle className="w-4 h-4" /><span>拒绝</span></button>
  <button onClick={() => setCurrentSloganIndex(prev => prev + 1)} className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"><span>跳过</span></button>
  <button onClick={() => setCurrentSloganIndex(prev => Math.min(prev + 1, pendingSlogans.length))} className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--border-light)] transition-colors"><span>下一条</span></button>
  <button onClick={() => setCurrentSloganIndex(prev => Math.min(prev + 5, pendingSlogans.length))} className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--border-light)] transition-colors"><span>下5条</span></button>
