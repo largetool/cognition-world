@@ -188,7 +188,7 @@ export async function getPublicLogs(userId: string, limit: number = 50): Promise
 }
 
 // 创建日志（10分钟后自动公开）
-export async function createLog(userId: string, content: string, tags?: string[]): Promise<Log | null> {
+export async function createLog(userId: string, content: string, tags?: string[]): Promise<{ log: Log | null; error?: string }> {
   // 检查用户是否被冻结
   const { data: profile } = await supabase
     .from('profiles')
@@ -198,7 +198,7 @@ export async function createLog(userId: string, content: string, tags?: string[]
 
   if (profile?.is_frozen) {
     console.error('User is frozen, cannot create log');
-    return null;
+    return { log: null, error: '账户已被冻结，无法发布' };
   }
 
   const publishedAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10分钟后
@@ -214,9 +214,12 @@ export async function createLog(userId: string, content: string, tags?: string[]
     .select()
     .single();
 
-  if (error) { console.error('Error creating log:', error); return null; }
+  if (error) {
+    console.error('Error creating log:', error);
+    return { log: null, error: error.message };
+  }
 
-  return data;
+  return { log: data };
 }
 
 // 删除日志（10分钟内用户可删除，10分钟后仅管理员可删除）
@@ -1162,9 +1165,9 @@ export async function createLogWithModeration(
   }
 
   // 3. 审核通过（或免审），创建日志
-  const log = await createLog(userId, content, tags);
-  if (!log) {
-    return { success: false, error: '日志创建失败' };
+  const { log, error: createError } = await createLog(userId, content, tags);
+  if (createError || !log) {
+    return { success: false, error: createError || '日志创建失败' };
   }
 
   return {

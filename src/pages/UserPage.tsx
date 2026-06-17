@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Settings, Share2, MapPin, Calendar, Eye, EyeOff, Send, ChevronLeft, ChevronRight, ArrowUp, Flag, X, AlertTriangle, ShieldAlert, UserX, Clock, Lock, CheckCircle } from 'lucide-react';
@@ -152,6 +152,20 @@ export default function UserPage() {
   const error = ssrNotFound ? '该用户不存在' : (ssrProfile !== undefined ? null : clientUserData.error);
   const refreshLogs = clientUserData.refreshLogs;
   const { isBlocked, isLoading: ipLoading } = useIPCheck();
+
+  // 为 SSR 日志补充 canDelete（管理员可在任何用户页删除任意日志）
+  const logsWithDelete = useMemo(() => {
+    const now = new Date();
+    const isAdmin = currentUser?.is_admin === true;
+    const currentUserId = currentUser?.user_id;
+    return logs.map(log => {
+      if ('canDelete' in log && log.canDelete) return log;
+      const ct = new Date(log.created_at || '');
+      const tenMin = new Date(ct.getTime() + 10 * 60 * 1000);
+      const canDel = isAdmin || (currentUserId === log.user_id && now < tenMin);
+      return { ...log, canDelete: canDel };
+    });
+  }, [logs, currentUser]);
   const [logContent, setLogContent] = useState('');
   const [logTags, setLogTags] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -175,8 +189,8 @@ export default function UserPage() {
   const [restoreModalOpen, setRestoreModalOpen] = useState(false);
 
   // 分页计算
-  const totalPages = Math.ceil(logs.length / LOGS_PER_PAGE);
-  const paginatedLogs = logs.slice((currentPage - 1) * LOGS_PER_PAGE, currentPage * LOGS_PER_PAGE);
+  const totalPages = Math.ceil(logsWithDelete.length / LOGS_PER_PAGE);
+  const paginatedLogs = logsWithDelete.slice((currentPage - 1) * LOGS_PER_PAGE, currentPage * LOGS_PER_PAGE);
 
   const isCurrentUser = currentUser?.user_id === profile?.user_id;
   const isAdminUser = isAdminFromProfile(currentUser);
@@ -255,6 +269,7 @@ export default function UserPage() {
           message_table: reportingItem.type === 'log' ? 'logs' : 'user_messages',
           message_content: reportingItem.content,
           reported_user_id: reportingItem.user_id,
+          reporter_id: currentUser.user_id,
           reason: reportReason.trim(),
         }),
       });
@@ -699,7 +714,7 @@ export default function UserPage() {
               </div>
               <p className="text-[var(--text-secondary)]">该用户已暂停展示</p>
             </div>
-          ) : logs.length > 0 ? (
+          ) : logsWithDelete.length > 0 ? (
             <>
               <div className="space-y-4">
                 {paginatedLogs.map((log, index) => (
