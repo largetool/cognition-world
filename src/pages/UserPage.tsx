@@ -144,7 +144,7 @@ export default function UserPage() {
   const { user: currentUser } = useAuth() as { user: Profile | null };
 
   // SSR 模式：使用预取数据；客户端模式：使用 useUser hook 拉取
-  const clientUserData = useUser(ssrProfile !== undefined ? undefined : userId, currentUser?.is_admin);
+  const clientUserData = useUser(ssrProfile !== undefined ? undefined : userId, currentUser?.is_admin ?? undefined);
   const profile = ssrProfile !== undefined ? ssrProfile : clientUserData.profile;
   const logs = ssrLogs !== undefined ? ssrLogs : clientUserData.logs;
   const activeBackground = ssrActiveBg !== undefined ? ssrActiveBg : clientUserData.activeBackground;

@@ -678,7 +678,7 @@ export function AdminPage() {
          const msg = `⚠️ 确定要永久删除用户 "${u.username}"（ID: ${String(u.display_id ?? 0).padStart(9, '0')}）吗？\n\n此操作不可撤销！\n该用户的所有日志、点赞、留言和上传的背景图将一并删除。`;
          if (!confirm(msg)) return;
          if (!confirm('⚠️ 再次确认：删除后无法恢复，确定继续？')) return;
-         const { data, error } = await supabase.rpc('admin_delete_user', { target_user_id: u.user_id });
+         const { data, error } = await (supabase.rpc as any)('admin_delete_user', { target_user_id: u.user_id });;
          const result = data as { success: boolean; error?: string } | null;
          if (error || result?.error) {
            alert('删除失败：' + (result?.error || error?.message || '未知错误'));
