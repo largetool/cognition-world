@@ -2,7 +2,7 @@ import type { Database } from '../supabase/types';
 import type { LocalSystemBackground } from '../data/systemBackgrounds';
 
 export type Profile = Database['public']['Tables']['profiles']['Row'];
-export type Log = Database['public']['Tables']['logs']['Row'];
+export type Log = Database['public']['Tables']['logs']['Row'] & { canDelete?: boolean };
 export type BackgroundImage = Database['public']['Tables']['background_images']['Row'];
 export type SystemBackground = Database['public']['Tables']['system_backgrounds']['Row'] | LocalSystemBackground;
 export type EditToken = Database['public']['Tables']['edit_tokens']['Row'];
