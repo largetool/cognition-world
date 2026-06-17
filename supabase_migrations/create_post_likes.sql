@@ -3,12 +3,15 @@
 -- 日期：2026-06-17
 -- =====================================================
 
--- 1. 创建表
+-- 先删除旧表（如果之前已运行过未完整成功的版本）
+DROP TABLE IF EXISTS post_likes CASCADE;
+
+-- 1. 创建表（user_id/text 以匹配 profiles.user_id 的类型）
 CREATE TABLE IF NOT EXISTS post_likes (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    target_id UUID NOT NULL,
+    target_id TEXT NOT NULL,
     target_type TEXT NOT NULL CHECK (target_type IN ('log', 'guestbook_message')),
-    user_id UUID NOT NULL,
+    user_id TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
     -- 同一用户对同一内容只能点赞一次
     UNIQUE (target_id, target_type, user_id)
@@ -26,14 +29,10 @@ ALTER TABLE post_likes ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can view likes" ON post_likes
     FOR SELECT USING (true);
 
--- 只有登录用户可以点赞（user_id 必须匹配 auth.uid()）
+-- 只有登录用户可以点赞（auth.uid() 是 uuid，user_id 是 text，需转换）
 CREATE POLICY "Auth users can like" ON post_likes
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+    FOR INSERT WITH CHECK (auth.uid()::text = user_id);
 
 -- 只有自己的点赞可以取消
 CREATE POLICY "Users can delete their own likes" ON post_likes
-    FOR DELETE USING (auth.uid() = user_id);
-
--- 5. 同步已有数据（如果 profiles 表的 user_id 需要和 auth.uid 保持一致）
--- 注意：下面这条根据实际情况决定是否运行
--- SELECT sync_my_auth_id(); -- 为当前登录用户同步
+    FOR DELETE USING (auth.uid()::text = user_id);
