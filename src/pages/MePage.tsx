@@ -213,6 +213,9 @@ export default function MePage() {
     setError(null);
 
     try {
+      // 确保 auth.uid() 与 profiles.user_id 同步（RLS 检查需要）
+      await supabase.rpc('sync_my_auth_id');
+
       // 检查发布限额
       const checkResult = await checkCanPost(profile.user_id);
       if (!checkResult.canPost) {

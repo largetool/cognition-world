@@ -13,7 +13,7 @@ import { useUser } from '../hooks/useUser';
 import { useIPCheck } from '../hooks/useIPCheck';
 import { createLog, createLogWithModeration, getAccountHideStatus, requestAccountHide, cancelAccountHide, requestAccountRestore, isUserExemptFromReview, deleteLog, type AccountHideStatus, type LogWithPublicStatus } from '../utils/storage';
 import { getUserSEO, isAdminFromProfile, getInitials, APP_CONFIG, getDefaultSEO } from '../types';
-import { supabase, supabaseUrl } from '../supabase/client';
+import { supabase } from '../supabase/client';
 import { generateProfilePageSchema, generatePersonSchema, generateBlogPostingSchema } from '../utils/seo';
 import { useSSRData } from '../utils/SSRContext';
 import type { Profile } from '../types';
@@ -254,36 +254,27 @@ export default function UserPage() {
     setReportSubmitting(true);
     setReportError('');
     try {
-      const session = (await supabase.auth.getSession()).data.session;
-      const authHeaders = session ? { Authorization: `Bearer ${session.access_token}` } : {};
-
-      const edgeUrl = supabaseUrl;
-      const response = await fetch(`${edgeUrl}/functions/v1/reports`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(authHeaders as Record<string, string>),
-        },
-        body: JSON.stringify({
+      // 直接插入 reports 表（绕过有问题的 Edge Function）
+      const { error: insertError } = await supabase
+        .from('reports')
+        .insert({
           reported_message_id: reportingItem.id,
           message_table: reportingItem.type === 'log' ? 'logs' : 'user_messages',
           message_content: reportingItem.content,
           reported_user_id: reportingItem.user_id,
           reporter_id: currentUser.user_id,
           reason: reportReason.trim(),
-        }),
-      });
+          status: 'pending',
+        });
 
-      const result = await response.json();
-
-      if (response.ok && result.success) {
+      if (insertError) {
+        setReportError(insertError.message || '举报提交失败，请稍后重试');
+        console.error('举报失败:', insertError);
+      } else {
         setReportSuccess(true);
         setTimeout(() => {
           closeReportModal();
         }, 2000);
-      } else {
-        setReportError(result.error || '举报提交失败，请稍后重试');
-        console.error('举报失败:', result.error);
       }
     } catch (err) {
       setReportError('网络异常，举报提交失败，请稍后重试');
