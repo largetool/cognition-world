@@ -778,11 +778,11 @@ export async function approveSlogan(userId: string): Promise<{ success: boolean;
   return { success: true };
 }
 
-// 拒绝 Slogan（清空并标记为不展示）
+// 拒绝 Slogan（仅标记为不公开，保留用户原文；null=已拒绝，与 false=待审核 区分）
 export async function rejectSlogan(userId: string): Promise<{ success: boolean; error?: string }> {
   const { error } = await supabase
     .from('profiles')
-    .update({ slogan_approved: true, slogan: '' })
+    .update({ slogan_approved: null })
     .eq('user_id', userId);
 
   if (error) return { success: false, error: error.message };

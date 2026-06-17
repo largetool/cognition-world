@@ -147,7 +147,7 @@ export function useUser(userId: string | undefined, isAdmin?: boolean) {
         error: err instanceof Error ? err.message : 'Failed to load user data',
       });
     }
-  }, [userId]);
+  }, [userId, isAdmin]);
 
   useEffect(() => {
     fetchUserData();
@@ -166,7 +166,7 @@ export function useUser(userId: string | undefined, isAdmin?: boolean) {
     } catch (err) {
       console.error('Failed to refresh logs:', err);
     }
-  }, [data.profile]);
+  }, [data.profile, isAdmin]);
 
   const refreshBackgrounds = useCallback(async () => {
     if (!data.profile) return;

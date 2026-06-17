@@ -93,6 +93,7 @@ export default function MePage() {
   // 点赞
   const [logLikes, setLogLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
   const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
+  const [likeErrors, setLikeErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     let isMounted = true;
@@ -243,7 +244,7 @@ export default function MePage() {
     } finally {
       setIsPublishing(false);
     }
-  }, [profile, newLogContent]);
+  }, [profile, newLogContent, newLogTags]);
 
   const handleDeleteLog = useCallback(async (logId: string) => {
     if (!profile) return;
@@ -307,12 +308,16 @@ export default function MePage() {
   const handleToggleLogLike = async (logId: string) => {
     if (likeLoading[logId]) return;
     setLikeLoading(prev => ({ ...prev, [logId]: true }));
+    setLikeErrors(prev => ({ ...prev, [logId]: false }));
     const result = await toggleLike(logId, 'log', profile.user_id);
     if (!result.error) {
       setLogLikes(prev => ({
         ...prev,
         [logId]: { count: result.count, liked: result.liked }
       }));
+    } else {
+      setLikeErrors(prev => ({ ...prev, [logId]: true }));
+      setTimeout(() => setLikeErrors(prev => ({ ...prev, [logId]: false })), 2000);
     }
     setLikeLoading(prev => ({ ...prev, [logId]: false }));
   };
@@ -778,7 +783,7 @@ export default function MePage() {
                 <textarea
                   rows={3}
                   value={newLogContent}
-                  onChange={(e) => setNewLogContent(e.target.value)}
+                  onChange={(e) => { setNewLogContent(e.target.value); setError(null); setPostLimitError(null); }}
                   className="w-full px-0 py-0 bg-transparent border-0 text-[0.9375rem] text-gray-800 placeholder:text-gray-400 focus:outline-none resize-none"
                   placeholder="分享你的想法...（完成后可添加标签，让 AI 更容易发现你）"
                 />
@@ -789,6 +794,16 @@ export default function MePage() {
                   className="w-full mt-2 px-0 py-0 bg-transparent border-t border-gray-100 pt-3 text-sm text-gray-500 placeholder:text-gray-300 focus:outline-none"
                   placeholder="添加标签（选填，逗号分隔如：GEO, AI, 独立开发）"
                 />
+                {postLimitError && (
+                  <div className="mt-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+                    {postLimitError}
+                  </div>
+                )}
+                {error && !postLimitError && (
+                  <div className="mt-3 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                    {error}
+                  </div>
+                )}
                 <div className="flex justify-end mt-4">
                   <motion.button
                     onClick={handlePublishLog}
@@ -859,11 +874,11 @@ export default function MePage() {
                             onClick={() => handleToggleLogLike(log.id)}
                             disabled={likeLoading[log.id]}
                             className={`text-xs transition-colors flex items-center gap-1 ${
-                              logLikes[log.id]?.liked ? 'text-blue-500' : 'text-gray-400 hover:text-blue-500'
+                              likeErrors[log.id] ? 'text-red-500' : logLikes[log.id]?.liked ? 'text-blue-500' : 'text-gray-400 hover:text-blue-500'
                             }`}
-                            title={logLikes[log.id]?.liked ? '取消点赞' : '点赞'}
+                            title={likeErrors[log.id] ? '点赞失败，请重试' : logLikes[log.id]?.liked ? '取消点赞' : '点赞'}
                           >
-                            <ThumbsUp className={`w-3.5 h-3.5 ${logLikes[log.id]?.liked ? 'fill-blue-500' : ''}`} />
+                            <ThumbsUp className={`w-3.5 h-3.5 ${logLikes[log.id]?.liked && !likeErrors[log.id] ? 'fill-blue-500' : ''}`} />
                             {logLikes[log.id]?.count > 0 && <span>{logLikes[log.id].count}</span>}
                           </button>
                           {log.canDelete && (

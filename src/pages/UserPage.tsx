@@ -164,6 +164,7 @@ export default function UserPage() {
   const [reportReason, setReportReason] = useState('');
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
+  const [reportError, setReportError] = useState('');
 
   // 账户隐藏相关状态
   const [hideStatus, setHideStatus] = useState<AccountHideStatus | null>(null);
@@ -220,6 +221,7 @@ export default function UserPage() {
     setReportingItem(item);
     setReportReason('');
     setReportSuccess(false);
+    setReportError('');
     setReportModalOpen(true);
   };
 
@@ -236,6 +238,7 @@ export default function UserPage() {
     if (!reportingItem || !currentUser || !reportReason.trim()) return;
 
     setReportSubmitting(true);
+    setReportError('');
     try {
       const session = (await supabase.auth.getSession()).data.session;
       const authHeaders = session ? { Authorization: `Bearer ${session.access_token}` } : {};
@@ -264,9 +267,11 @@ export default function UserPage() {
           closeReportModal();
         }, 2000);
       } else {
+        setReportError(result.error || '举报提交失败，请稍后重试');
         console.error('举报失败:', result.error);
       }
     } catch (err) {
+      setReportError('网络异常，举报提交失败，请稍后重试');
       console.error('举报提交失败:', err);
     } finally {
       setReportSubmitting(false);
@@ -1004,6 +1009,13 @@ export default function UserPage() {
                       />
                       <p className="text-xs text-gray-400 mt-1 text-right">{reportReason.length}/500</p>
                     </div>
+
+                    {/* 错误提示 */}
+                    {reportError && (
+                      <div className="mb-4 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                        {reportError}
+                      </div>
+                    )}
 
                     {/* 提交按钮 */}
                     <div className="flex gap-3">

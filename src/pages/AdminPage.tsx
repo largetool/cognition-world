@@ -370,7 +370,7 @@ export function AdminPage() {
  { key: 'messages', icon: MessageSquare, label: '留言板控制' },
  { key: 'sitemap', icon: Globe, label: '站点地图' },
  { key: 'users', icon: Shield, label: '用户权限' },
-              { key: 'slogans', icon: MessageSquare, label: 'Slogan审核', count: pendingSlogans.length },
+              { key: 'slogans', icon: MessageSquare, label: 'Slogen 审核', count: pendingSlogans.length },
               { key: 'reports', icon: Flag, label: '举报管理' },
               { key: 'whitelist', icon: CheckCircle, label: '免审白名单' },
             ].map((tab) => (
@@ -910,7 +910,7 @@ export function AdminPage() {
             )}
             {activeTab === 'slogans' && (
               <GlassCard>
-                <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Slogan 审核</h2>
+                <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Slogen 审核</h2>
  {isLoadingSlogans ? (
  <div className="text-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)] mx-auto" /></div>
  ) : pendingSlogans.length > 0 && currentSloganIndex < pendingSlogans.length ? (
@@ -933,7 +933,7 @@ export function AdminPage() {
  </div>
  <div className="grid grid-cols-5 gap-2">
  <button onClick={async () => { const result = await approveSlogan(pendingSlogans[currentSloganIndex].user_id); if (result.success) { setCurrentSloganIndex(prev => prev + 1); } else { alert('审核失败：' + result.error); } }} className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors"><CheckCircle className="w-4 h-4" /><span>展示</span></button>
- <button onClick={async () => { if (!confirm(`确定拒绝并清空 "${pendingSlogans[currentSloganIndex].username}" 的 Slogan？`)) return; const result = await rejectSlogan(pendingSlogans[currentSloganIndex].user_id); if (result.success) { setCurrentSloganIndex(prev => prev + 1); } else { alert('拒绝失败：' + result.error); } }} className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"><XCircle className="w-4 h-4" /><span>拒绝</span></button>
+ <button onClick={async () => { if (!confirm(`确定拒绝展示 "${pendingSlogans[currentSloganIndex].username}" 的 Slogan？（不会删除原文）`)) return; const result = await rejectSlogan(pendingSlogans[currentSloganIndex].user_id); if (result.success) { setCurrentSloganIndex(prev => prev + 1); } else { alert('拒绝失败：' + result.error); } }} className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"><XCircle className="w-4 h-4" /><span>拒绝展示</span></button>
  <button onClick={() => setCurrentSloganIndex(prev => prev + 1)} className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"><span>跳过</span></button>
  <button onClick={() => setCurrentSloganIndex(prev => Math.min(prev + 1, pendingSlogans.length))} className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--border-light)] transition-colors"><span>下一条</span></button>
  <button onClick={() => setCurrentSloganIndex(prev => Math.min(prev + 5, pendingSlogans.length))} className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--border-light)] transition-colors"><span>下5条</span></button>
