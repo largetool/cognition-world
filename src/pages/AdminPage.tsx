@@ -671,6 +671,28 @@ export function AdminPage() {
  </button>
  )
  )}
+   {/* 删除用户按钮（非 admin 账号可删除） */}
+   {u.username !== 'admin' && (
+     <button
+       onClick={async () => {
+         const msg = \`⚠️ 确定要永久删除用户 "\${u.username}"（ID: \${String(u.display_id ?? 0).padStart(9, '0')}）吗？\n\n此操作不可撤销！\n该用户的所有日志、点赞、留言和上传的背景图将一并删除。\`;
+         if (!confirm(msg)) return;
+         if (!confirm('⚠️ 再次确认：删除后无法恢复，确定继续？')) return;
+         const { data, error } = await supabase.rpc('admin_delete_user', { target_user_id: u.user_id });
+         const result = data as { success: boolean; error?: string } | null;
+         if (error || result?.error) {
+           alert('删除失败：' + (result?.error || error?.message || '未知错误'));
+         } else {
+           alert(\`用户 "\${u.username}" 已删除\`);
+           loadData();
+         }
+       }}
+       className="text-sm text-red-700 hover:text-red-900 flex items-center gap-1 font-medium"
+       title="永久删除此用户及其所有数据"
+     >
+       <Trash2 className="w-3.5 h-3.5" />删除
+     </button>
+   )}
  </div>
  </td>
  </tr>

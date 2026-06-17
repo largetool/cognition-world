@@ -65,7 +65,7 @@ interface UserData {
   error: string | null;
 }
 
-export function useUser(userId: string | undefined) {
+export function useUser(userId: string | undefined, isAdmin?: boolean) {
   const [data, setData] = useState<UserData>({
     profile: null,
     logs: [],
@@ -121,7 +121,7 @@ export function useUser(userId: string | undefined) {
       }
 
       const [logs, backgrounds, activeBg] = await Promise.all([
-        getLogsDirectInline(profile.user_id),
+        getLogsDirectInline(profile.user_id, undefined, isAdmin),
         getUserBackgroundImages(profile.user_id),
         getActiveBackgroundImage(profile.user_id),
       ]);
@@ -161,7 +161,7 @@ export function useUser(userId: string | undefined) {
   const refreshLogs = useCallback(async () => {
     if (!data.profile) return;
     try {
-      const logs = await getLogsDirectInline(data.profile.user_id);
+      const logs = await getLogsDirectInline(data.profile.user_id, undefined, isAdmin);
       setData(prev => ({ ...prev, logs }));
     } catch (err) {
       console.error('Failed to refresh logs:', err);
