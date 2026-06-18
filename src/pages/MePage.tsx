@@ -93,7 +93,7 @@ export default function MePage() {
   // 点赞
   const [logLikes, setLogLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
   const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
-  const [likeErrors, setLikeErrors] = useState<Record<string, boolean>>({});
+  const [likeErrors, setLikeErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let isMounted = true;
@@ -311,7 +311,7 @@ export default function MePage() {
   const handleToggleLogLike = async (logId: string) => {
     if (likeLoading[logId]) return;
     setLikeLoading(prev => ({ ...prev, [logId]: true }));
-    setLikeErrors(prev => ({ ...prev, [logId]: false }));
+    setLikeErrors(prev => ({ ...prev, [logId]: '' }));
     const result = await toggleLike(logId, 'log', profile.user_id);
     if (!result.error) {
       setLogLikes(prev => ({
@@ -319,8 +319,8 @@ export default function MePage() {
         [logId]: { count: result.count, liked: result.liked }
       }));
     } else {
-      setLikeErrors(prev => ({ ...prev, [logId]: true }));
-      setTimeout(() => setLikeErrors(prev => ({ ...prev, [logId]: false })), 2000);
+      setLikeErrors(prev => ({ ...prev, [logId]: result.error || '点赞失败' }));
+      setTimeout(() => setLikeErrors(prev => ({ ...prev, [logId]: '' })), 3000);
     }
     setLikeLoading(prev => ({ ...prev, [logId]: false }));
   };
@@ -879,7 +879,7 @@ export default function MePage() {
                             className={`text-xs transition-colors flex items-center gap-1 ${
                               likeErrors[log.id] ? 'text-red-500' : logLikes[log.id]?.liked ? 'text-blue-500' : 'text-gray-400 hover:text-blue-500'
                             }`}
-                            title={likeErrors[log.id] ? '点赞失败，请重试' : logLikes[log.id]?.liked ? '取消点赞' : '点赞'}
+                            title={likeErrors[log.id] || (logLikes[log.id]?.liked ? '取消点赞' : '点赞')}
                           >
                             <ThumbsUp className={`w-3.5 h-3.5 ${logLikes[log.id]?.liked && !likeErrors[log.id] ? 'fill-blue-500' : ''}`} />
                             {logLikes[log.id]?.count > 0 && <span>{logLikes[log.id].count}</span>}

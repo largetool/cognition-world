@@ -201,7 +201,9 @@ export async function createLog(userId: string, content: string, tags?: string[]
     return { log: null, error: '账户已被冻结，无法发布' };
   }
 
-  const publishedAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10分钟后
+  // published_at 列是 date 类型，只接受 YYYY-MM-DD 格式
+  const pubDate = new Date(Date.now() + 10 * 60 * 1000);
+  const publishedAt = pubDate.toISOString().split('T')[0]; // 10分钟后
   const { data, error } = await supabase
     .from('logs')
     .insert({

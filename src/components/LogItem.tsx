@@ -22,7 +22,7 @@ export function LogItem({ log, index = 0, displayId, currentUser, onDelete }: Lo
   const [likeCount, setLikeCount] = useState(0);
   const [liked, setLiked] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
-  const [likeError, setLikeError] = useState(false);
+  const [likeError, setLikeError] = useState('');
   const needsCollapse = log.content.length > MAX_PREVIEW_LENGTH;
 
   useEffect(() => {
@@ -35,14 +35,14 @@ export function LogItem({ log, index = 0, displayId, currentUser, onDelete }: Lo
   const handleLike = async () => {
     if (!currentUser || likeLoading) return;
     setLikeLoading(true);
-    setLikeError(false);
+    setLikeError('');
     const result = await toggleLike(log.id, 'log', currentUser.user_id);
     if (!result.error) {
       setLiked(result.liked);
       setLikeCount(result.count);
     } else {
-      setLikeError(true);
-      setTimeout(() => setLikeError(false), 2000);
+      setLikeError(result.error);
+      setTimeout(() => setLikeError(''), 3000);
     }
     setLikeLoading(false);
   };
@@ -129,7 +129,7 @@ export function LogItem({ log, index = 0, displayId, currentUser, onDelete }: Lo
               className={`text-xs transition-colors flex items-center gap-1 ${
                 likeError ? 'text-red-500' : liked ? 'text-blue-500' : 'text-[var(--text-tertiary)] hover:text-blue-500'
               }`}
-              title={likeError ? '点赞失败，请重试' : liked ? '取消点赞' : '点赞'}
+              title={likeError || (liked ? '取消点赞' : '点赞')}
             >
               <ThumbsUp className={`w-3.5 h-3.5 ${liked && !likeError ? 'fill-blue-500' : ''}`} />
               {likeCount > 0 && <span>{likeCount}</span>}
