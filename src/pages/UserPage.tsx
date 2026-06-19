@@ -1144,6 +1144,7 @@ function UserGuestbookSection({
   };
 
   const loadConversations = async () => {
+    if (!userId) return;
     // userId 是显示 ID（如 "000000003"），但表里 user_a/user_b 是 UUID 类型
     // 先从 profiles 查出 auth UUID
     const { data: profileData } = await supabase
