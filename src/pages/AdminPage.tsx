@@ -109,6 +109,13 @@ export function AdminPage() {
  checkAuth();
  }, [navigate, user, authLoading]);
 
+// 切换到举报管理 tab 时自动加载
+useEffect(() => {
+ if (activeTab === 'reports') {
+  loadReports();
+ }
+}, [activeTab]);
+
  const loadData = async () => {
  setIsLoading(true);
  const [images, list, sysBgs, msgConfig, sMode, sStats, usersList, guestbookEnabled] = await Promise.all([
@@ -153,14 +160,15 @@ export function AdminPage() {
   };
 
   // 加载举报列表
-  const loadReports = async () => {
+  const loadReports = async (filter?: string) => {
     setIsLoadingReports(true);
     try {
       const edgeUrl = supabaseUrl;
       const session = (await supabase.auth.getSession()).data.session;
       const authHeaders = session ? { Authorization: `Bearer ${session.access_token}` } : {};
 
-      const response = await fetch(`${edgeUrl}/functions/v1/reports/list?status=${reportFilter}`, {
+      const status = filter ?? reportFilter;
+      const response = await fetch(`${edgeUrl}/functions/v1/reports/list?status=${status}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -169,16 +177,20 @@ export function AdminPage() {
       });
 
       const result = await response.json();
+      if (result.error) {
+        console.error('加载举报列表失败:', result.error);
+        return;
+      }
       if (result.reports) {
         setReports(result.reports.map((r: any) => ({
           id: r.id,
           reporter_id: r.reporter_id,
-          reporter_username: r.reporter?.username || '未知',
+          reporter_username: r.reporter_username || '未知',
           reported_message_id: r.reported_message_id,
           message_table: r.message_table,
           message_content: r.message_content,
           reported_user_id: r.reported_user_id,
-          reported_username: r.reported?.username || '未知',
+          reported_username: r.reported_username || '未知',
           reason: r.reason,
           status: r.status,
           admin_notes: r.admin_notes,
@@ -718,7 +730,7 @@ export function AdminPage() {
                       {(['pending', 'confirmed', 'dismissed'] as const).map((filter) => (
                         <button
                           key={filter}
-                          onClick={() => { setReportFilter(filter); loadReports(); }}
+                          onClick={() => { setReportFilter(filter); loadReports(filter); }}
                           className={`px-3 py-1 rounded-lg text-sm transition-colors ${
                             reportFilter === filter
                               ? 'bg-[var(--accent)] text-white'

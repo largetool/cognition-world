@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Send, Clock, User as UserIcon, MessageSquare, Trash2, Eye } from 'lucide-react';
 import { getCurrentUser } from '../utils/auth';
-import { getMessages, sendMessage, getSystemMessages, isMessageBoardEnabled, deleteGuestbookMessage } from '../utils/storage';
+import { getMessages, sendMessage, getSystemMessages, isMessageBoardEnabled, deleteGuestbookMessage, markNotificationsRead } from '../utils/storage';
 import { checkMessageRateLimit } from '../utils/storage';
 import type { Profile } from '../types';
 import { parseSupabaseTime } from '../types';
@@ -46,6 +46,9 @@ export default function MessagesPage() {
         return;
       }
       setProfile(userProfile);
+
+      // 标记通知为已读
+      markNotificationsRead();
 
       // 检查留言板是否开启
       const enabled = await isMessageBoardEnabled();

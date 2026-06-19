@@ -410,6 +410,29 @@ export async function getSystemMessages(limit: number = 20): Promise<SystemMessa
  }));
 }
 
+const NOTIFICATION_LAST_SEEN_KEY = 'cognition_notification_last_seen';
+
+// 获取未读通知数量（基于 localStorage 记录的最后查看时间）
+export async function getUnreadNotificationCount(): Promise<number> {
+  try {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true });
+    if (error) return 0;
+    const total = data?.length ?? 0;
+    return total;
+  } catch {
+    return 0;
+  }
+}
+
+// 标记通知为已读（记录当前时间）
+export function markNotificationsRead(): void {
+  try {
+    localStorage.setItem(NOTIFICATION_LAST_SEEN_KEY, Date.now().toString());
+  } catch { /* ignore */ }
+}
+
 // 发送留言到 guestbook（10分钟后自动公开）
 export async function sendGuestbookMessage(userId: string, content: string): Promise<{ success: boolean; error?: string }> {
   const visibleAfter = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10分钟后

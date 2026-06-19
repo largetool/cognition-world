@@ -353,6 +353,29 @@ END;
 $$;
 
 -- =====================================================
+-- 9.5 举报通知 RPC — 举报提交后，通知管理员（SECURITY DEFINER 绕过 RLS）
+-- =====================================================
+CREATE OR REPLACE FUNCTION public.add_report_notification(
+  p_reporter_username TEXT,
+  p_reason TEXT,
+  p_content_preview TEXT
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  INSERT INTO public.notifications (content, type)
+  VALUES (
+    '【新举报】举报者：' || p_reporter_username
+    || '。原因：' || p_reason
+    || '。内容预览：' || substring(p_content_preview, 1, 200),
+    'system'
+  );
+END;
+$$;
+
+-- =====================================================
 -- 10. 验证最终策略状态
 -- =====================================================
 SELECT tablename, policyname, cmd

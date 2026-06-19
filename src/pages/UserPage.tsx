@@ -278,6 +278,18 @@ export default function UserPage() {
         setReportError(insertError.message || '举报提交失败，请稍后重试');
         console.error('举报失败:', insertError);
       } else {
+        // 通知管理员（通过 SECURITY DEFINER RPC 写入 notifications 表）
+        try {
+          await supabase.rpc('add_report_notification', {
+            p_reporter_username: currentUser.username || '未知用户',
+            p_reason: reportReason.trim(),
+            p_content_preview: reportingItem.content.slice(0, 200),
+          });
+        } catch (_) {
+          // 通知失败不影响举报提交
+          console.warn('[举报] 管理员通知发送失败（举报已提交）');
+        }
+
         setReportSuccess(true);
         setTimeout(() => {
           closeReportModal();
@@ -1132,13 +1144,25 @@ function UserGuestbookSection({
   };
 
   const loadConversations = async () => {
-    // 简化版：直接查询
-    const { data } = await supabase
+    // userId 是显示 ID（如 "000000003"），但表里 user_a/user_b 是 UUID 类型
+    // 先从 profiles 查出 auth UUID
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!profileData) return;
+
+    const authUuid = profileData.id;
+    const { data: convData, error: convError } = await supabase
       .from('user_conversations')
       .select('*')
-      .or(`user_a.eq.${userId},user_b.eq.${userId}`)
+      .or(`user_a.eq.${authUuid},user_b.eq.${authUuid}`)
       .order('last_message_at', { ascending: false });
-    setConversations(data || []);
+    if (convError) {
+      console.warn('[UserGuestbook] 加载留言板失败:', convError);
+    }
+    setConversations(convData || []);
   };
 
   if (loading || !enabled) return null;
