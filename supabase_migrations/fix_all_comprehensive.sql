@@ -1,12 +1,22 @@
 -- =====================================================
 -- 认知界：综合修复 SQL
 -- 安全运行，无论之前跑过什么，不会重复执行已生效的变更
--- 覆盖：管理员判断函数、点赞表 & RLS、举报列类型、日志删除策略
+-- 覆盖：管理员判断函数、auth_user_id 同步、点赞表 & RLS、举报列类型、日志 INSERT/DELETE 策略
 -- 日期：2026-06-19
 -- =====================================================
 
 -- =====================================================
--- 1. 管理员判断函数（CREATE OR REPLACE = 幂等）
+-- 0. 修复 auth_user_id：确保所有用户通过 profiles.id (UUID) 同步
+--    这是所有 RLS 策略（auth_user_id = auth.uid()）正常工作的前提
+-- =====================================================
+UPDATE public.profiles
+SET auth_user_id = id
+WHERE auth_user_id IS NULL;
+
+-- =====================================================
+-- 1. 管理员判断函数
+--    使用 profiles.id = auth.uid() 而非 auth_user_id，
+--    因为 id 就是 auth.users 的 UUID，永远匹配
 -- =====================================================
 CREATE OR REPLACE FUNCTION public.is_current_user_admin()
 RETURNS boolean
@@ -16,7 +26,7 @@ SECURITY DEFINER
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.profiles
-    WHERE auth_user_id = auth.uid()
+    WHERE id = auth.uid()
       AND is_admin = true
   );
 $$;
