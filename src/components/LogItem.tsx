@@ -41,6 +41,7 @@ export function LogItem({ log, index = 0, displayId, currentUser, onDelete }: Lo
       setLiked(result.liked);
       setLikeCount(result.count);
     } else {
+      console.error('[LogItem] toggleLike error:', result.error);
       setLikeError(result.error);
       setTimeout(() => setLikeError(''), 3000);
     }

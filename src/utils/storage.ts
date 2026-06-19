@@ -1147,12 +1147,20 @@ export async function toggleLike(targetId: string, targetType: 'log' | 'guestboo
       .from('post_likes')
       .delete()
       .eq('id', existing.id);
-    if (error) return { liked: false, count: 0, error: error.message };
+    if (error) {
+      console.error('[toggleLike] DELETE error:', error);
+      return { liked: false, count: 0, error: error.message };
+    }
   } else {
+    console.log('[toggleLike] 尝试点赞:', { targetId, targetType, userId });
     const { error } = await supabase
       .from('post_likes')
       .insert({ target_id: targetId, target_type: targetType, user_id: userId });
-    if (error) return { liked: false, count: 0, error: error.message };
+    if (error) {
+      console.error('[toggleLike] INSERT 错误详情:', { message: error.message, code: error.code, details: error.details, hint: error.hint });
+      return { liked: false, count: 0, error: error.message };
+    }
+    console.log('[toggleLike] 点赞成功');
   }
 
   // 获取最新点赞数
