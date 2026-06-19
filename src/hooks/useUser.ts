@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Profile, BackgroundImage } from '../types';
+import { parseSupabaseTime } from '../types';
 import { getUserById, getUserByDisplayId, isNumericDisplayId } from '../utils/auth';
 import { getUserBackgroundImages, getActiveBackgroundImage } from '../utils/storage';
 
@@ -38,7 +39,7 @@ async function getLogsDirectInline(
   const data = await res.json();
   const now = new Date();
   return (Array.isArray(data) ? data : []).map((log: any) => {
-    const ct = new Date(log.created_at || '');
+    const ct = parseSupabaseTime(log.created_at || '');
     const tenMin = new Date(ct.getTime() + 10 * 60 * 1000);
     const isPublic = log.is_public === true || now >= tenMin;
     const canDelete = isAdmin === true || (currentUserId === userId && now < tenMin);

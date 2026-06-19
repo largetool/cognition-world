@@ -111,7 +111,11 @@ export default function MessagesPage() {
   const isWithin10Minutes = (createdAt: string | null) => {
     if (!createdAt) return false;
     const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
-    return new Date(createdAt).getTime() > tenMinutesAgo;
+    // TIMESTAMP 列存 UTC 但无时区标记，JS 会错当成本地时间，补 'Z' 修正
+    const d = typeof createdAt === 'string' && /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}$/.test(createdAt.trim())
+      ? new Date(createdAt.trim().replace(' ', 'T') + 'Z')
+      : new Date(createdAt);
+    return d.getTime() > tenMinutesAgo;
   };
 
   // 检查留言是否已公开

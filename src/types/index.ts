@@ -54,8 +54,18 @@ export function isIPInCIDR(ip: string, cidr: string): boolean {
 /** 统一时区：北京时间 (Asia/Shanghai, UTC+8) */
 const TIMEZONE = 'Asia/Shanghai';
 
+/** 解析 Supabase 返回的时间戳：TIMESTAMP 列存 UTC 但无时区标记，JS 会错当成本地时间 */
+export function parseSupabaseTime(date: string | Date): Date {
+  if (date instanceof Date) return date;
+  // 匹配 ISO 8601 无时区标记：2026-06-19T02:00:00 或 2026-06-19 02:00:00
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}$/.test(date.trim())) {
+    return new Date(date.trim().replace(' ', 'T') + 'Z');
+  }
+  return new Date(date);
+}
+
 export function formatDate(date: string | Date): string {
-  const d = new Date(date);
+  const d = parseSupabaseTime(date);
   return d.toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
@@ -65,7 +75,7 @@ export function formatDate(date: string | Date): string {
 }
 
 export function formatDateTime(date: string | Date): string {
-  const d = new Date(date);
+  const d = parseSupabaseTime(date);
   return d.toLocaleString('zh-CN', {
     year: 'numeric',
     month: '2-digit',

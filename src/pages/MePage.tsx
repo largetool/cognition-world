@@ -7,6 +7,7 @@ import { supabase } from '../supabase/client';
 import { createLogWithModeration, getUserBackgroundImages, selectSystemBackground, getActiveBackgroundImage, checkCanPost, recordPost, getLikes, hasUserLiked, toggleLike, deleteLog } from '../utils/storage';
 import { localSystemBackgrounds } from '../data/systemBackgrounds';
 import type { Profile, SystemBackground, BackgroundImage } from '../types';
+import { parseSupabaseTime } from '../types';
 import { SEOHead } from '../components/SEOHead';
 import { generateProfilePageSchema, generatePersonSchema } from '../utils/seo';
 import BottomNav from '../components/BottomNav';
@@ -53,7 +54,7 @@ async function getLogsDirectInline(
   const data = await res.json();
   const now = new Date();
   return (Array.isArray(data) ? data : []).map((log: any) => {
-    const ct = new Date(log.created_at || '');
+    const ct = parseSupabaseTime(log.created_at || '');
     const tenMin = new Date(ct.getTime() + 10 * 60 * 1000);
     const isPublic = log.is_public === true || now >= tenMin;
     const canDelete = isAdmin === true || (currentUserId === userId && now < tenMin);

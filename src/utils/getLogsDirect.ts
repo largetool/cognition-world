@@ -47,7 +47,11 @@ export async function getLogsDirect(
 
   const now = new Date();
   return (Array.isArray(data) ? data : []).map((log: any) => {
-    const ct = new Date(log.created_at || '');
+    // TIMESTAMP 列存 UTC 但无时区标记，JS 会错当成本地时间，补 'Z' 修正
+    const rawCreatedAt = log.created_at || '';
+    const ct = typeof rawCreatedAt === 'string' && /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}$/.test(rawCreatedAt.trim())
+      ? new Date(rawCreatedAt.trim().replace(' ', 'T') + 'Z')
+      : new Date(rawCreatedAt);
     const tenMin = new Date(ct.getTime() + 10 * 60 * 1000);
     const isPublic = log.is_public === true || now >= tenMin;
     const canDelete = isAdmin === true || (currentUserId === userId && now < tenMin);

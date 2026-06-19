@@ -2,6 +2,7 @@
 import { supabase, supabaseUrl, supabaseAnonKey } from '../supabase/client';
 import { decode } from 'base64-arraybuffer';
 import type { BackgroundImage, Log, SystemBackground } from '../types';
+import { parseSupabaseTime } from '../types';
 
 // ========== 背景图相关 ==========
 
@@ -154,7 +155,7 @@ export async function getUserLogs(userId: string, currentUserId?: string, isAdmi
 
     const now = new Date();
     return (Array.isArray(data) ? data : []).map((log: any) => {
-      const createdAt = new Date(log.created_at || '');
+      const createdAt = parseSupabaseTime(log.created_at || '');
       const tenMinutesLater = new Date(createdAt.getTime() + 10 * 60 * 1000);
       const isPublic = log.is_public === true || now >= tenMinutesLater;
       const canDelete = isAdmin === true || (currentUserId === userId && now < tenMinutesLater);
@@ -256,7 +257,7 @@ export async function deleteLog(logId: string, userId: string, isAdmin: boolean)
   }
 
   // 检查是否在10分钟内
-  const createdAt = new Date(log.created_at || '');
+  const createdAt = parseSupabaseTime(log.created_at || '');
   const tenMinutesLater = new Date(createdAt.getTime() + 10 * 60 * 1000);
   const now = new Date();
 
@@ -264,8 +265,10 @@ export async function deleteLog(logId: string, userId: string, isAdmin: boolean)
     return { success: false, error: '10分钟后不可删除，请联系管理员' };
   }
 
-  const { error } = await supabase.from('logs').delete().eq('id', logId);
+  // .delete() 不带 .select() 时，RLS 拒绝可能返回 error: null 但不实际删除
+  const { data: deletedRows, error } = await supabase.from('logs').delete().eq('id', logId).select();
   if (error) return { success: false, error: error.message };
+  if (!deletedRows || deletedRows.length === 0) return { success: false, error: '删除失败，请刷新后重试' };
   return { success: true };
 }
 
