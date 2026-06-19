@@ -132,8 +132,12 @@ serve(async (req: Request) => {
         });
       }
 
+      // 管理员验证：用 or 同时查 id / auth_user_id，maybeSingle 避免无匹配时抛错
       const { data: profile } = await supabaseAdmin
-        .from("profiles").select("is_admin").eq("auth_user_id", user.id).single();
+        .from("profiles")
+        .select("is_admin")
+        .or(`id.eq.${user.id},auth_user_id.eq.${user.id}`)
+        .maybeSingle();
       if (!profile?.is_admin) {
         return new Response(JSON.stringify({ error: "仅管理员可查看" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -142,16 +146,73 @@ serve(async (req: Request) => {
 
       const statusFilter = url.searchParams.get("status") || "pending";
 
+      // 注：reporter_id / reported_user_id 存的是显示 ID（如 "000000003"），
+      // 且外键已移除，不能用 Supabase 的 resource embedding 语法做 join。
+      // 这里分两步：先查举报列表，再批量查 profiles 获取用户名。
       const { data: reports, error } = await supabaseAdmin
         .from("reports")
-        .select("*, reporter:reporter_id(username), reported:reported_user_id(username)")
+        .select("*")
         .eq("status", statusFilter)
         .order("created_at", { ascending: false })
         .limit(100);
 
       if (error) throw error;
 
-      return new Response(JSON.stringify({ reports: reports || [] }), {
+      // 收集所有涉及的 user_id，去重后批量查 profiles
+      // reporter_id/reported_user_id 可以是显示 ID（"000000003"）或 auth UUID，
+      // 两种都要查
+      const userIds = new Set<string>();
+      for (const r of reports || []) {
+        if (r.reporter_id) userIds.add(r.reporter_id);
+        if (r.reported_user_id) userIds.add(r.reported_user_id);
+      }
+
+      // 建两个 map：user_id → username 和 auth_user_id → username
+      let profileByUserId = new Map<string, string>();
+      let profileByAuthUuid = new Map<string, string>();
+      if (userIds.size > 0) {
+        // 查询所有 profiles，用 user_id 过滤（可匹配显示 ID）
+        const { data: profiles } = await supabaseAdmin
+          .from("profiles")
+          .select("user_id, auth_user_id, username")
+          .in("user_id", [...userIds]);
+
+        for (const p of profiles || []) {
+          if (p.user_id) profileByUserId.set(p.user_id, p.username);
+          if (p.auth_user_id) profileByAuthUuid.set(p.auth_user_id, p.username);
+        }
+
+        // 如果某些 user_id 没匹配到，可能存的是 auth UUID，再查一次
+        const unmatchedIds = [...userIds].filter(
+          (id) => !profileByUserId.has(id) && !profileByAuthUuid.has(id)
+        );
+        if (unmatchedIds.length > 0) {
+          const { data: extraProfiles } = await supabaseAdmin
+            .from("profiles")
+            .select("user_id, auth_user_id, username")
+            .in("auth_user_id", unmatchedIds);
+
+          for (const p of extraProfiles || []) {
+            if (p.user_id) profileByUserId.set(p.user_id, p.username);
+            if (p.auth_user_id) profileByAuthUuid.set(p.auth_user_id, p.username);
+          }
+        }
+      }
+
+      // 组装返回数据
+      const enriched = (reports || []).map((r) => ({
+        ...r,
+        reporter_username:
+          profileByUserId.get(r.reporter_id) ||
+          profileByAuthUuid.get(r.reporter_id) ||
+          "未知",
+        reported_username:
+          profileByUserId.get(r.reported_user_id) ||
+          profileByAuthUuid.get(r.reported_user_id) ||
+          "未知",
+      }));
+
+      return new Response(JSON.stringify({ reports: enriched }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
@@ -175,7 +236,10 @@ serve(async (req: Request) => {
       }
 
       const { data: adminProfile } = await supabaseAdmin
-        .from("profiles").select("is_admin").eq("auth_user_id", user.id).single();
+        .from("profiles")
+        .select("is_admin")
+        .or(`id.eq.${user.id},auth_user_id.eq.${user.id}`)
+        .maybeSingle();
       if (!adminProfile?.is_admin) {
         return new Response(JSON.stringify({ error: "仅管理员可审核" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }

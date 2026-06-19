@@ -179,9 +179,7 @@ useEffect(() => {
       const result = await response.json();
       if (result.error) {
         console.error('加载举报列表失败:', result.error);
-        return;
-      }
-      if (result.reports) {
+      } else if (result.reports) {
         setReports(result.reports.map((r: any) => ({
           id: r.id,
           reporter_id: r.reporter_id,

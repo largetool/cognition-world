@@ -132,9 +132,12 @@ serve(async (req: Request) => {
         });
       }
 
-      // 管理员验证：profiles.id 即是 auth.users 的 UUID，永远匹配
+      // 管理员验证：用 or 同时查 id / auth_user_id，maybeSingle 避免无匹配时抛错
       const { data: profile } = await supabaseAdmin
-        .from("profiles").select("is_admin").eq("id", user.id).single();
+        .from("profiles")
+        .select("is_admin")
+        .or(`id.eq.${user.id},auth_user_id.eq.${user.id}`)
+        .maybeSingle();
       if (!profile?.is_admin) {
         return new Response(JSON.stringify({ error: "仅管理员可查看" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -233,7 +236,10 @@ serve(async (req: Request) => {
       }
 
       const { data: adminProfile } = await supabaseAdmin
-        .from("profiles").select("is_admin").eq("id", user.id).single();
+        .from("profiles")
+        .select("is_admin")
+        .or(`id.eq.${user.id},auth_user_id.eq.${user.id}`)
+        .maybeSingle();
       if (!adminProfile?.is_admin) {
         return new Response(JSON.stringify({ error: "仅管理员可审核" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
