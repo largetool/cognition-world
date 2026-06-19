@@ -7,7 +7,7 @@
 
 -- =====================================================
 -- 0. 修复 auth_user_id：确保所有用户通过 profiles.id (UUID) 同步
---    这是所有 RLS 策略（auth_user_id = auth.uid()）正常工作的前提
+--    这是所有 RLS 策略（(auth_user_id = auth.uid() OR id = auth.uid())）正常工作的前提
 -- =====================================================
 UPDATE public.profiles
 SET auth_user_id = id
@@ -42,7 +42,7 @@ CREATE POLICY "用户可删除10分钟内的日志" ON public.logs
         OR (
             EXISTS (
                 SELECT 1 FROM public.profiles
-                WHERE auth_user_id = auth.uid()
+                WHERE (auth_user_id = auth.uid() OR id = auth.uid())
                   AND user_id = logs.user_id
             )
             AND created_at > NOW() - INTERVAL '10 minutes'
@@ -59,7 +59,7 @@ CREATE POLICY "用户可创建自己的日志" ON public.logs
         is_current_user_admin()
         OR EXISTS (
             SELECT 1 FROM public.profiles
-            WHERE auth_user_id = auth.uid()
+            WHERE (auth_user_id = auth.uid() OR id = auth.uid())
               AND user_id = logs.user_id
         )
     );
@@ -96,7 +96,7 @@ CREATE POLICY "登录用户可点赞" ON public.post_likes
     FOR INSERT WITH CHECK (
         EXISTS (
             SELECT 1 FROM public.profiles
-            WHERE auth_user_id = auth.uid()
+            WHERE (auth_user_id = auth.uid() OR id = auth.uid())
               AND user_id = post_likes.user_id
         )
     );
@@ -105,7 +105,7 @@ CREATE POLICY "用户可取消自己点赞" ON public.post_likes
     FOR DELETE USING (
         EXISTS (
             SELECT 1 FROM public.profiles
-            WHERE auth_user_id = auth.uid()
+            WHERE (auth_user_id = auth.uid() OR id = auth.uid())
               AND user_id = post_likes.user_id
         )
     );
@@ -188,7 +188,7 @@ CREATE POLICY "登录用户可举报" ON public.reports
     FOR INSERT WITH CHECK (
         EXISTS (
             SELECT 1 FROM public.profiles
-            WHERE auth_user_id = auth.uid()
+            WHERE (auth_user_id = auth.uid() OR id = auth.uid())
               AND user_id = reports.reporter_id
         )
     );
@@ -198,7 +198,7 @@ CREATE POLICY "用户可查看自己的举报" ON public.reports
         is_current_user_admin()
         OR EXISTS (
             SELECT 1 FROM public.profiles
-            WHERE auth_user_id = auth.uid()
+            WHERE (auth_user_id = auth.uid() OR id = auth.uid())
               AND user_id = reports.reporter_id
         )
     );
