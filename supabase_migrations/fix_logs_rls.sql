@@ -1,55 +1,68 @@
 -- =====================================================
--- 修复 logs 表的 RLS 策略
--- 问题：auth.uid() 返回 uuid，但 user_id 列是 text，
---       PostgreSQL 拒绝 uuid = text 的隐式比较
--- 日期：2026-06-17
+-- 修复 logs 和 reports 的 RLS 策略
+-- 关键问题：已有迁移用中文策略名，必须按原名 DROP
+-- 日期：2026-06-19
 -- =====================================================
 
--- 0. 先创建辅助函数：判断当前用户是否为管理员
---    注意：profiles.user_id 是 text 类型，auth.uid() 是 uuid
-CREATE OR REPLACE FUNCTION is_current_user_admin()
+-- 0. 先创建管理员判断函数
+CREATE OR REPLACE FUNCTION public.is_current_user_admin()
 RETURNS boolean
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
 AS $$
   SELECT EXISTS (
-    SELECT 1 FROM profiles
-    WHERE user_id::text = auth.uid()::text
+    SELECT 1 FROM public.profiles
+    WHERE auth_user_id = auth.uid()
       AND is_admin = true
   );
 $$;
 
--- 1. 修复 INSERT 策略（发布日志）
-DROP POLICY IF EXISTS "Users can insert their own logs" ON logs;
-CREATE POLICY "Users can insert their own logs" ON logs
-    FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
+-- =====================================================
+-- 1. 修复 logs DELETE 策略 — 允许管理员删除任意日志
+--    旧策略 "用户可删除10分钟内的日志" 只允许本人删10分钟内的
+-- =====================================================
+DROP POLICY IF EXISTS "用户可删除10分钟内的日志" ON public.logs;
 
--- 2. 修复 DELETE 策略（删除日志：本人或管理员）
-DROP POLICY IF EXISTS "Users can delete their own logs" ON logs;
-CREATE POLICY "Users can delete their own logs" ON logs
-    FOR DELETE USING (auth.uid()::text = user_id::text OR is_current_user_admin());
-
--- 3. 如果 SELECT 策略也有类似问题，一并修复
-DROP POLICY IF EXISTS "Users can view logs" ON logs;
-CREATE POLICY "Users can view logs" ON logs
-    FOR SELECT USING (true);
+CREATE POLICY "用户可删除10分钟内的日志" ON public.logs
+    FOR DELETE USING (
+        is_current_user_admin()
+        OR (
+            EXISTS (
+                SELECT 1 FROM public.profiles
+                WHERE auth_user_id = auth.uid()
+                  AND user_id = logs.user_id
+            )
+            AND created_at > NOW() - INTERVAL '10 minutes'
+        )
+    );
 
 -- =====================================================
--- 修复 reports 表的 RLS 策略（举报功能）
+-- 2. 修复 reports INSERT 策略 — 允许登录用户提交举报
+--    （原表没有 INSERT 策略，匿名用户无法举报）
 -- =====================================================
+DROP POLICY IF EXISTS "Auth users can create reports" ON public.reports;
+DROP POLICY IF EXISTS "登录用户可举报" ON public.reports;
 
--- 允许登录用户提交举报
-DROP POLICY IF EXISTS "Auth users can create reports" ON reports;
-CREATE POLICY "Auth users can create reports" ON reports
-    FOR INSERT WITH CHECK (auth.uid()::text = reporter_id::text);
+CREATE POLICY "登录用户可举报" ON public.reports
+    FOR INSERT WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE auth_user_id = auth.uid()
+              AND user_id = reports.reporter_id
+        )
+    );
 
--- 管理员可以查看所有举报
-DROP POLICY IF EXISTS "Admins can view reports" ON reports;
-CREATE POLICY "Admins can view reports" ON reports
-    FOR SELECT USING (is_current_user_admin());
+-- =====================================================
+-- 3. 确保 reports SELECT 策略存在（管理员 + 本人可查看）
+-- =====================================================
+DROP POLICY IF EXISTS "Users can view their own reports" ON public.reports;
 
--- 用户只能查看自己提交的举报
-DROP POLICY IF EXISTS "Users can view their own reports" ON reports;
-CREATE POLICY "Users can view their own reports" ON reports
-    FOR SELECT USING (auth.uid()::text = reporter_id::text);
+CREATE POLICY "用户可查看自己的举报" ON public.reports
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE auth_user_id = auth.uid()
+              AND user_id = reports.reporter_id
+        )
+    );
