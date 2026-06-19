@@ -40,6 +40,21 @@ CREATE POLICY "用户可删除10分钟内的日志" ON public.logs
     );
 
 -- =====================================================
+-- 2.5 日志新增策略 — 允许管理员发布（RLS 默认 INSERT 策略无管理员豁免）
+-- =====================================================
+DROP POLICY IF EXISTS "用户可创建自己的日志" ON public.logs;
+
+CREATE POLICY "用户可创建自己的日志" ON public.logs
+    FOR INSERT WITH CHECK (
+        is_current_user_admin()
+        OR EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE auth_user_id = auth.uid()
+              AND user_id = logs.user_id
+        )
+    );
+
+-- =====================================================
 -- 3. post_likes 表（如果不存在则创建）
 -- =====================================================
 CREATE TABLE IF NOT EXISTS public.post_likes (

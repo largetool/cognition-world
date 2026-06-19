@@ -201,8 +201,10 @@ export async function createLog(userId: string, content: string, tags?: string[]
     return { log: null, error: '账户已被冻结，无法发布' };
   }
 
-  // published_at 列是 timestamptz 类型，需要完整 ISO 时间戳
-  const publishedAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+  // published_at 是 timestamptz 类型，PostgREST 接受 YYYY-MM-DD 格式
+  // 注意：不用 toISOString()，因为 PostgREST 对裸 timestamp 的解析与原始 PG 不同
+  const pubDate = new Date(Date.now() + 10 * 60 * 1000);
+  const publishedAt = pubDate.toISOString().split('T')[0];
   const { data, error } = await supabase
     .from('logs')
     .insert({
