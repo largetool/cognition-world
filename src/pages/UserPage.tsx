@@ -171,6 +171,7 @@ export default function UserPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logError, setLogError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [deletingLogIds, setDeletingLogIds] = useState<Set<string>>(new Set());
 
   // 举报相关状态
   const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -190,7 +191,7 @@ export default function UserPage() {
 
   // 分页计算
   const totalPages = Math.ceil(logsWithDelete.length / LOGS_PER_PAGE);
-  const paginatedLogs = logsWithDelete.slice((currentPage - 1) * LOGS_PER_PAGE, currentPage * LOGS_PER_PAGE);
+  const paginatedLogs = logsWithDelete.filter(l => !deletingLogIds.has(l.id)).slice((currentPage - 1) * LOGS_PER_PAGE, currentPage * LOGS_PER_PAGE);
 
   const isCurrentUser = currentUser?.user_id === profile?.user_id;
   const isAdminUser = isAdminFromProfile(currentUser);
@@ -375,10 +376,12 @@ export default function UserPage() {
   const handleDeleteLog = async (logId: string) => {
     if (!profile || !currentUser) return;
     if (!confirm('确定要删除此日志？')) return;
+    setDeletingLogIds(prev => new Set(prev).add(logId));
     const result = await deleteLog(logId, profile.user_id, currentUser.is_admin || false);
     if (result.success) {
       refreshLogs();
     } else {
+      setDeletingLogIds(prev => { const next = new Set(prev); next.delete(logId); return next; });
       alert('删除失败：' + result.error);
     }
   };

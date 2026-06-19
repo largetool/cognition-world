@@ -204,6 +204,7 @@ export default function MePage() {
 
   const [postLimitError, setPostLimitError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [publishSuccess, setPublishSuccess] = useState(false);
 
   const handlePublishLog = useCallback(async () => {
     if (!profile || !newLogContent.trim()) return;
@@ -237,6 +238,8 @@ export default function MePage() {
         setLogs(prev => [{...result.log!, canDelete: true, created_at: result.log!.created_at || new Date().toISOString()}, ...prev]);
         setNewLogContent('');
         setNewLogTags('');
+        setPublishSuccess(true);
+        setTimeout(() => setPublishSuccess(false), 6000);
         await recordPost(profile.user_id);
       } else {
         setError(result.error || '发布失败，请重试');
@@ -251,6 +254,7 @@ export default function MePage() {
 
   const handleDeleteLog = useCallback(async (logId: string) => {
     if (!profile) return;
+    if (!confirm('确定要删除此日志？')) return;
     const result = await deleteLog(logId, profile.user_id, profile.is_admin || false);
     if (result.success) {
       setLogs(prev => prev.filter(l => l.id !== logId));
@@ -797,6 +801,11 @@ export default function MePage() {
                   className="w-full mt-2 py-2.5 px-0 bg-transparent border-t border-gray-200 pt-3 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
                   placeholder="添加标签（选填，逗号分隔如：GEO, AI, 独立开发）"
                 />
+                {publishSuccess && (
+                  <div className="mt-3 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-700">
+                    发布成功！10分钟内可删除此日志，之后日志信息将被公开展示。
+                  </div>
+                )}
                 {postLimitError && (
                   <div className="mt-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
                     {postLimitError}
