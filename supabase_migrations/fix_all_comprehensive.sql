@@ -264,7 +264,96 @@ CREATE POLICY "管理员可查看所有资料" ON public.profiles
     FOR ALL USING (is_current_user_admin());
 
 -- =====================================================
--- 8. 验证最终策略状态
+-- 8. toggle_like RPC 函数（SECURITY DEFINER，绕过 RLS）
+-- =====================================================
+CREATE OR REPLACE FUNCTION public.toggle_like(
+  p_target_id TEXT,
+  p_target_type TEXT,
+  p_user_id TEXT
+)
+RETURNS JSONB
+SECURITY DEFINER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_liked BOOLEAN;
+  v_count INTEGER;
+BEGIN
+  -- 检查是否已点赞
+  IF EXISTS (
+    SELECT 1 FROM public.post_likes
+    WHERE target_id = p_target_id
+      AND target_type = p_target_type
+      AND user_id = p_user_id
+  ) THEN
+    -- 已点赞 → 取消
+    DELETE FROM public.post_likes
+    WHERE target_id = p_target_id
+      AND target_type = p_target_type
+      AND user_id = p_user_id;
+    v_liked := false;
+  ELSE
+    -- 未点赞 → 插入
+    INSERT INTO public.post_likes (target_id, target_type, user_id)
+    VALUES (p_target_id, p_target_type, p_user_id);
+    v_liked := true;
+  END IF;
+
+  -- 获取最新计数
+  SELECT COUNT(*) INTO v_count
+  FROM public.post_likes
+  WHERE target_id = p_target_id
+    AND target_type = p_target_type;
+
+  RETURN jsonb_build_object('liked', v_liked, 'count', v_count);
+END;
+$$;
+
+-- =====================================================
+-- 9. has_user_liked / get_like_count RPC
+-- =====================================================
+CREATE OR REPLACE FUNCTION public.has_user_liked(
+  p_target_id TEXT,
+  p_target_type TEXT,
+  p_user_id TEXT
+)
+RETURNS BOOLEAN
+SECURITY DEFINER
+LANGUAGE plpgsql
+STABLE
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.post_likes
+    WHERE target_id = p_target_id
+      AND target_type = p_target_type
+      AND user_id = p_user_id
+  );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_like_count(
+  p_target_id TEXT,
+  p_target_type TEXT
+)
+RETURNS INTEGER
+SECURITY DEFINER
+LANGUAGE plpgsql
+STABLE
+AS $$
+DECLARE
+  v_count INTEGER;
+BEGIN
+  SELECT COUNT(*) INTO v_count
+  FROM public.post_likes
+  WHERE target_id = p_target_id
+    AND target_type = p_target_type;
+  RETURN v_count;
+END;
+$$;
+
+-- =====================================================
+-- 10. 验证最终策略状态
 -- =====================================================
 SELECT tablename, policyname, cmd
 FROM pg_policies

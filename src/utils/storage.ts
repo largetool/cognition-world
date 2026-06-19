@@ -1112,65 +1112,54 @@ export async function isUserExemptFromReview(userId: string): Promise<boolean> {
 
 /** 获取某个内容的所有点赞 */
 export async function getLikes(targetId: string, targetType: 'log' | 'guestbook_message'): Promise<number> {
-  const { count, error } = await supabase
-    .from('post_likes')
-    .select('*', { count: 'exact', head: true })
-    .eq('target_id', targetId)
-    .eq('target_type', targetType);
-  return count ?? 0;
+  try {
+    const { data, error } = await supabase.rpc('get_like_count', {
+      p_target_id: targetId,
+      p_target_type: targetType,
+    });
+    if (error) return 0;
+    return (data as number) ?? 0;
+  } catch {
+    return 0;
+  }
 }
 
 /** 当前用户是否已点赞 */
 export async function hasUserLiked(targetId: string, targetType: 'log' | 'guestbook_message', userId: string): Promise<boolean> {
-  const { data } = await supabase
-    .from('post_likes')
-    .select('id')
-    .eq('target_id', targetId)
-    .eq('target_type', targetType)
-    .eq('user_id', userId)
-    .maybeSingle();
-  return data !== null;
+  try {
+    const { data, error } = await supabase.rpc('has_user_liked', {
+      p_target_id: targetId,
+      p_target_type: targetType,
+      p_user_id: userId,
+    });
+    if (error) return false;
+    return data === true;
+  } catch {
+    return false;
+  }
 }
 
 /** 切换点赞状态（返回新的状态：已点赞/未点赞） */
 export async function toggleLike(targetId: string, targetType: 'log' | 'guestbook_message', userId: string): Promise<{ liked: boolean; count: number; error?: string }> {
-  const { data: existing } = await supabase
-    .from('post_likes')
-    .select('id')
-    .eq('target_id', targetId)
-    .eq('target_type', targetType)
-    .eq('user_id', userId)
-    .maybeSingle();
+  try {
+    const { data, error } = await supabase.rpc('toggle_like', {
+      p_target_id: targetId,
+      p_target_type: targetType,
+      p_user_id: userId,
+    });
 
-  if (existing) {
-    const { error } = await supabase
-      .from('post_likes')
-      .delete()
-      .eq('id', existing.id);
     if (error) {
-      console.error('[toggleLike] DELETE error:', error);
+      console.error('[toggleLike] RPC 错误:', error);
       return { liked: false, count: 0, error: error.message };
     }
-  } else {
-    console.log('[toggleLike] 尝试点赞:', { targetId, targetType, userId });
-    const { error } = await supabase
-      .from('post_likes')
-      .insert({ target_id: targetId, target_type: targetType, user_id: userId });
-    if (error) {
-      console.error('[toggleLike] INSERT 错误详情:', { message: error.message, code: error.code, details: error.details, hint: error.hint });
-      return { liked: false, count: 0, error: error.message };
-    }
-    console.log('[toggleLike] 点赞成功');
+
+    // RPC 返回 JSONB: { liked: boolean, count: number }
+    const result = data as { liked: boolean; count: number };
+    return { liked: result.liked, count: result.count };
+  } catch (err) {
+    console.error('[toggleLike] 异常:', err);
+    return { liked: false, count: 0, error: '点赞失败，请重试' };
   }
-
-  // 获取最新点赞数
-  const { count } = await supabase
-    .from('post_likes')
-    .select('*', { count: 'exact', head: true })
-    .eq('target_id', targetId)
-    .eq('target_type', targetType);
-
-  return { liked: !existing, count: count ?? 0 };
 }
 
 // ========== 内容审核 ==========
