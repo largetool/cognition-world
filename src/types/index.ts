@@ -129,11 +129,7 @@ export function getUserSEO(profile: Profile, recentLogs?: LogForSEO[], lang: str
   const allKeywords = [...baseKeywords, ...logKeywords];
 
   // 构建个性化描述
-  let description = profile.slogan || `${profile.tag} | ${appName}`;
-  if (recentLogs && recentLogs.length > 0) {
-    const latestLog = recentLogs[0].content.slice(0, 50);
-    description = `${profile.slogan || profile.tag} · 最新动态：${latestLog}${recentLogs[0].content.length > 50 ? '...' : ''}`;
-  }
+  const description = profile.slogan || `${profile.tag} | ${appName}`;
 
   if (lang === 'en') {
     return {

@@ -234,7 +234,7 @@ export default function MePage() {
       if (result.rejected) {
         setError(result.reason || '内容包含违规信息，请修改后重新发布');
       } else if (result.success && result.log) {
-        setLogs(prev => [{...result.log!, created_at: result.log!.created_at || new Date().toISOString()}, ...prev]);
+        setLogs(prev => [{...result.log!, canDelete: true, created_at: result.log!.created_at || new Date().toISOString()}, ...prev]);
         setNewLogContent('');
         setNewLogTags('');
         await recordPost(profile.user_id);
@@ -794,7 +794,7 @@ export default function MePage() {
                   type="text"
                   value={newLogTags}
                   onChange={(e) => setNewLogTags(e.target.value)}
-                  className="w-full mt-2 px-0 py-0 bg-transparent border-t border-gray-100 pt-3 text-sm text-gray-500 placeholder:text-gray-300 focus:outline-none"
+                  className="w-full mt-2 py-2.5 px-0 bg-transparent border-t border-gray-200 pt-3 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
                   placeholder="添加标签（选填，逗号分隔如：GEO, AI, 独立开发）"
                 />
                 {postLimitError && (
