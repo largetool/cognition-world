@@ -862,7 +862,7 @@ export default function MePage() {
                           const dateStr = log.created_at;
                           const date = dateStr ? parseSupabaseTime(dateStr) : new Date('2025-05-01');
                           if (isNaN(date.getTime())) return '2025-05-01';
-                          return date.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+                          return date.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Shanghai' });
                         })()}</time>
                       </div>
                       <p className="text-[0.9375rem] text-gray-800 leading-relaxed whitespace-pre-wrap">

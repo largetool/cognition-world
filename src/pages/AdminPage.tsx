@@ -9,7 +9,7 @@ import { GlassCard } from '../components/GlassCard';
 import { useAuth } from '../hooks/useAuth';
 import { getPendingBackgroundImages, approveBackgroundImage, rejectBackgroundImage, getSystemBackgrounds, getMessageBoardConfig, updateMessageBoardConfig, getSitemapMode, setSitemapMode, getSitemapStats, type SitemapMode, getAllUsersWithStats, updateUserRole, getDailyPostLimit, updateDailyPostLimit, getPendingSlogans, approveSlogan, rejectSlogan, isUserGuestbookEnabled, setUserGuestbookEnabled, freezeUser, unfreezeUser, getTrustedUsers, setTrustedUser, removeTrustedUser } from '../utils/storage';
 import { getAllBlacklist, addToBlacklist, removeFromBlacklist } from '../utils/ip';
-import { getDefaultSEO, isAdminFromProfile } from '../types';
+import { getDefaultSEO, isAdminFromProfile, parseSupabaseTime } from '../types';
 import type { Profile, BackgroundImage, IPBlacklist, SystemBackground } from '../types';
 import { supabase, supabaseUrl } from '../supabase/client';
 
@@ -758,7 +758,7 @@ export function AdminPage() {
                                   {report.status === 'pending' ? '待处理' : report.status === 'confirmed' ? '已确认' : '已驳回'}
                                 </span>
                                 <span className="text-xs text-[var(--text-tertiary)]">
-                                  {new Date(report.created_at).toLocaleString('zh-CN')}
+                                  {parseSupabaseTime(report.created_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
                                 </span>
                               </div>
                               <p className="text-sm text-[var(--text-secondary)] mb-1">
@@ -922,7 +922,7 @@ export function AdminPage() {
  </div>
  <div>
  <p className="font-semibold text-[var(--text-primary)]">{pendingSlogans[currentSloganIndex].username}</p>
- <p className="text-xs text-[var(--text-tertiary)]">注册时间：{new Date(pendingSlogans[currentSloganIndex].created_at).toLocaleDateString('zh-CN')}</p>
+ <p className="text-xs text-[var(--text-tertiary)]">注册时间：{parseSupabaseTime(pendingSlogans[currentSloganIndex].created_at).toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' })}</p>
  </div>
  </div>
  <blockquote className="text-xl font-medium text-[var(--text-primary)] italic border-l-4 border-purple-300 pl-4 py-2">"{pendingSlogans[currentSloganIndex].slogan}"</blockquote>

@@ -181,6 +181,36 @@ BEGIN
 END $$;
 
 -- =====================================================
+-- 2.3 日志查看策略 — 允许管理员查看所有，普通用户看自己的
+-- =====================================================
+DROP POLICY IF EXISTS "用户可查看自己的日志" ON public.logs;
+
+CREATE POLICY "用户可查看自己的日志" ON public.logs
+    FOR SELECT USING (
+        is_current_user_admin()
+        OR EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE (auth_user_id = auth.uid() OR id = auth.uid())
+              AND user_id = logs.user_id
+        )
+    );
+
+-- =====================================================
+-- 2.7 日志更新策略 — 允许管理员更新所有，普通用户更新自己的
+-- =====================================================
+DROP POLICY IF EXISTS "用户可更新自己的日志" ON public.logs;
+
+CREATE POLICY "用户可更新自己的日志" ON public.logs
+    FOR UPDATE USING (
+        is_current_user_admin()
+        OR EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE (auth_user_id = auth.uid() OR id = auth.uid())
+              AND user_id = logs.user_id
+        )
+    );
+
+-- =====================================================
 -- 5. reports RLS 策略 — 重建
 -- =====================================================
 
@@ -202,3 +232,40 @@ CREATE POLICY "用户可查看自己的举报" ON public.reports
               AND user_id = reports.reporter_id
         )
     );
+
+CREATE POLICY "管理员可查看举报" ON public.reports
+    FOR SELECT USING (is_current_user_admin());
+
+CREATE POLICY "管理员可更新举报" ON public.reports
+    FOR UPDATE USING (is_current_user_admin());
+
+-- =====================================================
+-- 6. background_images 策略 — 用户管理自己的背景图
+-- =====================================================
+DROP POLICY IF EXISTS "用户可管理自己的" ON public.background_images;
+
+CREATE POLICY "用户可管理自己的" ON public.background_images
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE (auth_user_id = auth.uid() OR id = auth.uid())
+              AND user_id = background_images.user_id
+        )
+    );
+
+-- =====================================================
+-- 7. profiles 管理员策略 — 使用 is_current_user_admin()
+-- =====================================================
+DROP POLICY IF EXISTS "管理员可查看所有资料" ON public.profiles;
+
+CREATE POLICY "管理员可查看所有资料" ON public.profiles
+    FOR ALL USING (is_current_user_admin());
+
+-- =====================================================
+-- 8. 验证最终策略状态
+-- =====================================================
+SELECT tablename, policyname, cmd
+FROM pg_policies
+WHERE schemaname = 'public'
+  AND tablename IN ('logs', 'post_likes', 'reports', 'background_images', 'profiles')
+ORDER BY tablename, cmd, policyname;

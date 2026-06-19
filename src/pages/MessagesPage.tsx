@@ -6,6 +6,7 @@ import { getCurrentUser } from '../utils/auth';
 import { getMessages, sendMessage, getSystemMessages, isMessageBoardEnabled, deleteGuestbookMessage } from '../utils/storage';
 import { checkMessageRateLimit } from '../utils/storage';
 import type { Profile } from '../types';
+import { parseSupabaseTime } from '../types';
 
 interface Message {
   id: string;
@@ -175,7 +176,7 @@ export default function MessagesPage() {
                       <p className="text-gray-900 text-sm leading-relaxed">{msg.content}</p>
                       <time className="text-xs text-gray-400 mt-1 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        {new Date(msg.created_at || Date.now()).toLocaleString('zh-CN')}
+                        {parseSupabaseTime(msg.created_at || new Date().toISOString()).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
                       </time>
                     </div>
                   </div>
@@ -276,11 +277,13 @@ export default function MessagesPage() {
                               <span className="font-medium text-gray-900">{msg.sender_name}</span>
                               <time className="text-xs text-gray-400 flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
-                                {new Date(msg.created_at || Date.now()).toLocaleString('zh-CN', {
+                                {parseSupabaseTime(msg.created_at || new Date().toISOString()).toLocaleString('zh-CN', {
                                   month: '2-digit',
                                   day: '2-digit',
                                   hour: '2-digit',
                                   minute: '2-digit',
+                                  timeZone: 'Asia/Shanghai',
+                                  hour12: false,
                                 })}
                               </time>
                               {/* 审核状态标记 */}

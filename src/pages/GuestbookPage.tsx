@@ -31,7 +31,7 @@ function formatDistanceToNow(dateString: string): string {
   if (diffMins < 60) return `${diffMins}分钟前`;
   if (diffHours < 24) return `${diffHours}小时前`;
   if (diffDays < 30) return `${diffDays}天前`;
-  return date.toLocaleDateString('zh-CN');
+  return date.toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' });
 }
 
 interface GuestbookMessage {

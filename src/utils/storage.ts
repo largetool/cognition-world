@@ -241,6 +241,7 @@ export async function deleteLog(logId: string, userId: string, isAdmin: boolean)
     .single();
 
   if (fetchError || !log) {
+    console.warn('[deleteLog] 获取日志失败:', fetchError, 'logId:', logId);
     return { success: false, error: '日志不存在' };
   }
 
@@ -274,7 +275,10 @@ export async function deleteLog(logId: string, userId: string, isAdmin: boolean)
 
   // 先删除，再通过 SELECT 验证是否真的被删掉（.delete().select() 在 RLS 拦截时不可靠）
   const { error: deleteError } = await supabase.from('logs').delete().eq('id', logId);
-  if (deleteError) return { success: false, error: deleteError.message };
+  if (deleteError) {
+    console.error('[deleteLog] DELETE error:', deleteError);
+    return { success: false, error: deleteError.message };
+  }
 
   // 验证：再查一次，确认行已不存在
   const { data: stillExists } = await supabase
@@ -283,9 +287,11 @@ export async function deleteLog(logId: string, userId: string, isAdmin: boolean)
     .eq('id', logId)
     .maybeSingle();
   if (stillExists) {
+    console.warn('[deleteLog] 删除后日志仍存在，RLS 可能阻止了删除。logId:', logId, 'userId:', userId);
     return { success: false, error: '删除失败，请刷新后重试' };
   }
 
+  console.log('[deleteLog] 成功删除 logId:', logId);
   return { success: true };
 }
 
