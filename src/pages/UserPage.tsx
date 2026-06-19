@@ -18,6 +18,7 @@ import { generateProfilePageSchema, generatePersonSchema, generateBlogPostingSch
 import { useSSRData } from '../utils/SSRContext';
 import type { Profile } from '../types';
 import { t, getCurrentLanguage } from '../locales';
+import { parseSupabaseTime } from '../types';
 
 const LOGS_PER_PAGE = 10;
 
@@ -160,7 +161,7 @@ export default function UserPage() {
     const currentUserId = currentUser?.user_id;
     return logs.map(log => {
       if ('canDelete' in log && log.canDelete) return log;
-      const ct = new Date(log.created_at || '');
+      const ct = parseSupabaseTime(log.created_at || '');
       const tenMin = new Date(ct.getTime() + 10 * 60 * 1000);
       const canDel = isAdmin || (currentUserId === log.user_id && now < tenMin);
       return { ...log, canDelete: canDel };

@@ -248,6 +248,13 @@ export async function deleteLog(logId: string, userId: string, isAdmin: boolean)
   if (isAdmin) {
     const { error } = await supabase.from('logs').delete().eq('id', logId);
     if (error) return { success: false, error: error.message };
+    // 验证删除是否真的生效
+    const { data: stillExists } = await supabase
+      .from('logs')
+      .select('id')
+      .eq('id', logId)
+      .maybeSingle();
+    if (stillExists) return { success: false, error: '删除失败，请刷新后重试' };
     return { success: true };
   }
 
@@ -265,10 +272,20 @@ export async function deleteLog(logId: string, userId: string, isAdmin: boolean)
     return { success: false, error: '10分钟后不可删除，请联系管理员' };
   }
 
-  // .delete() 不带 .select() 时，RLS 拒绝可能返回 error: null 但不实际删除
-  const { data: deletedRows, error } = await supabase.from('logs').delete().eq('id', logId).select();
-  if (error) return { success: false, error: error.message };
-  if (!deletedRows || deletedRows.length === 0) return { success: false, error: '删除失败，请刷新后重试' };
+  // 先删除，再通过 SELECT 验证是否真的被删掉（.delete().select() 在 RLS 拦截时不可靠）
+  const { error: deleteError } = await supabase.from('logs').delete().eq('id', logId);
+  if (deleteError) return { success: false, error: deleteError.message };
+
+  // 验证：再查一次，确认行已不存在
+  const { data: stillExists } = await supabase
+    .from('logs')
+    .select('id')
+    .eq('id', logId)
+    .maybeSingle();
+  if (stillExists) {
+    return { success: false, error: '删除失败，请刷新后重试' };
+  }
+
   return { success: true };
 }
 
