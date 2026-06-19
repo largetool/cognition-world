@@ -233,9 +233,11 @@ CREATE POLICY "用户可查看自己的举报" ON public.reports
         )
     );
 
+DROP POLICY IF EXISTS "管理员可查看举报" ON public.reports;
 CREATE POLICY "管理员可查看举报" ON public.reports
     FOR SELECT USING (is_current_user_admin());
 
+DROP POLICY IF EXISTS "管理员可更新举报" ON public.reports;
 CREATE POLICY "管理员可更新举报" ON public.reports
     FOR UPDATE USING (is_current_user_admin());
 
