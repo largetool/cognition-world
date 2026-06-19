@@ -11,7 +11,7 @@ import { BlockedPage } from '../components/BlockedPage';
 import { useAuth } from '../hooks/useAuth';
 import { useUser } from '../hooks/useUser';
 import { useIPCheck } from '../hooks/useIPCheck';
-import { createLog, createLogWithModeration, getAccountHideStatus, requestAccountHide, cancelAccountHide, requestAccountRestore, isUserExemptFromReview, deleteLog, type AccountHideStatus, type LogWithPublicStatus } from '../utils/storage';
+import { createLog, createLogWithModeration, getAccountHideStatus, requestAccountHide, cancelAccountHide, requestAccountRestore, isUserExemptFromReview, deleteLog, isLogDeletableLocal, cleanupDeletableLogs, type AccountHideStatus, type LogWithPublicStatus } from '../utils/storage';
 import { getUserSEO, isAdminFromProfile, getInitials, APP_CONFIG, getDefaultSEO } from '../types';
 import { supabase } from '../supabase/client';
 import { generateProfilePageSchema, generatePersonSchema, generateBlogPostingSchema } from '../utils/seo';
@@ -156,11 +156,16 @@ export default function UserPage() {
 
   // 为 SSR 日志补充 canDelete（管理员可在任何用户页删除任意日志）
   const logsWithDelete = useMemo(() => {
+    cleanupDeletableLogs();
     const now = new Date();
     const isAdmin = currentUser?.is_admin === true;
     const currentUserId = currentUser?.user_id;
     return logs.map(log => {
       if ('canDelete' in log && log.canDelete) return log;
+      // localStorage 优先（用户自己发布的日志）
+      const localDeletable = currentUserId === log.user_id && isLogDeletableLocal(log.id);
+      if (localDeletable) return { ...log, canDelete: true };
+      // 兜底：created_at + 10分钟
       const ct = parseSupabaseTime(log.created_at || '');
       const tenMin = new Date(ct.getTime() + 10 * 60 * 1000);
       const canDel = isAdmin || (currentUserId === log.user_id && now < tenMin);

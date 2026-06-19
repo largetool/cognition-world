@@ -43,11 +43,12 @@ async function getLogsDirectInline(
   return (Array.isArray(data) ? data : []).map((log: any) => {
     // 1) localStorage 优先：刚发布的日志用本地时间标记，不受服务器时钟影响
     const localDeletable = currentUserId === userId && isLogDeletableLocal(log.id);
-    // 2) 兜底：用 published_at（客户端设置）与 now 比较
-    const pubAt = log.published_at ? parseSupabaseTime(log.published_at) : null;
-    const dbDeletable = (currentUserId === userId && pubAt && now < pubAt);
+    // 2) 兜底：用 created_at（完整时间戳）+ 10分钟，和 UserPage/deleteLog 保持一致
+    const ct = log.created_at ? parseSupabaseTime(log.created_at) : null;
+    const tenMin = ct ? new Date(ct.getTime() + 10 * 60 * 1000) : null;
+    const dbDeletable = (currentUserId === userId && tenMin && now < tenMin);
     const canDelete = isAdmin === true || localDeletable || dbDeletable;
-    const isPublic = log.is_public === true || (pubAt && now >= pubAt);
+    const isPublic = log.is_public === true || (tenMin && now >= tenMin);
     if (currentUserId === userId && canDelete) {
       console.log('[getLogsDirect] canDelete=true, local:', localDeletable, 'db:', dbDeletable, 'logId:', log.id);
     }

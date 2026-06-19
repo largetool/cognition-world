@@ -53,11 +53,27 @@ async function getLogsDirectInline(
 
   const data = await res.json();
   const now = new Date();
+  // 清理已过期标记
+  try {
+    const stored = JSON.parse(localStorage.getItem('cognition_deletable_logs') || '{}');
+    const cleaned = Object.fromEntries(Object.entries(stored).filter(([_, e]) => Number(e) > Date.now()));
+    localStorage.setItem('cognition_deletable_logs', JSON.stringify(cleaned));
+  } catch {}
   return (Array.isArray(data) ? data : []).map((log: any) => {
-    const ct = parseSupabaseTime(log.created_at || '');
-    const tenMin = new Date(ct.getTime() + 10 * 60 * 1000);
-    const isPublic = log.is_public === true || now >= tenMin;
-    const canDelete = isAdmin === true || (currentUserId === userId && now < tenMin);
+    // 优先用 localStorage 标记（刚发布的日志不受服务器时钟影响）
+    try {
+      const stored = JSON.parse(localStorage.getItem('cognition_deletable_logs') || '{}');
+      const expiry = stored[log.id];
+      if (expiry && Number(expiry) > Date.now()) {
+        // 在本地可删除窗口内
+        return { ...log, is_public: false, canDelete: true };
+      }
+    } catch {}
+    // 兜底：用 created_at 判断（和 storage.ts 的 getUserLogs 一致）
+    const createdAt = parseSupabaseTime(log.created_at || '');
+    const tenMinutesLater = new Date(createdAt.getTime() + 10 * 60 * 1000);
+    const isPublic = log.is_public === true || now >= tenMinutesLater;
+    const canDelete = isAdmin === true || (currentUserId === userId && now < tenMinutesLater);
     return { ...log, is_public: isPublic, canDelete };
   });
 }
