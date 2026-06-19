@@ -39,10 +39,11 @@ async function getLogsDirectInline(
   const data = await res.json();
   const now = new Date();
   return (Array.isArray(data) ? data : []).map((log: any) => {
-    const ct = parseSupabaseTime(log.created_at || '');
-    const tenMin = new Date(ct.getTime() + 10 * 60 * 1000);
-    const isPublic = log.is_public === true || now >= tenMin;
-    const canDelete = isAdmin === true || (currentUserId === userId && now < tenMin);
+    // 用 published_at（客户端设置的时间）而非 created_at（服务器时间）来判断
+    // 这样浏览器时钟误差不会影响 canDelete 和 isPublic 的计算
+    const pubAt = log.published_at ? parseSupabaseTime(log.published_at) : null;
+    const isPublic = log.is_public === true || (pubAt && now >= pubAt);
+    const canDelete = isAdmin === true || (currentUserId === userId && (!pubAt || now < pubAt));
     return { ...log, is_public: isPublic, canDelete };
   });
 }

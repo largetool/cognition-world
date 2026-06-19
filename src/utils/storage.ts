@@ -264,14 +264,19 @@ export async function deleteLog(logId: string, userId: string, isAdmin: boolean)
     return { success: false, error: '只能删除自己的日志' };
   }
 
-  // 检查是否在10分钟内
-  const createdAt = parseSupabaseTime(log.created_at || '');
-  const tenMinutesLater = new Date(createdAt.getTime() + 10 * 60 * 1000);
+  // 检查是否在10分钟内（日志 + 兜底，让 RLS 做最终决定）
+  const rawCreatedAt = log.created_at || '';
+  const createdAt = parseSupabaseTime(rawCreatedAt);
   const now = new Date();
+  const diffMs = now.getTime() - createdAt.getTime();
 
-  if (now >= tenMinutesLater) {
-    return { success: false, error: '10分钟后不可删除，请联系管理员' };
-  }
+  console.log('[deleteLog] 时间日志:', {
+    rawCreatedAt,
+    createdAtISO: createdAt.toISOString(),
+    nowISO: now.toISOString(),
+    diffMinutes: Math.round(diffMs / 60000),
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  });
 
   // 先删除，再通过 SELECT 验证是否真的被删掉（.delete().select() 在 RLS 拦截时不可靠）
   const { error: deleteError } = await supabase.from('logs').delete().eq('id', logId);
