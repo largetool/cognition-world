@@ -4,6 +4,42 @@ import { decode } from 'base64-arraybuffer';
 import type { BackgroundImage, Log, SystemBackground } from '../types';
 import { parseSupabaseTime } from '../types';
 
+// ========== 删除标记（localStorage，不依赖服务器时间）==========
+const DELETABLE_LOGS_KEY = 'cognition_deletable_logs';
+
+/** 标记某条日志为"可删除"状态，10分钟后自动过期 */
+export function markLogDeletable(logId: string) {
+  const expiry = Date.now() + 10 * 60 * 1000; // 10分钟后过期
+  try {
+    const stored = JSON.parse(localStorage.getItem(DELETABLE_LOGS_KEY) || '{}');
+    stored[logId] = expiry;
+    localStorage.setItem(DELETABLE_LOGS_KEY, JSON.stringify(stored));
+  } catch {}
+}
+
+/** 检查本地存储中某条日志是否还在可删除窗口内 */
+export function isLogDeletableLocal(logId: string): boolean {
+  try {
+    const stored = JSON.parse(localStorage.getItem(DELETABLE_LOGS_KEY) || '{}');
+    const expiry = stored[logId];
+    return expiry && Date.now() < expiry;
+  } catch {
+    return false;
+  }
+}
+
+/** 清理已过期的删除标记 */
+export function cleanupDeletableLogs() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(DELETABLE_LOGS_KEY) || '{}');
+    const now = Date.now();
+    const cleaned = Object.fromEntries(
+      Object.entries(stored).filter(([_, e]) => e > now)
+    );
+    localStorage.setItem(DELETABLE_LOGS_KEY, JSON.stringify(cleaned));
+  } catch {}
+}
+
 // ========== 背景图相关 ==========
 
 export async function uploadBackgroundImage(

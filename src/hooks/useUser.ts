@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Profile, BackgroundImage } from '../types';
 import { parseSupabaseTime } from '../types';
 import { getUserById, getUserByDisplayId, isNumericDisplayId } from '../utils/auth';
-import { getUserBackgroundImages, getActiveBackgroundImage } from '../utils/storage';
+import { getUserBackgroundImages, getActiveBackgroundImage, isLogDeletableLocal, cleanupDeletableLogs } from '../utils/storage';
 
 /** 零依赖获取日志（避开 webpack chunk TDZ） */
 async function getLogsDirectInline(
@@ -37,13 +37,20 @@ async function getLogsDirectInline(
     return [];
   }
   const data = await res.json();
+  // 清理已过期的 localStorage 标记
+  cleanupDeletableLogs();
   const now = new Date();
   return (Array.isArray(data) ? data : []).map((log: any) => {
-    // 用 published_at（客户端设置的时间）而非 created_at（服务器时间）来判断
-    // 这样浏览器时钟误差不会影响 canDelete 和 isPublic 的计算
+    // 1) localStorage 优先：刚发布的日志用本地时间标记，不受服务器时钟影响
+    const localDeletable = currentUserId === userId && isLogDeletableLocal(log.id);
+    // 2) 兜底：用 published_at（客户端设置）与 now 比较
     const pubAt = log.published_at ? parseSupabaseTime(log.published_at) : null;
+    const dbDeletable = (currentUserId === userId && pubAt && now < pubAt);
+    const canDelete = isAdmin === true || localDeletable || dbDeletable;
     const isPublic = log.is_public === true || (pubAt && now >= pubAt);
-    const canDelete = isAdmin === true || (currentUserId === userId && (!pubAt || now < pubAt));
+    if (currentUserId === userId && canDelete) {
+      console.log('[getLogsDirect] canDelete=true, local:', localDeletable, 'db:', dbDeletable, 'logId:', log.id);
+    }
     return { ...log, is_public: isPublic, canDelete };
   });
 }

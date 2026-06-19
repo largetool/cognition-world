@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Calendar, Eye, EyeOff, LogOut, User, Edit3, X, Save, Send, Clock, Image, CheckCircle, AlertCircle, Check, Share2, ThumbsUp } from 'lucide-react';
 import { getCurrentUser, logout, updateProfile } from '../utils/auth';
 import { supabase } from '../supabase/client';
-import { createLogWithModeration, getUserBackgroundImages, selectSystemBackground, getActiveBackgroundImage, checkCanPost, recordPost, getLikes, hasUserLiked, toggleLike, deleteLog } from '../utils/storage';
+import { createLogWithModeration, getUserBackgroundImages, selectSystemBackground, getActiveBackgroundImage, checkCanPost, recordPost, getLikes, hasUserLiked, toggleLike, deleteLog, markLogDeletable } from '../utils/storage';
 import { localSystemBackgrounds } from '../data/systemBackgrounds';
 import type { Profile, SystemBackground, BackgroundImage } from '../types';
 import { parseSupabaseTime } from '../types';
@@ -236,6 +236,7 @@ export default function MePage() {
       if (result.rejected) {
         setError(result.reason || '内容包含违规信息，请修改后重新发布');
       } else if (result.success && result.log) {
+        markLogDeletable(result.log.id);
         setLogs(prev => [{...result.log!, canDelete: true, created_at: result.log!.created_at || new Date().toISOString()}, ...prev]);
         setNewLogContent('');
         setNewLogTags('');
