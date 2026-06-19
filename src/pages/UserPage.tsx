@@ -280,7 +280,7 @@ export default function UserPage() {
       } else {
         // 通知管理员（通过 SECURITY DEFINER RPC 写入 notifications 表）
         try {
-          await supabase.rpc('add_report_notification', {
+          await (supabase.rpc as any)('add_report_notification', {
             p_reporter_username: currentUser.username || '未知用户',
             p_reason: reportReason.trim(),
             p_content_preview: reportingItem.content.slice(0, 200),
