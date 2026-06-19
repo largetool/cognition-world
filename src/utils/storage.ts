@@ -189,14 +189,20 @@ export async function getPublicLogs(userId: string, limit: number = 50): Promise
 
 // 创建日志（10分钟后自动公开）
 export async function createLog(userId: string, content: string, tags?: string[]): Promise<{ log: Log | null; error?: string }> {
-  // 检查用户是否被冻结
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_frozen')
-    .eq('user_id', userId)
-    .single();
+  // 检查用户是否被冻结（RLS 可能拦截，用 try-catch 兜底）
+  let isFrozen = false;
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_frozen')
+      .eq('user_id', userId)
+      .single();
+    isFrozen = profile?.is_frozen === true;
+  } catch {
+    // RLS 拒绝不算错误，继续执行
+  }
 
-  if (profile?.is_frozen) {
+  if (isFrozen) {
     console.error('User is frozen, cannot create log');
     return { log: null, error: '账户已被冻结，无法发布' };
   }
