@@ -87,8 +87,11 @@ async function callAliyunApi(service: string, serviceParams: Record<string, any>
   // 5. 添加 Signature 到参数
   params['Signature'] = signature;
 
+  // 6. 重新排序（Signature 参与排序后发送）
+  const finalSortedKeys = Object.keys(params).sort();
+
   // === 发送表单编码的 POST 请求 ===
-  const formBody = sortedKeys
+  const formBody = finalSortedKeys
     .map(k => percentEncode(k) + '=' + percentEncode(params[k]))
     .join('&');
 
