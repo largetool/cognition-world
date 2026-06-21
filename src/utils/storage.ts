@@ -337,6 +337,32 @@ export async function deleteLog(logId: string, userId: string, isAdmin: boolean)
   return { success: true };
 }
 
+/**
+ * 管理员批量删除日志（跳过单条验证，分批执行）
+ */
+export async function batchDeleteLogs(
+  logIds: string[],
+): Promise<{ success: number; failed: number }> {
+  const BATCH_SIZE = 50;
+  let success = 0;
+
+  for (let i = 0; i < logIds.length; i += BATCH_SIZE) {
+    const batch = logIds.slice(i, i + BATCH_SIZE);
+    const { error } = await supabase
+      .from('logs')
+      .delete()
+      .in('id', batch);
+
+    if (error) {
+      console.error('[batchDeleteLogs] batch error:', error);
+    } else {
+      success += batch.length;
+    }
+  }
+
+  return { success, failed: logIds.length - success };
+}
+
 // ========== 留言板相关 ==========
 
 export interface Message { id: string; sender_id: string; sender_name: string; content: string; created_at: string | null; }

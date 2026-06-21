@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Settings, Share2, MapPin, Calendar, Eye, EyeOff, Send, ChevronLeft, ChevronRight, ArrowUp, Flag, X, AlertTriangle, ShieldAlert, UserX, Clock, Lock, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Settings, Share2, MapPin, Calendar, Eye, EyeOff, Send, ChevronLeft, ChevronRight, ArrowUp, Flag, X, AlertTriangle, ShieldAlert, UserX, Clock, Lock, CheckCircle, Trash2 } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
@@ -11,7 +11,7 @@ import { BlockedPage } from '../components/BlockedPage';
 import { useAuth } from '../hooks/useAuth';
 import { useUser } from '../hooks/useUser';
 import { useIPCheck } from '../hooks/useIPCheck';
-import { createLog, createLogWithModeration, getAccountHideStatus, requestAccountHide, cancelAccountHide, requestAccountRestore, isUserExemptFromReview, deleteLog, isLogDeletableLocal, cleanupDeletableLogs, type AccountHideStatus, type LogWithPublicStatus } from '../utils/storage';
+import { createLog, createLogWithModeration, getAccountHideStatus, requestAccountHide, cancelAccountHide, requestAccountRestore, isUserExemptFromReview, deleteLog, batchDeleteLogs, isLogDeletableLocal, cleanupDeletableLogs, type AccountHideStatus, type LogWithPublicStatus } from '../utils/storage';
 import { getUserSEO, isAdminFromProfile, getInitials, APP_CONFIG, getDefaultSEO } from '../types';
 import { supabase } from '../supabase/client';
 import { generateProfilePageSchema, generatePersonSchema, generateBlogPostingSchema } from '../utils/seo';
@@ -178,6 +178,9 @@ export default function UserPage() {
   const [logError, setLogError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [deletingLogIds, setDeletingLogIds] = useState<Set<string>>(new Set());
+  // 管理员多选批量删除
+  const [selectedLogIds, setSelectedLogIds] = useState<Set<string>>(new Set());
+  const [isBatchDeleting, setIsBatchDeleting] = useState(false);
 
   // 举报相关状态
   const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -402,6 +405,57 @@ export default function UserPage() {
       setDeletingLogIds(prev => { const next = new Set(prev); next.delete(logId); return next; });
       alert('删除失败：' + result.error);
     }
+  };
+
+  // ===== 管理员多选批量删除 =====
+
+  const toggleSelectLog = (logId: string) => {
+    setSelectedLogIds(prev => {
+      const next = new Set(prev);
+      if (next.has(logId)) next.delete(logId); else next.add(logId);
+      return next;
+    });
+  };
+
+  const selectAllCurrentPage = () => {
+    const currentIds = paginatedLogs.map(l => l.id);
+    setSelectedLogIds(prev => {
+      const next = new Set(prev);
+      const allSelected = currentIds.every(id => prev.has(id));
+      if (allSelected) {
+        currentIds.forEach(id => next.delete(id));
+      } else {
+        currentIds.forEach(id => next.add(id));
+      }
+      return next;
+    });
+  };
+
+  const selectAllAcrossPages = async () => {
+    if (!profile) return;
+    const { data, error } = await supabase
+      .from('logs')
+      .select('id')
+      .eq('user_id', profile.user_id);
+    if (!error && data) {
+      setSelectedLogIds(new Set(data.map(d => d.id)));
+      alert(`已选择全部 ${data.length} 条日志`);
+    } else {
+      alert('获取日志列表失败');
+    }
+  };
+
+  const handleBatchDelete = async () => {
+    if (selectedLogIds.size === 0) return;
+    if (!confirm(`⚠️ 确定要删除选中的 ${selectedLogIds.size} 条日志吗？此操作不可撤销！`)) return;
+    if (!confirm(`⚠️ 再次确认：删除 ${selectedLogIds.size} 条日志后无法恢复，确定继续？`)) return;
+
+    setIsBatchDeleting(true);
+    const result = await batchDeleteLogs([...selectedLogIds]);
+    setSelectedLogIds(new Set());
+    refreshLogs();
+    alert(`批量删除完成：成功 ${result.success} 条${result.failed > 0 ? `，失败 ${result.failed} 条` : ''}`);
+    setIsBatchDeleting(false);
   };
 
   if (ipLoading) {
@@ -728,10 +782,74 @@ export default function UserPage() {
             </div>
           ) : logsWithDelete.length > 0 ? (
             <>
+              {/* 管理员多选工具栏 */}
+              {isAdminUser && (
+                <div className="mb-4 p-3 rounded-xl bg-blue-50 border border-blue-200">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-1.5 text-xs text-blue-700 cursor-pointer select-none hover:text-blue-900 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={selectedLogIds.size > 0 && paginatedLogs.every(l => selectedLogIds.has(l.id))}
+                          onChange={selectAllCurrentPage}
+                          className="rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        全选当前页
+                      </label>
+                      <button
+                        onClick={selectAllAcrossPages}
+                        className="text-xs text-blue-600 hover:text-blue-800 underline underline-offset-2"
+                      >
+                        全选所有页面
+                      </button>
+                      <span className="text-xs text-blue-500">
+                        {selectedLogIds.size > 0 ? `已选择 ${selectedLogIds.size} 条` : ''}
+                      </span>
+                    </div>
+                    {selectedLogIds.size > 0 && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleBatchDelete}
+                          disabled={isBatchDeleting}
+                          className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-xs hover:bg-red-600 disabled:opacity-50 transition-colors flex items-center gap-1"
+                        >
+                          {isBatchDeleting ? (
+                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            <><Trash2 className="w-3 h-3" />批量删除 ({selectedLogIds.size})</>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setSelectedLogIds(new Set())}
+                          className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 text-xs hover:bg-gray-300 transition-colors"
+                        >
+                          取消选择
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-4">
                 {paginatedLogs.map((log, index) => (
                   <div key={log.id} className="relative group" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
                     <meta itemProp="position" content={String((currentPage - 1) * LOGS_PER_PAGE + index + 1)} />
+                    {/* 管理员多选复选框 */}
+                    {isAdminUser && (
+                      <label
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute top-2 left-2 z-10 p-1 rounded-md bg-white/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-blue-50"
+                        title={selectedLogIds.has(log.id) ? '取消选择' : '选择此日志'}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedLogIds.has(log.id)}
+                          onChange={() => toggleSelectLog(log.id)}
+                          className="rounded border-blue-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                      </label>
+                    )}
                     <LogItem log={log} index={index} displayId={profile?.display_id} currentUser={currentUser} onDelete={handleDeleteLog} />
                     {/* 举报按钮 - 仅对非自己的日志显示 */}
                     {currentUser && log.user_id !== currentUser.user_id && (
