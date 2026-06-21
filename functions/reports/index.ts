@@ -238,7 +238,7 @@ serve(async (req: Request) => {
 
     // ==================== 管理员：审核举报 ====================
     if (req.method === "POST" && url.pathname.endsWith("/review")) {
-      const { reportId, status, notes, freezeUser } = await req.json();
+      const { reportId, status, notes } = await req.json();
 
       if (!reportId || !["confirmed", "dismissed"].includes(status)) {
         return new Response(JSON.stringify({ error: "参数错误" }), {
@@ -271,6 +271,19 @@ serve(async (req: Request) => {
         });
       }
 
+      // 获取完整举报信息
+      const { data: report } = await supabaseAdmin
+        .from("reports")
+        .select("*")
+        .eq("id", reportId)
+        .single();
+
+      if (!report) {
+        return new Response(JSON.stringify({ error: "举报记录不存在" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
       // 更新举报状态
       await supabaseAdmin.from("reports").update({
         status,
@@ -279,22 +292,47 @@ serve(async (req: Request) => {
         reviewed_at: new Date().toISOString(),
       }).eq("id", reportId);
 
-      // 确认违规时，如果需要，冻结被举报者
-      if (status === "confirmed" && freezeUser) {
-        const { data: report } = await supabaseAdmin
-          .from("reports")
-          .select("reported_user_id")
-          .eq("id", reportId)
-          .single();
-
-        if (report) {
-          await supabaseAdmin.from("profiles").update({
-            is_frozen: true,
-            frozen_at: new Date().toISOString(),
-            frozen_reason: `举报确认：${notes || "违规内容"}`,
-            frozen_by: user.id,
-          }).eq("auth_user_id", report.reported_user_id);
+      // 确认违规：隐藏内容 + 发通知
+      if (status === "confirmed") {
+        // 根据 message_table 隐藏对应内容
+        const hideReason = notes || report.reason;
+        if (report.message_table === "logs") {
+          await supabaseAdmin.from("logs").update({
+            is_hidden: true,
+            violation_reason: hideReason,
+          }).eq("id", report.reported_message_id);
+        } else if (report.message_table === "guestbook_messages") {
+          await supabaseAdmin.from("guestbook_messages").update({
+            is_hidden: true,
+          }).eq("id", report.reported_message_id);
         }
+
+        // 获取举报者的 username（从 reporter_id UUID 查 profiles）
+        const { data: reporterProfile } = await supabaseAdmin
+          .from("profiles")
+          .select("username")
+          .eq("auth_user_id", report.reporter_id)
+          .maybeSingle();
+
+        const reporterUsername = reporterProfile?.username || "未知用户";
+
+        // 内容类型中文名
+        const contentTypeMap: Record<string, string> = {
+          logs: "认知日志",
+          guestbook_messages: "留言",
+          user_messages: "用户消息",
+          profiles: "用户资料",
+        };
+        const contentTypeLabel = contentTypeMap[report.message_table] || report.message_table;
+
+        // 发给举报者：感谢通知
+        await supabaseAdmin.rpc("send_violation_notifications", {
+          p_reporter_user_id: report.reporter_id,
+          p_reporter_username: reporterUsername,
+          p_reported_user_id: report.reported_user_id,
+          p_reason: hideReason,
+          p_content_type: contentTypeLabel,
+        });
       }
 
       return new Response(JSON.stringify({ success: true }), {

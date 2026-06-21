@@ -216,6 +216,7 @@ export async function getPublicLogs(userId: string, limit: number = 50): Promise
     .from('logs')
     .select('*')
     .eq('user_id', userId)
+    .eq('is_hidden', false)
     .or(`is_public.eq.true,and(created_at.lt.${tenMinutesAgo})`)
     .order('created_at', { ascending: false })
     .limit(limit);

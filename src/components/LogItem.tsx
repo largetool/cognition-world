@@ -66,21 +66,34 @@ export function LogItem({ log, index = 0, displayId, currentUser, onDelete }: Lo
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const isHidden = !!(log as any).is_hidden;
+  const isOwner = currentUser && currentUser.user_id === log.user_id;
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.1, ease: [0.4, 0, 0.2, 1] }}
-      className="glass-card rounded-xl p-4 mb-3"
+      className={`glass-card rounded-xl p-4 mb-3 relative ${isHidden ? 'overflow-hidden' : ''}`}
       itemScope
       itemType="https://schema.org/SocialMediaPosting"
     >
+      {/* 违规隐藏遮罩 — 仅内容所有者可见 */}
+      {isHidden && isOwner && (
+        <div className="absolute inset-0 z-10 bg-gray-900/60 rounded-xl flex items-center justify-center pointer-events-none">
+          <div className="text-center px-4">
+            <p className="text-white text-sm font-medium mb-1">因违规已被隐藏</p>
+            <p className="text-gray-300 text-xs">此内容不对外展示，仅您自己可见</p>
+          </div>
+        </div>
+      )}
+
       {/* Schema.org 微数据 */}
       <meta itemProp="headline" content={log.content.slice(0, 100)} />
       <meta itemProp="articleBody" content={log.content} />
 
-      {/* 只渲染一份内容：SSR 时输出完整文本供爬虫读取，客户端用 line-clamp 控制视觉截断 */}
-      <div className="log-content-wrapper" itemProp="text">
+      {/* 只渲染一份内容 */}
+      <div className={`log-content-wrapper ${isHidden && isOwner ? 'opacity-40' : ''}`} itemProp="text">
         <p
           className={`text-[var(--text-primary)] whitespace-pre-wrap ${needsCollapse && !isExpanded ? 'line-clamp-2' : ''}`}
         >

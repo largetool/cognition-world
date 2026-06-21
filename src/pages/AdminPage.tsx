@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle, XCircle, Trash2, Shield, Image as ImageIcon, Upload, MessageSquare, Settings, Save, Globe, AlertTriangle, Flag, Lock, Unlock, Eye, X, UserPlus, Search } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Trash2, Shield, Image as ImageIcon, Upload, MessageSquare, Settings, Save, Globe, AlertTriangle, Flag, Lock, Unlock, Eye, X, UserPlus, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
@@ -51,6 +51,8 @@ export function AdminPage() {
  });
  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
  const [isSavingLimits, setIsSavingLimits] = useState(false);
+ const [userPage, setUserPage] = useState(1);
+ const USERS_PER_PAGE = 20;
 
  const [pendingSlogans, setPendingSlogans] = useState<Array<{
  id: string;
@@ -202,7 +204,7 @@ useEffect(() => {
   };
 
   // 审核举报
-  const handleReviewReport = async (action: 'confirmed' | 'dismissed', freezeUser: boolean = false) => {
+  const handleReviewReport = async (action: 'confirmed' | 'dismissed') => {
     if (!selectedReport) return;
 
     setIsReviewing(true);
@@ -221,7 +223,6 @@ useEffect(() => {
           reportId: selectedReport,
           status: action,
           notes: reviewNotes.trim() || null,
-          freezeUser,
         }),
       });
 
@@ -612,6 +613,7 @@ useEffect(() => {
  <table className="w-full">
  <thead>
  <tr className="border-b border-[var(--border-light)]">
+ <th className="text-left py-3 px-4 text-sm font-medium text-[var(--text-secondary)]">用户ID</th>
  <th className="text-left py-3 px-4 text-sm font-medium text-[var(--text-secondary)]">用户名</th>
  <th className="text-left py-3 px-4 text-sm font-medium text-[var(--text-secondary)]">等级</th>
  <th className="text-left py-3 px-4 text-sm font-medium text-[var(--text-secondary)]">今日发布</th>
@@ -621,8 +623,9 @@ useEffect(() => {
  </tr>
  </thead>
  <tbody>
- {users.map((u) => (
+ {users.slice((userPage - 1) * USERS_PER_PAGE, userPage * USERS_PER_PAGE).map((u) => (
  <tr key={u.user_id} className="border-b border-[var(--border-light)] last:border-0">
+ <td className="py-3 px-4"><span className="font-mono text-xs text-[var(--text-secondary)]">{String(u.display_id ?? '').padStart(9, '0')}</span></td>
  <td className="py-3 px-4"><span className="font-medium text-[var(--text-primary)]">{u.username}</span></td>
  <td className="py-3 px-4">
  <select value={u.role} onChange={async (e) => { const result = await updateUserRole(u.user_id, e.target.value as 'user' | 'verified' | 'premium'); if (result.success) { loadData(); } else { alert('更新失败：' + result.error); } }} disabled={u.is_admin} className="px-3 py-1 rounded-lg border border-[var(--border-light)] bg-white text-sm disabled:opacity-50">
@@ -669,6 +672,12 @@ useEffect(() => {
  if (reason) {
  const result = await freezeUser(u.user_id, reason);
  if (result.success) {
+ try {
+ await (supabase.rpc as any)('send_freeze_notification', {
+ p_user_display_id: u.user_id,
+ p_reason: reason,
+ });
+ } catch (e) { console.error('发送冻结通知失败:', e); }
  loadData();
  } else {
  alert('冻结失败：' + result.error);
@@ -709,6 +718,62 @@ useEffect(() => {
  ))}
  </tbody>
  </table>
+ {/* 分页 */}
+ {users.length > USERS_PER_PAGE && (() => {
+   const totalPages = Math.ceil(users.length / USERS_PER_PAGE);
+   const pages: number[] = [];
+   const maxVisible = 5;
+   let start = Math.max(1, userPage - Math.floor(maxVisible / 2));
+   let end = Math.min(totalPages, start + maxVisible - 1);
+   if (end - start + 1 < maxVisible) {
+     start = Math.max(1, end - maxVisible + 1);
+   }
+   for (let i = start; i <= end; i++) pages.push(i);
+   return (
+     <div className="mt-4 flex items-center justify-center gap-1">
+       <button
+         onClick={() => setUserPage(p => Math.max(1, p - 1))}
+         disabled={userPage === 1}
+         className="px-3 py-1.5 rounded-lg text-sm hover:bg-[var(--bg-secondary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+       >
+         <ChevronLeft className="w-4 h-4" />
+       </button>
+       {start > 1 && (
+         <>
+           <button onClick={() => setUserPage(1)} className="px-3 py-1.5 rounded-lg text-sm hover:bg-[var(--bg-secondary)] transition-colors">1</button>
+           {start > 2 && <span className="px-1 text-[var(--text-tertiary)]">...</span>}
+         </>
+       )}
+       {pages.map(p => (
+         <button
+           key={p}
+           onClick={() => setUserPage(p)}
+           className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+             p === userPage
+               ? 'bg-[var(--accent)] text-white'
+               : 'hover:bg-[var(--bg-secondary)]'
+           }`}
+         >
+           {p}
+         </button>
+       ))}
+       {end < totalPages && (
+         <>
+           {end < totalPages - 1 && <span className="px-1 text-[var(--text-tertiary)]">...</span>}
+           <button onClick={() => setUserPage(totalPages)} className="px-3 py-1.5 rounded-lg text-sm hover:bg-[var(--bg-secondary)] transition-colors">{totalPages}</button>
+         </>
+       )}
+       <button
+         onClick={() => setUserPage(p => Math.min(totalPages, p + 1))}
+         disabled={userPage === totalPages}
+         className="px-3 py-1.5 rounded-lg text-sm hover:bg-[var(--bg-secondary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+       >
+         <ChevronRight className="w-4 h-4" />
+       </button>
+       <span className="ml-3 text-xs text-[var(--text-tertiary)]">共 {users.length} 人</span>
+     </div>
+   );
+ })()}
  </div>
  ) : (
  <p className="text-center py-8 text-[var(--text-tertiary)]">暂无用户数据</p>
@@ -866,7 +931,7 @@ useEffect(() => {
 
                                 <div className="flex gap-3">
                                   <button
-                                    onClick={() => handleReviewReport('confirmed', true)}
+                                    onClick={() => handleReviewReport('confirmed')}
                                     disabled={isReviewing}
                                     className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                                   >
@@ -874,8 +939,8 @@ useEffect(() => {
                                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                     ) : (
                                       <>
-                                        <Lock className="w-4 h-4" />
-                                        确认违规并冻结
+                                        <Eye className="w-4 h-4" />
+                                        确认违规（隐藏内容）
                                       </>
                                     )}
                                   </button>
@@ -901,7 +966,7 @@ useEffect(() => {
                               <div className="p-4 bg-gray-50 rounded-xl">
                                 <p className="text-sm text-[var(--text-secondary)] mb-1">处理结果</p>
                                 <p className="text-[var(--text-primary)]">
-                                  {report.status === 'confirmed' ? '已确认违规' : '已驳回举报'}
+                                  {report.status === 'confirmed' ? '已确认违规（内容已隐藏，双方已通知）' : '已驳回举报'}
                                 </p>
                                 {report.admin_notes && (
                                   <p className="text-sm text-[var(--text-secondary)] mt-2">
