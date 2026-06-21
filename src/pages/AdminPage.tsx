@@ -178,7 +178,7 @@ useEffect(() => {
 
       const result = await response.json();
       if (result.error) {
-        console.error('加载举报列表失败:', result.error);
+        console.error('加载举报列表失败:', result.error, '完整响应:', JSON.stringify(result));
       } else if (result.reports) {
         setReports(result.reports.map((r: any) => ({
           id: r.id,

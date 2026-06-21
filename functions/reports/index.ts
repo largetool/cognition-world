@@ -13,10 +13,11 @@ serve(async (req: Request) => {
   }
 
   try {
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     const url = new URL(req.url);
 
@@ -125,42 +126,43 @@ serve(async (req: Request) => {
     // ==================== 管理员：查看举报列表 ====================
     if (req.method === "GET" && url.pathname.endsWith("/list")) {
       const token = req.headers.get("authorization")?.replace("Bearer ", "") || "";
-      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+      // 用用户 JWT + anon key 创建客户端（依赖 RLS 策略控制权限）
+      const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+        auth: { persistSession: false },
+      });
+
+      // 验证用户身份
+      const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
       if (authError || !user) {
+        console.error("[Reports] 鉴权失败:", authError?.message || "无用户");
         return new Response(JSON.stringify({ error: "未授权" }), {
           status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
 
-      // 管理员验证：用 or 同时查 id / auth_user_id，maybeSingle 避免无匹配时抛错
-      const { data: profile } = await supabaseAdmin
-        .from("profiles")
-        .select("is_admin")
-        .or(`id.eq.${user.id},auth_user_id.eq.${user.id}`)
-        .maybeSingle();
-      if (!profile?.is_admin) {
-        return new Response(JSON.stringify({ error: "仅管理员可查看" }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
-      }
-
       const statusFilter = url.searchParams.get("status") || "pending";
 
-      // 注：reporter_id / reported_user_id 存的是显示 ID（如 "000000003"），
-      // 且外键已移除，不能用 Supabase 的 resource embedding 语法做 join。
-      // 这里分两步：先查举报列表，再批量查 profiles 获取用户名。
-      const { data: reports, error } = await supabaseAdmin
+      // 查询举报列表（RLS 策略会限制仅管理员可查看）
+      console.log("[Reports] 查询举报列表, status:", statusFilter);
+      const { data: reports, error: reportsError } = await supabaseUser
         .from("reports")
         .select("*")
         .eq("status", statusFilter)
         .order("created_at", { ascending: false })
         .limit(100);
 
-      if (error) throw error;
+      if (reportsError) {
+        console.error("[Reports] 查询举报列表失败:", reportsError);
+        return new Response(JSON.stringify({ error: `查询失败: ${reportsError.message || JSON.stringify(reportsError)}` }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
 
-      // 收集所有涉及的 user_id，去重后批量查 profiles
-      // reporter_id/reported_user_id 可以是显示 ID（"000000003"）或 auth UUID，
-      // 两种都要查
+      console.log("[Reports] 查询到举报数:", reports?.length || 0);
+
+      // 收集所有涉及的 user_id
       const userIds = new Set<string>();
       for (const r of reports || []) {
         if (r.reporter_id) userIds.add(r.reporter_id);
@@ -168,14 +170,25 @@ serve(async (req: Request) => {
       }
 
       // 建两个 map：user_id → username 和 auth_user_id → username
-      let profileByUserId = new Map<string, string>();
-      let profileByAuthUuid = new Map<string, string>();
+      const profileByUserId = new Map<string, string>();
+      const profileByAuthUuid = new Map<string, string>();
       if (userIds.size > 0) {
-        // 查询所有 profiles，用 user_id 过滤（可匹配显示 ID）
-        const { data: profiles } = await supabaseAdmin
+        console.log("[Reports] 查询 profiles, userIds:", [...userIds]);
+
+        // 查询所有 profiles，用 user_id 过滤
+        const { data: profiles, error: profilesError } = await supabaseUser
           .from("profiles")
           .select("user_id, auth_user_id, username")
           .in("user_id", [...userIds]);
+
+        if (profilesError) {
+          console.error("[Reports] 查询 profiles 失败:", profilesError);
+          return new Response(JSON.stringify({ error: `查询 profiles 失败: ${profilesError.message || JSON.stringify(profilesError)}` }), {
+            status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+
+        console.log("[Reports] profiles 匹配数:", profiles?.length || 0);
 
         for (const p of profiles || []) {
           if (p.user_id) profileByUserId.set(p.user_id, p.username);
@@ -186,15 +199,20 @@ serve(async (req: Request) => {
         const unmatchedIds = [...userIds].filter(
           (id) => !profileByUserId.has(id) && !profileByAuthUuid.has(id)
         );
+        console.log("[Reports] 未匹配 IDs:", unmatchedIds);
         if (unmatchedIds.length > 0) {
-          const { data: extraProfiles } = await supabaseAdmin
+          const { data: extraProfiles, error: extraError } = await supabaseUser
             .from("profiles")
             .select("user_id, auth_user_id, username")
             .in("auth_user_id", unmatchedIds);
 
-          for (const p of extraProfiles || []) {
-            if (p.user_id) profileByUserId.set(p.user_id, p.username);
-            if (p.auth_user_id) profileByAuthUuid.set(p.auth_user_id, p.username);
+          if (extraError) {
+            console.error("[Reports] 二次查询 profiles 失败:", extraError);
+          } else {
+            for (const p of extraProfiles || []) {
+              if (p.user_id) profileByUserId.set(p.user_id, p.username);
+              if (p.auth_user_id) profileByAuthUuid.set(p.auth_user_id, p.username);
+            }
           }
         }
       }
@@ -212,6 +230,7 @@ serve(async (req: Request) => {
           "未知",
       }));
 
+      console.log("[Reports] 返回数据条数:", enriched.length);
       return new Response(JSON.stringify({ reports: enriched }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -235,11 +254,17 @@ serve(async (req: Request) => {
         });
       }
 
-      const { data: adminProfile } = await supabaseAdmin
+      const { data: adminById } = await supabaseAdmin
         .from("profiles")
         .select("is_admin")
-        .or(`id.eq.${user.id},auth_user_id.eq.${user.id}`)
+        .eq("id", user.id)
         .maybeSingle();
+      const { data: adminByAuthId } = await supabaseAdmin
+        .from("profiles")
+        .select("is_admin")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+      const adminProfile = adminById || adminByAuthId;
       if (!adminProfile?.is_admin) {
         return new Response(JSON.stringify({ error: "仅管理员可审核" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -281,7 +306,13 @@ serve(async (req: Request) => {
       status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error("[Reports] 未捕获异常:", error, typeof error, error instanceof Error ? (error as Error).stack : "");
+    let errorMessage = "服务器内部错误";
+    try {
+      errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+    } catch (e) {
+      errorMessage = String(error);
+    }
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
