@@ -5,7 +5,7 @@ import { ArrowLeft, Clock, User, ThumbsUp, Flag, MapPin } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { Footer } from '../components/Footer';
 import { supabase } from '../supabase/client';
-import { getUserSEO, APP_CONFIG, getDefaultSEO } from '../types';
+import { getUserSEO, APP_CONFIG, getDefaultSEO, formatDateTime } from '../types';
 import { generateProfilePageSchema, generateBreadcrumbList, breadcrumbs } from '../utils/seo';
 import { t, getCurrentLanguage } from '../locales';
 import { getLikes, hasUserLiked, toggleLike } from '../utils/storage';
@@ -279,7 +279,7 @@ export default function ThoughtPage() {
             <div className="flex items-center gap-2 text-sm text-[var(--text-tertiary)] mb-4">
               <Clock className="w-4 h-4" />
               <time itemProp="datePublished" dateTime={log.created_at || new Date().toISOString()}>
-                {new Date(log.created_at || Date.now()).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
+                {formatDateTime(log.created_at || '')}
               </time>
             </div>
 
