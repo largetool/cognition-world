@@ -20,17 +20,12 @@ function getAccessKey() {
 }
 
 const ENDPOINT = 'https://green-cip.cn-shanghai.aliyuncs.com';
-const REGION = 'cn-shanghai';
-const SERVICE = 'green-cip';
 
 /**
  * 调用阿里云 OpenAPI Signature v3（ACS3-HMAC-SHA256）
  * 文档: https://www.alibabacloud.com/help/en/sdk/product-overview/v3-request-structure-and-signature
  *
- * MultiModalGuard API 使用 RPC 风格：
- * - 公共参数（Action, Version）→ x-acs-* 请求头
- * - API 参数（Service, ServiceParameters）→ 表单编码的请求体
- * - ServiceParameters 必须是 JSON 字符串
+ * MultiModalGuard API 使用 JSON 格式请求体
  */
 async function callAliyunApi(action: string, body: Record<string, any>): Promise<any> {
   const { keyId, keySecret } = getAccessKey();
@@ -41,17 +36,12 @@ async function callAliyunApi(action: string, body: Record<string, any>): Promise
   const date = new Date();
   // x-acs-date: YYYYMMDDTHHmmssZ（无连字符冒号，UTC）
   const requestDate = date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-  // Credential 中日期: YYYYMMDD
-  const dateStr = requestDate.substring(0, 8);
   const nonce = crypto.randomUUID();
   const algorithm = 'ACS3-HMAC-SHA256';
   const host = 'green-cip.cn-shanghai.aliyuncs.com';
 
-  // 构造表单编码的请求体（API 参数通过表单传递）
-  const formParams = new URLSearchParams();
-  formParams.append('Service', (body.Service as string) || 'query_security_check_pro');
-  formParams.append('ServiceParameters', JSON.stringify(body.ServiceParameters || {}));
-  const bodyStr = formParams.toString();
+  // JSON 请求体（MultiModalGuard API 使用 JSON 格式）
+  const bodyStr = JSON.stringify(body);
 
   // Body SHA256
   const payloadHash = crypto.createHash('sha256').update(bodyStr, 'utf8').digest('hex');
@@ -82,19 +72,18 @@ async function callAliyunApi(action: string, body: Record<string, any>): Promise
   const canonicalRequestHash = crypto.createHash('sha256').update(canonicalRequest, 'utf8').digest('hex');
   const stringToSign = `${algorithm}\n${canonicalRequestHash}`;
 
-  // 6. Signature
+  // 6. Signature = HexEncode(HMAC-SHA256(AccessKeySecret, StringToSign))
   const signature = crypto.createHmac('sha256', keySecret).update(stringToSign, 'utf8').digest('hex');
 
-  // 7. Authorization
-  const credential = `${keyId}/${dateStr}/${REGION}/${SERVICE}/aliyun_v4_request`;
-  const authorization = `${algorithm} Credential=${credential}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+  // 7. Authorization（V3 简单格式：只带 AccessKeyId，不带 region/service scope）
+  const authorization = `${algorithm} Credential=${keyId}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
 
   // === 发送请求 ===
   const response = await fetch(ENDPOINT, {
     method: 'POST',
     headers: {
       'Host': host,
-      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Type': 'application/json',
       'X-Acs-Action': action,
       'X-Acs-Version': '2022-03-02',
       'X-Acs-Content-Sha256': payloadHash,
