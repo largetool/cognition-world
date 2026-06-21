@@ -24,9 +24,8 @@ const REGION = 'cn-shanghai';
 const SERVICE = 'green-cip';
 
 /**
- * 调用阿里云 OpenAPI Signature v3
- * @param action API 动作（如 MultiModalGuard）
- * @param body 请求体 JSON
+ * 调用阿里云 OpenAPI Signature v3（ACS3-HMAC-SHA256）
+ * 文档: https://www.alibabacloud.com/help/en/sdk/product-overview/v3-request-structure-and-signature
  */
 async function callAliyunApi(action: string, body: Record<string, any>): Promise<any> {
   const { keyId, keySecret } = getAccessKey();
@@ -36,58 +35,63 @@ async function callAliyunApi(action: string, body: Record<string, any>): Promise
 
   const bodyStr = JSON.stringify(body);
   const date = new Date();
-  const dateStr = date.toISOString().replace(/[:\-]/g, '').substring(0, 8); // YYYYMMDD
-  // 阿里云 Signature v3 要求 x-acs-date 为 YYYYMMDDTHHmmssZ 格式
-  const requestDate = date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  // x-acs-date: ISO 8601 UTC, 格式 yyyy-MM-ddTHH:mm:ssZ
+  const requestDate = date.toISOString().replace(/\.\d+Z$/, 'Z');
+  // credential 中用的日期: YYYYMMDD
+  const dateStr = date.toISOString().replace(/[:\-]/g, '').substring(0, 8);
   const nonce = crypto.randomUUID();
+  const algorithm = 'ACS3-HMAC-SHA256';
+  const host = 'green-cip.cn-shanghai.aliyuncs.com';
 
-  // === 构造签名 ===
-  // 参考 Alibaba Cloud OpenAPI Signature v3
-
-  // 1. 参与签名的请求头（按字母排序）
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'Host': 'green-cip.cn-shanghai.aliyuncs.com',
-    'X-Acs-Action': action,
-    'X-Acs-Version': '2022-03-02',
-    'X-Acs-Signature-Nonce': nonce,
-    'X-Acs-Date': requestDate,
-  };
-
-  // 按 header 名称字母排序
-  const sortedHeaderKeys = Object.keys(headers).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-
-  // 2. CanonicalHeaders: header名小写 + ":" + 值.trim()
-  const canonicalHeaders = sortedHeaderKeys
-    .map(k => `${k.toLowerCase()}:${headers[k].trim()}`)
-    .join('\n') + '\n';
-
-  // 3. SignedHeaders: 小写 header 名集合
-  const signedHeaders = sortedHeaderKeys.map(k => k.toLowerCase()).join(';');
-
-  // 4. HashedPayload: Body 的 SHA256
+  // Body SHA256
   const payloadHash = crypto.createHash('sha256').update(bodyStr, 'utf8').digest('hex');
 
-  // 5. CanonicalRequest
+  // === 1. 参与签名的请求头 ===
+  // 只包含 SignedHeaders 列表中的头（官方示例：不包含 Content-Type）
+  const signedHeaderMap: Record<string, string> = {
+    'host': host,
+    'x-acs-action': action,
+    'x-acs-content-sha256': payloadHash,
+    'x-acs-date': requestDate,
+    'x-acs-signature-nonce': nonce,
+    'x-acs-version': '2022-03-02',
+  };
+  const signedHeaderKeys = Object.keys(signedHeaderMap); // 已按字母排好
+
+  // 2. CanonicalHeaders
+  const canonicalHeaders = signedHeaderKeys
+    .map(k => `${k}:${signedHeaderMap[k].trim()}`)
+    .join('\n') + '\n';
+
+  // 3. SignedHeaders
+  const signedHeaders = signedHeaderKeys.join(';');
+
+  // 4. CanonicalRequest
   const canonicalRequest = `POST\n/\n\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
 
-  // 6. StringToSign
-  const algorithm = 'ACS3-HMAC-SHA256';
+  // 5. StringToSign = Algorithm + "\n" + HexEncode(SHA256(CanonicalRequest))
   const canonicalRequestHash = crypto.createHash('sha256').update(canonicalRequest, 'utf8').digest('hex');
-  const stringToSign = `${algorithm}\n${requestDate}\n${canonicalRequestHash}`;
+  const stringToSign = `${algorithm}\n${canonicalRequestHash}`;
 
-  // 7. Signature（直接用 AccessKeySecret 做 HMAC-SHA256）
+  // 6. Signature
   const signature = crypto.createHmac('sha256', keySecret).update(stringToSign, 'utf8').digest('hex');
 
-  // 8. Authorization
+  // 7. Authorization
   const credential = `${keyId}/${dateStr}/${REGION}/${SERVICE}/aliyun_v4_request`;
   const authorization = `${algorithm} Credential=${credential}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
 
   // === 发送请求 ===
+  // 实际 HTTP 请求头（Host 保持标准大写，其他用 x-acs- 前缀）
   const response = await fetch(ENDPOINT, {
     method: 'POST',
     headers: {
-      ...headers,
+      'Host': host,
+      'Content-Type': 'application/json',
+      'X-Acs-Action': action,
+      'X-Acs-Version': '2022-03-02',
+      'X-Acs-Content-Sha256': payloadHash,
+      'X-Acs-Date': requestDate,
+      'X-Acs-Signature-Nonce': nonce,
       'Authorization': authorization,
     },
     body: bodyStr,
