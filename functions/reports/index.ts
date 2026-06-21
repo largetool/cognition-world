@@ -340,6 +340,112 @@ serve(async (req: Request) => {
       });
     }
 
+    // ==================== 管理员：批量审核举报 ====================
+    if (req.method === "POST" && url.pathname.endsWith("/batch-review")) {
+      const { reportIds, status, notes } = await req.json();
+
+      if (!reportIds || !Array.isArray(reportIds) || reportIds.length === 0 || !["confirmed", "dismissed"].includes(status)) {
+        return new Response(JSON.stringify({ error: "参数错误" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      // 验证管理员身份
+      const token = req.headers.get("authorization")?.replace("Bearer ", "") || "";
+      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+      if (authError || !user) {
+        return new Response(JSON.stringify({ error: "未授权" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      const { data: adminById } = await supabaseAdmin
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", user.id)
+        .maybeSingle();
+      const { data: adminByAuthId } = await supabaseAdmin
+        .from("profiles")
+        .select("is_admin")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+      const adminProfile = adminById || adminByAuthId;
+      if (!adminProfile?.is_admin) {
+        return new Response(JSON.stringify({ error: "仅管理员可审核" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      // 获取所有待处理的举报记录
+      const { data: reports, error: fetchError } = await supabaseAdmin
+        .from("reports")
+        .select("*")
+        .in("id", reportIds);
+
+      if (fetchError) {
+        return new Response(JSON.stringify({ error: "查询举报记录失败" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      // 批量处理
+      const results = { success: 0, failed: 0, errors: [] as string[] };
+      for (const report of reports || []) {
+        try {
+          await supabaseAdmin.from("reports").update({
+            status,
+            admin_notes: notes || null,
+            reviewed_by: user.id,
+            reviewed_at: new Date().toISOString(),
+          }).eq("id", report.id);
+
+          if (status === "confirmed") {
+            const hideReason = notes || report.reason;
+            if (report.message_table === "logs") {
+              await supabaseAdmin.from("logs").update({
+                is_hidden: true,
+                violation_reason: hideReason,
+              }).eq("id", report.reported_message_id);
+            } else if (report.message_table === "guestbook_messages") {
+              await supabaseAdmin.from("guestbook_messages").update({
+                is_hidden: true,
+              }).eq("id", report.reported_message_id);
+            }
+
+            const { data: reporterProfile } = await supabaseAdmin
+              .from("profiles")
+              .select("username")
+              .eq("auth_user_id", report.reporter_id)
+              .maybeSingle();
+            const reporterUsername = reporterProfile?.username || "未知用户";
+            const contentTypeMap: Record<string, string> = {
+              logs: "认知日志",
+              guestbook_messages: "留言",
+              user_messages: "用户消息",
+              profiles: "用户资料",
+            };
+            const contentTypeLabel = contentTypeMap[report.message_table] || report.message_table;
+
+            await supabaseAdmin.rpc("send_violation_notifications", {
+              p_reporter_user_id: report.reporter_id,
+              p_reporter_username: reporterUsername,
+              p_reported_user_id: report.reported_user_id,
+              p_reason: hideReason,
+              p_content_type: contentTypeLabel,
+            });
+          }
+          results.success++;
+        } catch (err) {
+          results.failed++;
+          results.errors.push(`报告 ${report.id}: ${err instanceof Error ? err.message : "未知错误"}`);
+        }
+      }
+
+      return new Response(JSON.stringify({ success: true, results }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
     return new Response(JSON.stringify({ error: "未知请求" }), {
       status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" }
     });

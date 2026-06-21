@@ -87,6 +87,7 @@ export function AdminPage() {
  const [selectedReport, setSelectedReport] = useState<string | null>(null);
  const [reviewNotes, setReviewNotes] = useState('');
  const [isReviewing, setIsReviewing] = useState(false);
+ const [selectedReports, setSelectedReports] = useState<Set<string>>(new Set());
 
  // 白名单管理
  const [trustedUsers, setTrustedUsers] = useState<Array<{ user_id: string; username: string; is_admin: boolean }>>([]);
@@ -237,6 +238,64 @@ useEffect(() => {
     } catch (err) {
       console.error('审核举报失败:', err);
       alert('审核失败');
+    }
+    setIsReviewing(false);
+  };
+
+  // 多选切换
+  const toggleSelectReport = (id: string) => {
+    setSelectedReports(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedReports.size === reports.filter(r => r.status === 'pending').length) {
+      setSelectedReports(new Set());
+    } else {
+      setSelectedReports(new Set(reports.filter(r => r.status === 'pending').map(r => r.id)));
+    }
+  };
+
+  // 批量审核
+  const handleBatchReview = async (action: 'confirmed' | 'dismissed') => {
+    if (selectedReports.size === 0) return;
+    if (action === 'confirmed' && !confirm(`确定要确认 ${selectedReports.size} 条举报为违规吗？违规内容将被隐藏，双方将收到通知。`)) return;
+    if (action === 'dismissed' && !confirm(`确定要驳回 ${selectedReports.size} 条举报吗？`)) return;
+
+    setIsReviewing(true);
+    try {
+      const edgeUrl = supabaseUrl;
+      const session = (await supabase.auth.getSession()).data.session;
+      const authHeaders = session ? { Authorization: `Bearer ${session.access_token}` } : {};
+
+      const response = await fetch(`${edgeUrl}/functions/v1/reports/batch-review`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authHeaders as Record<string, string>),
+        },
+        body: JSON.stringify({
+          reportIds: [...selectedReports],
+          status: action,
+          notes: reviewNotes.trim() || null,
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setSelectedReports(new Set());
+        setReviewNotes('');
+        await loadReports();
+        alert(`批量处理完成：成功 ${result.results.success} 条${result.results.failed > 0 ? `，失败 ${result.results.failed} 条` : ''}`);
+      } else {
+        alert('批量处理失败: ' + result.error);
+      }
+    } catch (err) {
+      console.error('批量审核失败:', err);
+      alert('批量审核失败');
     }
     setIsReviewing(false);
   };
@@ -785,10 +844,23 @@ useEffect(() => {
               <div className="space-y-6">
                 <GlassCard>
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
-                      <Flag className="w-5 h-5" />
-                      举报管理
-                    </h2>
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
+                        <Flag className="w-5 h-5" />
+                        举报管理
+                      </h2>
+                      {reportFilter === 'pending' && reports.some(r => r.status === 'pending') && (
+                        <label className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] cursor-pointer select-none hover:text-[var(--text-primary)] transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={selectedReports.size > 0 && selectedReports.size === reports.filter(r => r.status === 'pending').length}
+                            onChange={toggleSelectAll}
+                            className="rounded border-gray-300 text-[var(--accent)] focus:ring-[var(--accent)]"
+                          />
+                          全选待处理
+                        </label>
+                      )}
+                    </div>
                     <div className="flex gap-2">
                       {(['pending', 'confirmed', 'dismissed'] as const).map((filter) => (
                         <button
@@ -806,6 +878,43 @@ useEffect(() => {
                     </div>
                   </div>
 
+                  {/* 批量操作栏 */}
+                  {selectedReports.size > 0 && (
+                    <div className="flex items-center justify-between p-3 mb-3 rounded-lg bg-[var(--accent)]/10 border border-[var(--accent)]/30">
+                      <span className="text-sm font-medium text-[var(--accent)]">已选择 {selectedReports.size} 条举报</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleBatchReview('confirmed')}
+                          disabled={isReviewing}
+                          className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-sm hover:bg-red-600 disabled:opacity-50 transition-colors flex items-center gap-1"
+                        >
+                          {isReviewing ? (
+                            <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            <><Eye className="w-3.5 h-3.5" />批量确认违规</>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleBatchReview('dismissed')}
+                          disabled={isReviewing}
+                          className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 disabled:opacity-50 transition-colors flex items-center gap-1"
+                        >
+                          {isReviewing ? (
+                            <div className="w-3.5 h-3.5 border-2 border-gray-400/30 border-t-gray-600 rounded-full animate-spin" />
+                          ) : (
+                            <><XCircle className="w-3.5 h-3.5" />批量驳回</>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setSelectedReports(new Set())}
+                          className="px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          取消选择
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {isLoadingReports ? (
                     <div className="text-center py-8">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)] mx-auto" />
@@ -822,7 +931,17 @@ useEffect(() => {
                               : 'border-[var(--border-light)] hover:border-[var(--accent)]/50'
                           }`}
                         >
-                          <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-3">
+                            {report.status === 'pending' && (
+                              <div className="pt-0.5" onClick={e => e.stopPropagation()}>
+                                <input
+                                  type="checkbox"
+                                  checked={selectedReports.has(report.id)}
+                                  onChange={() => toggleSelectReport(report.id)}
+                                  className="rounded border-gray-300 text-[var(--accent)] focus:ring-[var(--accent)] cursor-pointer"
+                                />
+                              </div>
+                            )}
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
                                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
