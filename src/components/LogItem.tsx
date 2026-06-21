@@ -1,20 +1,38 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Copy, CopyCheck, ThumbsUp, X } from 'lucide-react';
+import { Copy, CopyCheck, ThumbsUp, X, MapPin } from 'lucide-react';
 import { formatDateTime, fmtDisplayId, APP_CONFIG } from '../types';
 import { getLikes, hasUserLiked, toggleLike } from '../utils/storage';
 import type { Log } from '../types';
 
 interface LogItemProps {
-  log: Log | { id: string; content: string; created_at: string | null; user_id: string; is_public?: boolean | null; published_at?: string | null; tags?: string[] | null; canDelete?: boolean };
+  log: Log | { id: string; content: string; created_at: string | null; user_id: string; is_public?: boolean | null; published_at?: string | null; tags?: string[] | null; canDelete?: boolean; category?: string | null; location?: string | null };
   index?: number;
   displayId?: number | null;
   currentUser?: { user_id: string } | null;
   onDelete?: (logId: string) => void;
 }
 
-const MAX_PREVIEW_LENGTH = 50;
+const MAX_PREVIEW_LENGTH = 100;
+
+// 分类显示配置
+const CATEGORY_CONFIG: Record<string, { label: string; textColor: string; bgColor: string; borderColor: string }> = {
+  experience: { label: '经历', textColor: 'text-amber-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/20' },
+  present:   { label: '此刻', textColor: 'text-sky-400',  bgColor: 'bg-sky-500/10',   borderColor: 'border-sky-500/20' },
+  future:    { label: '将来', textColor: 'text-emerald-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/20' },
+};
+
+/** 从时间戳提取"年月"显示，用于分类时间绑定 */
+function categoryDateLabel(dateStr: string | null | undefined): string {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}年${d.getMonth() + 1}月`;
+  } catch {
+    return '';
+  }
+}
 
 export function LogItem({ log, index = 0, displayId, currentUser, onDelete }: LogItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -91,6 +109,29 @@ export function LogItem({ log, index = 0, displayId, currentUser, onDelete }: Lo
       {/* Schema.org 微数据 */}
       <meta itemProp="headline" content={log.content.slice(0, 100)} />
       <meta itemProp="articleBody" content={log.content} />
+      {log.category && <meta itemProp="articleSection" content={CATEGORY_CONFIG[log.category]?.label || log.category} />}
+      {log.location && <meta itemProp="contentLocation" content={log.location} />}
+
+      {/* 分类 + 地理位置 标签（半固定式便签体系） */}
+      {(log.category || log.location) && (
+        <div className="flex flex-wrap items-center gap-2 mb-2">
+          {log.category && (() => {
+            const cfg = CATEGORY_CONFIG[log.category];
+            if (!cfg) return null;
+            return (
+              <span className={`text-xs px-2.5 py-0.5 rounded-full ${cfg.bgColor} ${cfg.textColor} border ${cfg.borderColor} font-medium`}>
+                {cfg.label} · {categoryDateLabel(log.created_at)}
+              </span>
+            );
+          })()}
+          {log.location && (
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-gray-500/10 text-gray-400 border border-gray-500/20 flex items-center gap-1">
+              <MapPin className="w-3 h-3" />
+              {log.location}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* 只渲染一份内容 */}
       <div className={`log-content-wrapper ${isHidden && isOwner ? 'opacity-40' : ''}`} itemProp="text">

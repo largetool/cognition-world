@@ -174,6 +174,8 @@ export default function UserPage() {
   }, [logs, currentUser]);
   const [logContent, setLogContent] = useState('');
   const [logTags, setLogTags] = useState('');
+  const [logCategory, setLogCategory] = useState<string>('');   // 分类：experience / present / future
+  const [logLocation, setLogLocation] = useState<string>('');   // 地理位置（选填）
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logError, setLogError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -218,11 +220,13 @@ export default function UserPage() {
     setIsSubmitting(true);
 
     // 带 AI 审核的发布
-    const result = await createLogWithModeration(profile.user_id, logContent.trim(), tags);
+    const result = await createLogWithModeration(profile.user_id, logContent.trim(), tags, logCategory || undefined, logLocation.trim() || undefined);
 
     if (result.success) {
       setLogContent('');
       setLogTags('');
+      setLogCategory('');
+      setLogLocation('');
       refreshLogs();
     } else if (result.rejected) {
       setLogError(result.reason || '内容包含违规信息，请修改后重新发布');
@@ -736,8 +740,45 @@ export default function UserPage() {
               value={logTags}
               onChange={(e) => setLogTags(e.target.value)}
               placeholder="添加标签（选填，逗号分隔如：GEO, AI, 独立开发）"
-              className="input-field mb-4 text-sm"
+              className="input-field mb-3 text-sm"
             />
+
+            {/* 半固定式便签：分类选择 + 地理标签 */}
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              {/* 分类选择 */}
+              <div className="flex items-center gap-1.5">
+                {[
+                  { value: 'experience', label: '经历', color: 'text-amber-600 bg-amber-50 border-amber-200', activeColor: 'bg-amber-500 text-white border-amber-500' },
+                  { value: 'present', label: '此刻', color: 'text-sky-600 bg-sky-50 border-sky-200', activeColor: 'bg-sky-500 text-white border-sky-500' },
+                  { value: 'future', label: '将来', color: 'text-emerald-600 bg-emerald-50 border-emerald-200', activeColor: 'bg-emerald-500 text-white border-emerald-500' },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setLogCategory(logCategory === opt.value ? '' : opt.value)}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
+                      logCategory === opt.value
+                        ? opt.activeColor
+                        : `${opt.color} hover:opacity-80`
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {/* 地理标签输入 */}
+              <div className="relative flex-1 min-w-[140px] max-w-[200px]">
+                <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={logLocation}
+                  onChange={(e) => setLogLocation(e.target.value)}
+                  placeholder="添加位置（选填）"
+                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-full border border-gray-200 bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-300/50 focus:border-indigo-300 transition-all"
+                  maxLength={50}
+                />
+              </div>
+            </div>
             {logError && (
               <div className="mb-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
                 {logError}

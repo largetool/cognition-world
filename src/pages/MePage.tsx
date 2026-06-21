@@ -99,6 +99,8 @@ export default function MePage() {
   const [editForm, setEditForm] = useState({ tag: '', slogan: '', location: '', isPublic: true });
   const [newLogContent, setNewLogContent] = useState('');
   const [newLogTags, setNewLogTags] = useState('');
+  const [newLogCategory, setNewLogCategory] = useState<string>('');
+  const [newLogLocation, setNewLogLocation] = useState<string>('');
   const [isPublishing, setIsPublishing] = useState(false);
   const [backgroundImages, setBackgroundImages] = useState<BackgroundImage[]>([]);
   const [systemBackgrounds, setSystemBackgrounds] = useState<SystemBackground[]>(localSystemBackgrounds);
@@ -248,7 +250,7 @@ export default function MePage() {
         .filter(Boolean);
 
       // 带 AI 审核的发布
-      const result = await createLogWithModeration(profile.user_id, newLogContent.trim(), tags);
+      const result = await createLogWithModeration(profile.user_id, newLogContent.trim(), tags, newLogCategory || undefined, newLogLocation.trim() || undefined);
       if (result.rejected) {
         setError(result.reason || '内容包含违规信息，请修改后重新发布');
       } else if (result.success && result.log) {
@@ -256,6 +258,8 @@ export default function MePage() {
         setLogs(prev => [{...result.log!, canDelete: true, created_at: result.log!.created_at || new Date().toISOString()}, ...prev]);
         setNewLogContent('');
         setNewLogTags('');
+        setNewLogCategory('');
+        setNewLogLocation('');
         setPublishSuccess(true);
         setTimeout(() => setPublishSuccess(false), 6000);
         await recordPost(profile.user_id);
@@ -268,7 +272,7 @@ export default function MePage() {
     } finally {
       setIsPublishing(false);
     }
-  }, [profile, newLogContent, newLogTags]);
+  }, [profile, newLogContent, newLogTags, newLogCategory, newLogLocation]);
 
   const handleDeleteLog = useCallback(async (logId: string) => {
     if (!profile) return;
@@ -819,6 +823,42 @@ export default function MePage() {
                   className="w-full mt-2 py-2.5 px-0 bg-transparent border-t border-gray-200 pt-3 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
                   placeholder="添加标签（选填，逗号分隔如：GEO, AI, 独立开发）"
                 />
+
+                {/* 分类选择 + 地理标签 */}
+                <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-200">
+                  <div className="flex items-center gap-1.5">
+                    {[
+                      { value: 'experience', label: '经历', color: 'text-amber-600 bg-amber-50 border-amber-200', activeColor: 'bg-amber-500 text-white border-amber-500' },
+                      { value: 'present', label: '此刻', color: 'text-sky-600 bg-sky-50 border-sky-200', activeColor: 'bg-sky-500 text-white border-sky-500' },
+                      { value: 'future', label: '将来', color: 'text-emerald-600 bg-emerald-50 border-emerald-200', activeColor: 'bg-emerald-500 text-white border-emerald-500' },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setNewLogCategory(newLogCategory === opt.value ? '' : opt.value)}
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
+                          newLogCategory === opt.value
+                            ? opt.activeColor
+                            : `${opt.color} hover:opacity-80`
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="relative flex-1 min-w-[130px] max-w-[180px]">
+                    <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={newLogLocation}
+                      onChange={(e) => setNewLogLocation(e.target.value)}
+                      placeholder="添加位置（选填）"
+                      className="w-full pl-8 pr-3 py-1.5 text-xs rounded-full border border-gray-200 bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-300/50 focus:border-indigo-300 transition-all"
+                      maxLength={50}
+                    />
+                  </div>
+                </div>
+
                 {publishSuccess && (
                   <div className="mt-3 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-700">
                     发布成功！10分钟内可删除此日志，之后日志信息将被公开展示。

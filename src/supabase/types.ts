@@ -425,28 +425,34 @@ export type Database = {
       }
       logs: {
         Row: {
+          category: string | null
           content: string
           created_at: string | null
           id: string
           is_public: boolean | null
+          location: string | null
           published_at: string | null
           tags: string[] | null
           user_id: string
         }
         Insert: {
+          category?: string | null
           content: string
           created_at?: string | null
           id?: string
           is_public?: boolean | null
+          location?: string | null
           published_at?: string | null
           tags?: string[] | null
           user_id: string
         }
         Update: {
+          category?: string | null
           content?: string
           created_at?: string | null
           id?: string
           is_public?: boolean | null
+          location?: string | null
           published_at?: string | null
           tags?: string[] | null
           user_id?: string

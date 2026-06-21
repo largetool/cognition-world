@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, User, ThumbsUp, Flag } from 'lucide-react';
+import { ArrowLeft, Clock, User, ThumbsUp, Flag, MapPin } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { Footer } from '../components/Footer';
 import { supabase } from '../supabase/client';
@@ -60,6 +60,15 @@ function generateThoughtSchema(log: Log, profile: Profile, displayId: number | n
   if (log.tags && log.tags.length > 0) {
     schema.about = log.tags.map(tag => ({ '@type': 'Thing', name: tag }));
   }
+  if (log.category) {
+    schema.articleSection = CATEGORY_CONFIG[log.category]?.label || log.category;
+  }
+  if (log.location) {
+    schema.contentLocation = {
+      '@type': 'Place',
+      name: log.location,
+    };
+  }
   return schema;
 }
 
@@ -69,6 +78,26 @@ interface Log {
   content: string;
   created_at: string | null;
   tags?: string[] | null;
+  category?: string | null;
+  location?: string | null;
+}
+
+// 分类显示配置（与 LogItem 一致）
+const CATEGORY_CONFIG: Record<string, { label: string; textColor: string; bgColor: string; borderColor: string }> = {
+  experience: { label: '经历', textColor: 'text-amber-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/20' },
+  present:   { label: '此刻', textColor: 'text-sky-400',  bgColor: 'bg-sky-500/10',   borderColor: 'border-sky-500/20' },
+  future:    { label: '将来', textColor: 'text-emerald-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/20' },
+};
+
+/** 从时间戳提取"年月"显示 */
+function categoryDateLabel(dateStr: string | null | undefined): string {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}年${d.getMonth() + 1}月`;
+  } catch {
+    return '';
+  }
 }
 
 export default function ThoughtPage() {
@@ -245,12 +274,35 @@ export default function ThoughtPage() {
           <article className="bg-[var(--bg-secondary)] rounded-2xl p-6 sm:p-8" itemScope itemType="https://schema.org/SocialMediaPosting">
             <meta itemProp="headline" content={log.content.slice(0, 100)} />
             <meta itemProp="articleBody" content={log.content} />
+            {log.category && <meta itemProp="articleSection" content={CATEGORY_CONFIG[log.category]?.label || log.category} />}
+            {log.location && <meta itemProp="contentLocation" content={log.location} />}
             <div className="flex items-center gap-2 text-sm text-[var(--text-tertiary)] mb-4">
               <Clock className="w-4 h-4" />
               <time itemProp="datePublished" dateTime={log.created_at || new Date().toISOString()}>
                 {new Date(log.created_at || Date.now()).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
               </time>
             </div>
+
+            {/* 分类 + 地理位置 标签 */}
+            {(log.category || log.location) && (
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                {log.category && (() => {
+                  const cfg = CATEGORY_CONFIG[log.category];
+                  if (!cfg) return null;
+                  return (
+                    <span className={`text-xs px-3 py-1 rounded-full ${cfg.bgColor} ${cfg.textColor} border ${cfg.borderColor} font-medium`}>
+                      {cfg.label} · {categoryDateLabel(log.created_at)}
+                    </span>
+                  );
+                })()}
+                {log.location && (
+                  <span className="text-xs px-3 py-1 rounded-full bg-gray-500/10 text-gray-400 border border-gray-500/20 flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5" />
+                    {log.location}
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* 完整内容 - SEO友好 */}
             <div itemProp="text" className="prose prose-lg max-w-none text-[var(--text-primary)] whitespace-pre-wrap">

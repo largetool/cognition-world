@@ -148,6 +148,8 @@ export interface LogWithPublicStatus {
   published_at?: string | null;
   canDelete?: boolean;
   tags?: string[] | null;
+  category?: string | null;
+  location?: string | null;
 }
 
 // 获取用户日志（包含公开状态）
@@ -226,7 +228,7 @@ export async function getPublicLogs(userId: string, limit: number = 50): Promise
 }
 
 // 创建日志（10分钟后自动公开）
-export async function createLog(userId: string, content: string, tags?: string[]): Promise<{ log: Log | null; error?: string }> {
+export async function createLog(userId: string, content: string, tags?: string[], category?: string, location?: string): Promise<{ log: Log | null; error?: string }> {
   // 检查用户是否被冻结（RLS 可能拦截，用 try-catch 兜底）
   let isFrozen = false;
   try {
@@ -256,6 +258,8 @@ export async function createLog(userId: string, content: string, tags?: string[]
       is_public: false,
       published_at: publishedAt,
       tags: tags || [],
+      ...(category ? { category } : {}),
+      ...(location ? { location } : {}),
     })
     .select()
     .single();
@@ -1268,6 +1272,8 @@ export async function createLogWithModeration(
   userId: string,
   content: string,
   tags?: string[],
+  category?: string,
+  location?: string,
 ): Promise<{ success: boolean; error?: string; moderated?: boolean; rejected?: boolean; reason?: string; log?: Log }> {
   // 1. 检查是否免审用户
   const exempt = await isUserExemptFromReview(userId);
@@ -1287,7 +1293,7 @@ export async function createLogWithModeration(
   }
 
   // 3. 审核通过（或免审），创建日志
-  const { log, error: createError } = await createLog(userId, content, tags);
+  const { log, error: createError } = await createLog(userId, content, tags, category, location);
   if (createError || !log) {
     return { success: false, error: createError || '日志创建失败' };
   }
