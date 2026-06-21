@@ -26,6 +26,11 @@ const SERVICE = 'green-cip';
 /**
  * 调用阿里云 OpenAPI Signature v3（ACS3-HMAC-SHA256）
  * 文档: https://www.alibabacloud.com/help/en/sdk/product-overview/v3-request-structure-and-signature
+ *
+ * MultiModalGuard API 使用 RPC 风格：
+ * - 公共参数（Action, Version）→ x-acs-* 请求头
+ * - API 参数（Service, ServiceParameters）→ 表单编码的请求体
+ * - ServiceParameters 必须是 JSON 字符串
  */
 async function callAliyunApi(action: string, body: Record<string, any>): Promise<any> {
   const { keyId, keySecret } = getAccessKey();
@@ -33,21 +38,25 @@ async function callAliyunApi(action: string, body: Record<string, any>): Promise
     throw new Error('阿里云 AccessKey 未配置（请在环境变量中设置 ALIBABA_ACCESS_KEY_ID 和 ALIBABA_ACCESS_KEY_SECRET）');
   }
 
-  const bodyStr = JSON.stringify(body);
   const date = new Date();
-  // x-acs-date: ISO 8601 UTC, 格式 yyyy-MM-ddTHH:mm:ssZ
-  const requestDate = date.toISOString().replace(/\.\d+Z$/, 'Z');
-  // credential 中用的日期: YYYYMMDD
-  const dateStr = date.toISOString().replace(/[:\-]/g, '').substring(0, 8);
+  // x-acs-date: YYYYMMDDTHHmmssZ（无连字符冒号，UTC）
+  const requestDate = date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  // Credential 中日期: YYYYMMDD
+  const dateStr = requestDate.substring(0, 8);
   const nonce = crypto.randomUUID();
   const algorithm = 'ACS3-HMAC-SHA256';
   const host = 'green-cip.cn-shanghai.aliyuncs.com';
 
+  // 构造表单编码的请求体（API 参数通过表单传递）
+  const formParams = new URLSearchParams();
+  formParams.append('Service', (body.Service as string) || 'query_security_check_pro');
+  formParams.append('ServiceParameters', JSON.stringify(body.ServiceParameters || {}));
+  const bodyStr = formParams.toString();
+
   // Body SHA256
   const payloadHash = crypto.createHash('sha256').update(bodyStr, 'utf8').digest('hex');
 
-  // === 1. 参与签名的请求头 ===
-  // 只包含 SignedHeaders 列表中的头（官方示例：不包含 Content-Type）
+  // === 1. 参与签名的请求头（按字母排序） ===
   const signedHeaderMap: Record<string, string> = {
     'host': host,
     'x-acs-action': action,
@@ -56,7 +65,7 @@ async function callAliyunApi(action: string, body: Record<string, any>): Promise
     'x-acs-signature-nonce': nonce,
     'x-acs-version': '2022-03-02',
   };
-  const signedHeaderKeys = Object.keys(signedHeaderMap); // 已按字母排好
+  const signedHeaderKeys = Object.keys(signedHeaderMap);
 
   // 2. CanonicalHeaders
   const canonicalHeaders = signedHeaderKeys
@@ -69,7 +78,7 @@ async function callAliyunApi(action: string, body: Record<string, any>): Promise
   // 4. CanonicalRequest
   const canonicalRequest = `POST\n/\n\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
 
-  // 5. StringToSign = Algorithm + "\n" + HexEncode(SHA256(CanonicalRequest))
+  // 5. StringToSign
   const canonicalRequestHash = crypto.createHash('sha256').update(canonicalRequest, 'utf8').digest('hex');
   const stringToSign = `${algorithm}\n${canonicalRequestHash}`;
 
@@ -81,12 +90,11 @@ async function callAliyunApi(action: string, body: Record<string, any>): Promise
   const authorization = `${algorithm} Credential=${credential}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
 
   // === 发送请求 ===
-  // 实际 HTTP 请求头（Host 保持标准大写，其他用 x-acs- 前缀）
   const response = await fetch(ENDPOINT, {
     method: 'POST',
     headers: {
       'Host': host,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
       'X-Acs-Action': action,
       'X-Acs-Version': '2022-03-02',
       'X-Acs-Content-Sha256': payloadHash,
