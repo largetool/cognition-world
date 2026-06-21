@@ -350,7 +350,7 @@ serve(async (req: Request) => {
         });
       }
 
-      // 验证管理员身份
+      // 验证管理员身份（用 supabaseAdmin 绕过 RLS）
       const token = req.headers.get("authorization")?.replace("Bearer ", "") || "";
       const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
       if (authError || !user) {
@@ -376,29 +376,62 @@ serve(async (req: Request) => {
         });
       }
 
-      // 获取所有待处理的举报记录
-      const { data: reports, error: fetchError } = await supabaseAdmin
+      // 获取所有待处理的举报记录（用 user JWT，走 RLS 确保权限）
+      const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+        auth: { persistSession: false },
+      });
+      console.log("[BatchReview] 查询举报, IDs:", JSON.stringify(reportIds));
+      const { data: reports, error: fetchError } = await supabaseUser
         .from("reports")
         .select("*")
         .in("id", reportIds);
 
       if (fetchError) {
-        return new Response(JSON.stringify({ error: "查询举报记录失败" }), {
+        console.error("[BatchReview] 查询举报失败:", fetchError);
+        return new Response(JSON.stringify({ error: "查询举报记录失败", detail: fetchError.message }), {
           status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
 
+      console.log("[BatchReview] 查到举报数:", reports?.length || 0);
+
       // 批量处理
-      const results = { success: 0, failed: 0, errors: [] as string[] };
+      const results = { success: 0, failed: 0, errors: [] as string[], verified: [] as string[] };
+      const targetIds = (reports || []).map(r => r.id);
+      console.log("[BatchReview] 目标 IDs:", JSON.stringify(targetIds));
+
+      // 先批量更新状态
+      const { error: bulkUpdateError } = await supabaseAdmin
+        .from("reports")
+        .update({
+          status,
+          admin_notes: notes || null,
+          reviewed_by: user.id,
+          reviewed_at: new Date().toISOString(),
+        })
+        .in("id", targetIds);
+
+      if (bulkUpdateError) {
+        console.error("[BatchReview] 批量状态更新失败:", bulkUpdateError);
+        results.errors.push(`批量状态更新失败: ${bulkUpdateError.message}`);
+      } else {
+        console.log("[BatchReview] 批量状态更新成功, 目标数:", targetIds.length);
+      }
+
+      // 更新完后验证
+      const { data: verifyData } = await supabaseUser
+        .from("reports")
+        .select("id, status")
+        .in("id", targetIds);
+      if (verifyData) {
+        results.verified = verifyData.map(r => `${r.id}=${r.status}`);
+        console.log("[BatchReview] 验证结果:", JSON.stringify(results.verified));
+      }
+
+      // 确认违规的额外处理（隐藏内容 + 发通知）
       for (const report of reports || []) {
         try {
-          await supabaseAdmin.from("reports").update({
-            status,
-            admin_notes: notes || null,
-            reviewed_by: user.id,
-            reviewed_at: new Date().toISOString(),
-          }).eq("id", report.id);
-
           if (status === "confirmed") {
             const hideReason = notes || report.reason;
             if (report.message_table === "logs") {

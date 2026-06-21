@@ -136,6 +136,39 @@ export default function ContactPage() {
 
               <hr className="my-8 border-gray-200" />
 
+              <section id="report" className="mb-10 scroll-mt-20">
+                <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">违法和不良信息举报</h2>
+                <div className="p-5 bg-amber-50 rounded-xl border border-amber-200 mb-4">
+                  <p className="text-sm text-amber-800 mb-3">
+                    认知界致力于营造清朗的网络空间。如您发现本站用户发布的内容涉及以下类型，欢迎通过以下渠道举报：
+                  </p>
+                  <ul className="list-disc pl-6 text-sm text-amber-800 space-y-1 mb-4">
+                    <li>违反法律法规的信息</li>
+                    <li>涉黄、涉赌、涉毒内容</li>
+                    <li>侮辱、诽谤、人身攻击</li>
+                    <li>侵犯他人隐私或知识产权</li>
+                    <li>垃圾广告、恶意营销</li>
+                    <li>其他违法和不良信息</li>
+                  </ul>
+                  <p className="text-sm text-amber-800">
+                    <strong>举报邮箱：</strong>
+                    <a href="mailto:contact@uptef.com" className="text-blue-600 hover:underline">contact@uptef.com</a>
+                  </p>
+                </div>
+                <div className="p-5 bg-blue-50 rounded-xl border border-blue-200">
+                  <h3 className="text-sm font-semibold text-blue-800 mb-2">举报处理流程</h3>
+                  <ol className="list-decimal pl-6 text-sm text-blue-800 space-y-1">
+                    <li>收到举报后，管理员将在 24 小时内核实内容</li>
+                    <li>确认违规的内容将被隐藏，不再对外展示</li>
+                    <li>举报者和被举报者将收到系统通知</li>
+                    <li>如对处理结果有异议，可通过同一邮箱联系管理员申诉</li>
+                  </ol>
+                  <p className="text-xs text-blue-600 mt-3">我们承诺对举报者的个人信息严格保密。</p>
+                </div>
+              </section>
+
+              <hr className="my-8 border-gray-200" />
+
               <footer className="text-center pt-4">
                 <p className="text-xl font-bold text-[var(--text-primary)] mb-2">认知界（Cognition World）</p>
                 <p className="text-sm text-[var(--text-secondary)]">2026 年 6 月</p>

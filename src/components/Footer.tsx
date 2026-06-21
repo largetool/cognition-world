@@ -39,6 +39,9 @@ export function Footer() {
               <li>
                 <Link to="/accessibility" className={linkClass}>无障碍声明</Link>
               </li>
+              <li>
+                <Link to="/contact#report" className={`${linkClass} text-amber-600 hover:text-amber-700`}>违法和不良信息举报</Link>
+              </li>
             </ul>
           </div>
 
