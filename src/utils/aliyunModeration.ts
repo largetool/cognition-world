@@ -1,8 +1,9 @@
 // ============================================
 // 阿里云 AI 安全护栏（Guardrails）审核客户端
-// API: MultiModalGuard
-// 文档: https://help.aliyun.com/zh/icp-filing/basic-icp-service/product-overview/...
-// 版本: v1.0 - 2026-06-11
+// API: MultiModalGuard（RPC 风格，V2 HMAC-SHA1 签名）
+// 文档: https://help.aliyun.com/zh/document_detail/2932956.html
+// 签名规范: https://help.aliyun.com/zh/sdk/product-overview/v2-request-structure
+// 版本: v2.0 - 2026-06-21
 // ============================================
 
 import crypto from 'crypto';
@@ -22,76 +23,81 @@ function getAccessKey() {
 const ENDPOINT = 'https://green-cip.cn-shanghai.aliyuncs.com';
 
 /**
- * 调用阿里云 OpenAPI Signature v3（ACS3-HMAC-SHA256）
- * 文档: https://www.alibabacloud.com/help/en/sdk/product-overview/v3-request-structure-and-signature
- *
- * MultiModalGuard API 使用 JSON 格式请求体
+ * 阿里云 OpenAPI V2 RPC 签名（百分号编码）
+ * 文档: https://help.aliyun.com/zh/sdk/product-overview/v2-request-structure
  */
-async function callAliyunApi(action: string, body: Record<string, any>): Promise<any> {
+function percentEncode(str: string): string {
+  return encodeURIComponent(str)
+    .replace(/\+/g, '%20')
+    .replace(/\*/g, '%2A')
+    .replace(/%7E/g, '~');
+}
+
+/**
+ * 调用 MultiModalGuard API（V2 RPC 风格，表单编码请求体）
+ * 参数说明：
+ * - Action: MultiModalGuard
+ * - Version: 2022-03-02
+ * - Service: query_security_check / query_security_check_pro
+ * - ServiceParameters: JSON 字符串（必须 stringify）
+ * - 认证参数：AccessKeyId, Timestamp, SignatureMethod, SignatureNonce, SignatureVersion, Format
+ */
+async function callAliyunApi(service: string, serviceParams: Record<string, any>): Promise<any> {
   const { keyId, keySecret } = getAccessKey();
   if (!keyId || !keySecret) {
     throw new Error('阿里云 AccessKey 未配置（请在环境变量中设置 ALIBABA_ACCESS_KEY_ID 和 ALIBABA_ACCESS_KEY_SECRET）');
   }
 
   const date = new Date();
-  // x-acs-date: YYYYMMDDTHHmmssZ（无连字符冒号，UTC）
-  const requestDate = date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  // Timestamp 格式: yyyy-MM-ddTHH:mm:ssZ（ISO 8601 UTC，含连字符冒号）
+  const timestamp = date.toISOString().replace(/\.\d+Z$/, 'Z');
   const nonce = crypto.randomUUID();
-  const algorithm = 'ACS3-HMAC-SHA256';
-  const host = 'green-cip.cn-shanghai.aliyuncs.com';
 
-  // JSON 请求体（MultiModalGuard API 使用 JSON 格式）
-  const bodyStr = JSON.stringify(body);
-
-  // Body SHA256
-  const payloadHash = crypto.createHash('sha256').update(bodyStr, 'utf8').digest('hex');
-
-  // === 1. 参与签名的请求头（按字母排序） ===
-  const signedHeaderMap: Record<string, string> = {
-    'host': host,
-    'x-acs-action': action,
-    'x-acs-content-sha256': payloadHash,
-    'x-acs-date': requestDate,
-    'x-acs-signature-nonce': nonce,
-    'x-acs-version': '2022-03-02',
+  // 构建参数字典（包括 API 参数和认证参数）
+  const params: Record<string, string> = {
+    'Action': 'MultiModalGuard',
+    'Version': '2022-03-02',
+    'AccessKeyId': keyId,
+    'Timestamp': timestamp,
+    'SignatureMethod': 'HMAC-SHA1',
+    'SignatureVersion': '1.0',
+    'SignatureNonce': nonce,
+    'Format': 'JSON',
+    'Service': service,
+    'ServiceParameters': JSON.stringify(serviceParams),
   };
-  const signedHeaderKeys = Object.keys(signedHeaderMap);
 
-  // 2. CanonicalHeaders
-  const canonicalHeaders = signedHeaderKeys
-    .map(k => `${k}:${signedHeaderMap[k].trim()}`)
-    .join('\n') + '\n';
+  // === V2 RPC 签名计算 ===
 
-  // 3. SignedHeaders
-  const signedHeaders = signedHeaderKeys.join(';');
+  // 1. 按参数名排序
+  const sortedKeys = Object.keys(params).sort();
 
-  // 4. CanonicalRequest
-  const canonicalRequest = `POST\n/\n\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
+  // 2. 构造 CanonicalizedQueryString：percentEncode(key)=percentEncode(value)&...
+  const canonicalizedQuery = sortedKeys
+    .map(k => percentEncode(k) + '=' + percentEncode(params[k]))
+    .join('&');
 
-  // 5. StringToSign
-  const canonicalRequestHash = crypto.createHash('sha256').update(canonicalRequest, 'utf8').digest('hex');
-  const stringToSign = `${algorithm}\n${canonicalRequestHash}`;
+  // 3. StringToSign = HTTPMethod + "&" + percentEncode("/") + "&" + percentEncode(canonicalizedQuery)
+  const stringToSign = 'POST&' + percentEncode('/') + '&' + percentEncode(canonicalizedQuery);
 
-  // 6. Signature = HexEncode(HMAC-SHA256(AccessKeySecret, StringToSign))
-  const signature = crypto.createHmac('sha256', keySecret).update(stringToSign, 'utf8').digest('hex');
+  // 4. Signature = Base64(HMAC-SHA1(AccessKeySecret + "&", StringToSign))
+  const key = keySecret + '&';
+  const signature = crypto.createHmac('sha1', key).update(stringToSign, 'utf8').digest('base64');
 
-  // 7. Authorization（V3 简单格式：只带 AccessKeyId，不带 region/service scope）
-  const authorization = `${algorithm} Credential=${keyId}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+  // 5. 添加 Signature 到参数
+  params['Signature'] = signature;
 
-  // === 发送请求 ===
+  // === 发送表单编码的 POST 请求 ===
+  const formBody = sortedKeys
+    .map(k => percentEncode(k) + '=' + percentEncode(params[k]))
+    .join('&');
+
   const response = await fetch(ENDPOINT, {
     method: 'POST',
     headers: {
-      'Host': host,
-      'Content-Type': 'application/json',
-      'X-Acs-Action': action,
-      'X-Acs-Version': '2022-03-02',
-      'X-Acs-Content-Sha256': payloadHash,
-      'X-Acs-Date': requestDate,
-      'X-Acs-Signature-Nonce': nonce,
-      'Authorization': authorization,
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: bodyStr,
+    body: formBody,
   });
 
   const result = await response.json();
@@ -120,12 +126,7 @@ export async function checkTextModeration(
   content: string,
   service: ModerationService = 'query_security_check',
 ): Promise<ModerationResult> {
-  const result = await callAliyunApi('MultiModalGuard', {
-    Service: service,
-    ServiceParameters: {
-      content,
-    },
-  });
+  const result = await callAliyunApi(service, { content });
 
   if (result.Code === 200) {
     const data = result.Data || {};
@@ -156,10 +157,7 @@ export async function checkTextModeration(
  */
 export async function testConnection(): Promise<{ success: boolean; message: string }> {
   try {
-    const result = await callAliyunApi('MultiModalGuard', {
-      Service: 'query_security_check',
-      ServiceParameters: { content: 'test' },
-    });
+    const result = await callAliyunApi('query_security_check', { content: 'test' });
     if (result.Code === 200) {
       return { success: true, message: `连接成功，审核结果：${result.Data?.Suggestion || 'unknown'}` };
     }
