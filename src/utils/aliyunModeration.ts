@@ -37,7 +37,8 @@ async function callAliyunApi(action: string, body: Record<string, any>): Promise
   const bodyStr = JSON.stringify(body);
   const date = new Date();
   const dateStr = date.toISOString().replace(/[:\-]/g, '').substring(0, 8); // YYYYMMDD
-  const requestDate = date.toUTCString();
+  // 阿里云 Signature v3 要求 x-acs-date 为 YYYYMMDDTHHmmssZ 格式
+  const requestDate = date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
   const nonce = crypto.randomUUID();
 
   // === 构造签名 ===
