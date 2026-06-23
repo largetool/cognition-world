@@ -59,9 +59,9 @@ const CST_MS = 8 * 60 * 60 * 1000; // UTC+8 偏移毫秒
 export function parseSupabaseTime(date: string | Date): Date {
   if (date instanceof Date) return date;
   if (typeof date === 'string') {
-    // 匹配 ISO 8601 无时区标记：2026-06-19T02:00:00 或 2026-06-19 02:00:00
     const trimmed = date.trim();
-    if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}$/.test(trimmed)) {
+    // 匹配 ISO 8601 无时区标记（含毫秒）：2026-06-19T10:13:00 或 2026-06-19T10:13:00.123
+    if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(trimmed)) {
       return new Date(trimmed.replace(' ', 'T') + 'Z');
     }
   }
