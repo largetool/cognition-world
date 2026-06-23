@@ -88,6 +88,37 @@ interface LogData {
   canDelete?: boolean;
   published_at?: string | null;
   tags?: string[] | null;
+  category?: string | null;
+  location?: string | null;
+}
+
+// 分类显示配置（与 LogItem 一致）
+const CATEGORY_CONFIG: Record<string, { label: string; textColor: string; bgColor: string; borderColor: string }> = {
+  experience: { label: '经历', textColor: 'text-amber-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/20' },
+  present:   { label: '此刻', textColor: 'text-sky-400',  bgColor: 'bg-sky-500/10',   borderColor: 'border-sky-500/20' },
+  future:    { label: '将来', textColor: 'text-emerald-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/20' },
+};
+
+/** 手动转 CST(UTC+8) 格式化时间，避免 ICU 依赖问题 */
+function formatTimeCST(dateStr: string | null | undefined): string {
+  if (!dateStr) return '2025-05-01';
+  const date = parseSupabaseTime(dateStr);
+  if (isNaN(date.getTime())) return '2025-05-01';
+  const cst = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+  const month = String(cst.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(cst.getUTCDate()).padStart(2, '0');
+  const hours = String(cst.getUTCHours()).padStart(2, '0');
+  const minutes = String(cst.getUTCMinutes()).padStart(2, '0');
+  return `${month}/${day} ${hours}:${minutes}`;
+}
+
+/** 从时间戳提取"年月"显示，用于分类时间绑定 */
+function categoryDateLabel(dateStr: string | null | undefined): string {
+  if (!dateStr) return '';
+  const d = parseSupabaseTime(dateStr);
+  if (isNaN(d.getTime())) return '';
+  const cst = new Date(d.getTime() + 8 * 60 * 60 * 1000);
+  return `${cst.getUTCFullYear()}年${cst.getUTCMonth() + 1}月`;
 }
 
 export default function MePage() {
@@ -915,16 +946,32 @@ export default function MePage() {
                         <div className="w-5 h-5 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                           <Clock className="w-3 h-3 text-gray-500" />
                         </div>
-                        <time>{(() => {
-                          const dateStr = log.created_at;
-                          const date = dateStr ? parseSupabaseTime(dateStr) : new Date('2025-05-01');
-                          if (isNaN(date.getTime())) return '2025-05-01';
-                          return date.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Shanghai' });
-                        })()}</time>
+                        <time>{formatTimeCST(log.created_at)}</time>
                       </div>
                       <p className="text-[0.9375rem] text-gray-800 leading-relaxed whitespace-pre-wrap">
                         {log.content}
                       </p>
+                      {/* 分类 + 地理位置 */}
+                      {(log.category || log.location) && (
+                        <div className="flex flex-wrap items-center gap-2 mt-3">
+                          {log.category && (() => {
+                            const cfg = CATEGORY_CONFIG[log.category];
+                            if (!cfg) return null;
+                            return (
+                              <span className={`text-xs px-2.5 py-0.5 rounded-full ${cfg.bgColor} ${cfg.textColor} border ${cfg.borderColor} font-medium`}>
+                                {cfg.label} · {categoryDateLabel(log.created_at)}
+                              </span>
+                            );
+                          })()}
+                          {log.location && (
+                            <span className="text-xs px-2.5 py-0.5 rounded-full bg-gray-500/10 text-gray-400 border border-gray-500/20 flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {log.location}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {/* 标签 */}
                       {log.tags && log.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-3">
                           {log.tags.map((tag: string, ti: number) => (
