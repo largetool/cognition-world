@@ -96,6 +96,17 @@ export function AdminPage() {
  const [isSearching, setIsSearching] = useState(false);
  const [isLoadingTrusted, setIsLoadingTrusted] = useState(false);
 
+ // 管理员留言板（guestbook_messages）状态
+ const [guestbookMessages, setGuestbookMessages] = useState<Array<{
+   id: string;
+   user_id: string;
+   username: string;
+   content: string;
+   is_read: boolean | null;
+   created_at: string;
+ }>>([]);
+ const [isLoadingGuestbook, setIsLoadingGuestbook] = useState(false);
+
  useEffect(() => {
  if (authLoading) return;
  const checkAuth = async () => {
@@ -116,6 +127,13 @@ export function AdminPage() {
 useEffect(() => {
  if (activeTab === 'reports') {
   loadReports();
+ }
+}, [activeTab]);
+
+// 切换到留言板 tab 时自动加载管理员留言
+useEffect(() => {
+ if (activeTab === 'messages') {
+  loadGuestbookMessages();
  }
 }, [activeTab]);
 
@@ -160,6 +178,49 @@ useEffect(() => {
     const users = await getTrustedUsers();
     setTrustedUsers(users);
     setIsLoadingTrusted(false);
+  };
+
+  // 加载管理员留言板消息
+  const loadGuestbookMessages = async () => {
+    setIsLoadingGuestbook(true);
+    try {
+      const { data, error } = await supabase
+        .from('guestbook_messages')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(200);
+
+      if (error) {
+        console.error('加载留言失败:', error);
+        setGuestbookMessages([]);
+      } else {
+        setGuestbookMessages((data as any[]) || []);
+      }
+    } catch (err) {
+      console.error('加载留言失败:', err);
+      setGuestbookMessages([]);
+    }
+    setIsLoadingGuestbook(false);
+  };
+
+  // 标记留言为已读
+  const markGuestbookAsRead = async (messageId: string) => {
+    try {
+      const { error } = await supabase
+        .from('guestbook_messages')
+        .update({ is_read: true })
+        .eq('id', messageId);
+
+      if (error) {
+        console.error('标记已读失败:', error);
+      } else {
+        setGuestbookMessages(prev =>
+          prev.map(m => m.id === messageId ? { ...m, is_read: true } : m)
+        );
+      }
+    } catch (err) {
+      console.error('标记已读失败:', err);
+    }
   };
 
   // 加载举报列表
@@ -595,6 +656,53 @@ useEffect(() => {
  <p className="text-sm text-amber-700 flex items-center gap-2"><AlertTriangle className="w-4 h-4" />注意：用户间留言板功能涉及用户隐私，请谨慎开启</p>
  </div>
  </div>
+ </GlassCard>
+ <GlassCard>
+ <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2"><MessageSquare className="w-5 h-5" />给管理员的留言</h2>
+ <p className="text-sm text-[var(--text-secondary)] mb-4">用户通过 /guestbook 发送的私密留言，仅管理员可见</p>
+ {isLoadingGuestbook ? (
+ <div className="text-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)] mx-auto" /></div>
+ ) : guestbookMessages.length > 0 ? (
+ <div className="space-y-3 max-h-[600px] overflow-y-auto">
+ {guestbookMessages.map((msg) => (
+ <div key={msg.id} className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-light)]">
+ <div className="flex items-start justify-between mb-2">
+ <div className="flex items-center gap-2">
+ <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+ <span className="text-purple-600 font-bold text-sm">{msg.username.charAt(0).toUpperCase()}</span>
+ </div>
+ <div>
+ <span className="font-medium text-[var(--text-primary)] text-sm">{msg.username}</span>
+ <p className="text-xs text-[var(--text-tertiary)]">
+ {new Date(msg.created_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
+ </p>
+ </div>
+ </div>
+ <div className="flex items-center gap-2">
+ {!msg.is_read && (
+ <button
+ onClick={() => markGuestbookAsRead(msg.id)}
+ className="px-2 py-1 rounded-lg bg-purple-100 text-purple-700 text-xs hover:bg-purple-200 transition-colors"
+ >
+ 标为已读
+ </button>
+ )}
+ <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${msg.is_read ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+ {msg.is_read ? '已读' : '未读'}
+ </span>
+ </div>
+ </div>
+ <p className="text-sm text-[var(--text-primary)] whitespace-pre-wrap">{msg.content}</p>
+ </div>
+ ))}
+ </div>
+ ) : (
+ <div className="text-center py-12">
+ <MessageSquare className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+ <p className="text-[var(--text-secondary)]">暂无留言</p>
+ <p className="text-sm text-[var(--text-tertiary)] mt-1">用户发送的留言会显示在这里</p>
+ </div>
+ )}
  </GlassCard>
  </div>
  )}
