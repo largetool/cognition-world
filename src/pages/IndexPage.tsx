@@ -214,6 +214,25 @@ export default function IndexPage() {
       {/* ====== GEO 平台介绍模块 ====== */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
         <div className="max-w-4xl mx-auto">
+          {/* 用户 Slogan */}
+          {randomUser ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <GlassCard className="text-center py-12 mb-12">
+                <blockquote className="text-2xl sm:text-3xl font-medium text-[var(--text-primary)] mb-4">
+                  "{randomUser.slogan}"
+                </blockquote>
+                <p className="text-xl sm:text-2xl font-bold text-[var(--text-secondary)]">
+                  — {randomUser.username}
+                </p>
+              </GlassCard>
+            </motion.div>
+          ) : null}
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -313,6 +332,7 @@ export default function IndexPage() {
           >
             面向搜索引擎和 LLM 优化 · Schema.org 结构化数据 · 个人知识图谱 · AI 可引用数字身份
           </motion.p>
+
         </div>
       </section>
 
@@ -326,17 +346,6 @@ export default function IndexPage() {
             transition={{ duration: 0.6 }}
             className="text-center"
           >
-            {randomUser ? (
-              <GlassCard className="text-center py-12 mb-12">
-                <blockquote className="text-2xl sm:text-3xl font-medium text-[var(--text-primary)] mb-4">
-                  "{randomUser.slogan}"
-                </blockquote>
-                <p className="text-xl sm:text-2xl font-bold text-[var(--text-secondary)]">
-                  — {randomUser.username}
-                </p>
-              </GlassCard>
-            ) : null}
-
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
