@@ -346,26 +346,31 @@ export default function GuestbookPage() {
                     {error}
                   </div>
                 )}
-                <form onSubmit={handleSubmit} className="flex gap-3">
-                  <input
-                    type="text"
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  <textarea
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="写下你想对管理员说的话..."
                     maxLength={1000}
-                    className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
+                    rows={8}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all resize-y"
                   />
-                  <button
-                    type="submit"
-                    disabled={!canSubmit || submitting}
-                    className="px-4 py-3 bg-purple-500 text-white rounded-xl hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                  >
-                    {submitting ? (
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4" />
-                    )}
-                  </button>
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={!canSubmit || submitting}
+                      className="px-6 py-3 bg-purple-500 text-white rounded-xl hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                    >
+                      {submitting ? (
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          发送留言
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </form>
                 <div className="flex items-center justify-between mt-2">
                   <p className="text-xs text-purple-600">
