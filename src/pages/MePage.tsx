@@ -143,7 +143,7 @@ export default function MePage() {
   const [bgError, setBgError] = useState(false);
 
   // 外站链接管理
-  const [showLinkSettings, setShowLinkSettings] = useState(false);
+  const [showLinksInline, setShowLinksInline] = useState(false);
   const [externalLinks, setExternalLinks] = useState<ExternalLink[]>([]);
   const [linkPlatform, setLinkPlatform] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
@@ -499,20 +499,6 @@ export default function MePage() {
                 <Image className="w-5 h-5" />
               </motion.button>
 
-              {/* 外站链接按钮 */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowLinkSettings(!showLinkSettings)}
-                className={`p-2.5 rounded-xl transition-colors ${showLinkSettings ? 'text-indigo-600 bg-indigo-50' : 'text-gray-500 hover:text-indigo-600 hover:bg-indigo-50'}`}
-                title="管理外站链接"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                </svg>
-              </motion.button>
-
               {/* 编辑按钮 */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -822,169 +808,7 @@ export default function MePage() {
               )}
             </AnimatePresence>
 
-            {/* ===== 外站链接管理面板 ===== */}
-            <AnimatePresence>
-              {showLinkSettings && (
-                <motion.div
-                  className="mb-8"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                >
-                  <div className="rounded-2xl p-6 bg-white/70 backdrop-blur-2xl border border-white/90 shadow-xl shadow-slate-200/60">
-                    <div className="flex items-center justify-between mb-5">
-                      <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center shadow-md">
-                          <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                          </svg>
-                        </div>
-                        外站链接
-                      </h3>
-                      <button
-                        onClick={() => setShowLinkSettings(false)}
-                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
-
-                    <div className="space-y-3">
-                      {/* 已配置的链接列表 */}
-                      {externalLinks.length > 0 ? (
-                        <div className="space-y-2 mb-4">
-                          {externalLinks.map((link, idx) => {
-                            const cfg = getPlatformConfig(link.platform);
-                            return (
-                              <div
-                                key={link.platform}
-                                className="flex items-center gap-3 p-3 bg-gray-50/80 rounded-xl border border-gray-100"
-                              >
-                                <div
-                                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
-                                  style={{ backgroundColor: cfg?.color || '#6366F1' }}
-                                >
-                                  {cfg?.icon || '?'}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-sm font-medium text-gray-800">{cfg?.name || link.platform}</div>
-                                  <div className="text-xs text-gray-400 truncate">{link.url}</div>
-                                </div>
-                                <button
-                                  onClick={() => {
-                                    setExternalLinks(prev => prev.filter((_, i) => i !== idx));
-                                    setLinkError('');
-                                  }}
-                                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0"
-                                  title="删除"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div className="text-center py-6 mb-2">
-                          <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-br from-indigo-100 to-indigo-200 flex items-center justify-center">
-                            <svg className="w-5 h-5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                            </svg>
-                          </div>
-                          <p className="text-sm text-gray-400">还没有添加外站链接</p>
-                          <p className="text-xs text-gray-300 mt-1">添加你在其他平台的公开主页，让更多人找到你</p>
-                        </div>
-                      )}
-
-                      {/* 添加新链接 */}
-                      <div className="border-t border-gray-100 pt-4">
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <select
-                            value={linkPlatform}
-                            onChange={(e) => { setLinkPlatform(e.target.value); setLinkError(''); }}
-                            className="px-3 py-2.5 bg-white/80 backdrop-blur-sm border border-gray-200/80 rounded-xl text-sm text-gray-700 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
-                          >
-                            <option value="">选择平台</option>
-                            {EXTERNAL_LINK_PLATFORMS.map(p => (
-                              <option key={p.key} value={p.key} disabled={externalLinks.some(l => l.platform === p.key)}>
-                                {p.name} {externalLinks.some(l => l.platform === p.key) ? '(已添加)' : ''}
-                              </option>
-                            ))}
-                          </select>
-                          <input
-                            type="url"
-                            value={linkUrl}
-                            onChange={(e) => { setLinkUrl(e.target.value); setLinkError(''); }}
-                            placeholder="输入你的公开主页链接"
-                            className="flex-1 px-4 py-2.5 bg-white/80 backdrop-blur-sm border border-gray-200/80 rounded-xl text-sm text-gray-800 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm"
-                          />
-                          <button
-                            onClick={() => {
-                              if (!linkPlatform) { setLinkError('请选择平台'); return; }
-                              if (!linkUrl.trim()) { setLinkError('请输入链接'); return; }
-                              if (externalLinks.some(l => l.platform === linkPlatform)) {
-                                setLinkError('该平台已添加');
-                                return;
-                              }
-                              setExternalLinks(prev => [...prev, { platform: linkPlatform, url: linkUrl.trim() }]);
-                              setLinkPlatform('');
-                              setLinkUrl('');
-                              setLinkError('');
-                            }}
-                            className="px-4 py-2.5 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 text-sm font-medium transition-all shrink-0"
-                          >
-                            添加
-                          </button>
-                        </div>
-                        {linkError && (
-                          <p className="text-xs text-red-500 mt-2">{linkError}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* 保存按钮 */}
-                    <div className="flex gap-3 mt-6">
-                      <button
-                        onClick={() => setShowLinkSettings(false)}
-                        className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 text-sm font-medium transition-colors"
-                      >
-                        取消
-                      </button>
-                      <button
-                        onClick={async () => {
-                          if (!profile) return;
-                          setLinkError('');
-                          try {
-                            const { error: updateError } = await supabase
-                              .from('profiles')
-                              .update({ external_links: JSON.stringify(externalLinks), updated_at: new Date().toISOString() })
-                              .eq('id', profile.id);
-                            if (updateError) {
-                              setLinkError('保存失败：' + updateError.message);
-                            } else {
-                              setShowLinkSettings(false);
-                              // 更新本地 profile 状态
-                              setProfile((prev: any) => ({ ...prev, external_links: externalLinks }));
-                            }
-                          } catch (err) {
-                            setLinkError('保存失败，请重试');
-                            console.error('保存外站链接失败:', err);
-                          }
-                        }}
-                        className="flex-1 px-4 py-2.5 bg-[#1a1a1a] text-white rounded-xl hover:bg-[#333] flex items-center justify-center gap-2 text-sm transition-colors"
-                      >
-                        <Save className="w-4 h-4" />
-                        保存
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {!isEditing && !showBgSettings && !showLinkSettings && (
+            {!isEditing && !showBgSettings && (
               <motion.div
                 className="rounded-2xl p-5 mb-8 bg-white/60 backdrop-blur-xl border border-white/80 shadow-lg shadow-slate-200/50"
                 initial={{ opacity: 0, y: 20 }}
@@ -1019,6 +843,143 @@ export default function MePage() {
                         </div>
                         <span className="text-gray-500 font-medium">私密状态</span>
                       </>
+                    )}
+                  </div>
+
+                  {/* ——— 外站链接 ——— */}
+                  <div className="border-t border-gray-100 pt-3 mt-3">
+                    {/* 已有链接展示 */}
+                    {externalLinks.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {externalLinks.map((link) => {
+                          const cfg = getPlatformConfig(link.platform);
+                          return (
+                            <div
+                              key={link.platform}
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-indigo-50/80 border border-indigo-100 text-xs"
+                            >
+                              <div
+                                className="w-5 h-5 rounded flex items-center justify-center text-white text-[9px] font-bold shrink-0"
+                                style={{ backgroundColor: cfg?.color || '#6366F1' }}
+                              >
+                                {cfg?.icon || '?'}
+                              </div>
+                              <span className="text-indigo-700 font-medium truncate max-w-[100px]">{link.url.replace(/https?:\/\//, '')}</span>
+                              <button
+                                onClick={() => setExternalLinks(prev => prev.filter(l => l.platform !== link.platform))}
+                                className="p-0.5 text-indigo-300 hover:text-red-500 transition-colors"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* 展开/收起按钮 */}
+                    <button
+                      onClick={() => { setShowLinksInline(!showLinksInline); setLinkError(''); }}
+                      className="w-full flex items-center gap-3 text-sm text-gray-400 hover:text-indigo-600 transition-colors group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-100 to-indigo-200 flex items-center justify-center group-hover:from-indigo-200 group-hover:to-indigo-300 transition-colors">
+                        <svg className="w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                        </svg>
+                      </div>
+                      <span className="font-medium">{externalLinks.length > 0 ? '管理外站链接' : '添加个人链接'}</span>
+                      <svg
+                        className={`w-4 h-4 ml-auto transition-transform ${showLinksInline ? 'rotate-180' : ''}`}
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                      >
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </button>
+
+                    {/* 内联管理面板 */}
+                    {showLinksInline && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mt-3 pt-3 border-t border-gray-100"
+                      >
+                        {/* 添加新链接 */}
+                        <div className="flex flex-col sm:flex-row gap-2 mb-3">
+                          <select
+                            value={linkPlatform}
+                            onChange={(e) => { setLinkPlatform(e.target.value); setLinkError(''); }}
+                            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-700 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                          >
+                            <option value="">选择平台</option>
+                            {EXTERNAL_LINK_PLATFORMS.map(p => (
+                              <option key={p.key} value={p.key} disabled={externalLinks.some(l => l.platform === p.key)}>
+                                {p.name} {externalLinks.some(l => l.platform === p.key) ? '(已添加)' : ''}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            type="url"
+                            value={linkUrl}
+                            onChange={(e) => { setLinkUrl(e.target.value); setLinkError(''); }}
+                            placeholder="输入你的公开主页链接"
+                            className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-700 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                          />
+                          <button
+                            onClick={() => {
+                              if (!linkPlatform) { setLinkError('请选择平台'); return; }
+                              if (!linkUrl.trim()) { setLinkError('请输入链接'); return; }
+                              if (externalLinks.some(l => l.platform === linkPlatform)) {
+                                setLinkError('该平台已添加'); return;
+                              }
+                              setExternalLinks(prev => [...prev, { platform: linkPlatform, url: linkUrl.trim() }]);
+                              setLinkPlatform('');
+                              setLinkUrl('');
+                              setLinkError('');
+                            }}
+                            className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 text-xs font-medium transition-colors shrink-0"
+                          >
+                            添加
+                          </button>
+                        </div>
+                        {linkError && <p className="text-xs text-red-500 mb-2">{linkError}</p>}
+
+                        {/* 保存按钮 */}
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => { setShowLinksInline(false); setLinkError(''); }}
+                            className="px-4 py-2 border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 text-xs font-medium transition-colors"
+                          >
+                            取消
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (!profile) return;
+                              setLinkError('');
+                              try {
+                                const { error: updateError } = await supabase
+                                  .from('profiles')
+                                  .update({ external_links: JSON.stringify(externalLinks), updated_at: new Date().toISOString() })
+                                  .eq('id', profile.id);
+                                if (updateError) {
+                                  setLinkError('保存失败：' + updateError.message);
+                                } else {
+                                  setShowLinksInline(false);
+                                  setProfile((prev: any) => ({ ...prev, external_links: externalLinks }));
+                                }
+                              } catch (err) {
+                                setLinkError('保存失败，请重试');
+                                console.error('保存外站链接失败:', err);
+                              }
+                            }}
+                            className="px-4 py-2 bg-[#1a1a1a] text-white rounded-lg hover:bg-[#333] text-xs font-medium transition-colors flex items-center gap-1"
+                          >
+                            <Save className="w-3 h-3" />
+                            保存
+                          </button>
+                        </div>
+                      </motion.div>
                     )}
                   </div>
                 </div>
