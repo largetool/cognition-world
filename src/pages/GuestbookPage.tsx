@@ -76,20 +76,14 @@ export default function GuestbookPage() {
     }
   };
 
-  // 检查资格
+  // 检查资格（直接用 user 对象，避免 profiles 表查询）
   const checkEligibility = async () => {
     if (!user) return;
 
     try {
-      // 获取用户注册时间
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('created_at')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (profile?.created_at) {
-        setRegisterDate(new Date(profile.created_at));
+      // user 本身就有 profiles 表的完整数据
+      if (user.created_at) {
+        setRegisterDate(new Date(user.created_at));
       }
 
       // 计算 24 小时内的留言数
