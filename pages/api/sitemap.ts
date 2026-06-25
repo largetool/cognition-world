@@ -1,17 +1,31 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-const STATIC_PAGES = [
-  { loc: 'https://uptef.com/', changefreq: 'daily', priority: '1.0' },
-  { loc: 'https://uptef.com/whitepaper', changefreq: 'weekly', priority: '0.8' },
-  { loc: 'https://uptef.com/terms', changefreq: 'monthly', priority: '0.4' },
-  { loc: 'https://uptef.com/privacy', changefreq: 'monthly', priority: '0.4' },
-  { loc: 'https://uptef.com/about', changefreq: 'monthly', priority: '0.6' },
-  { loc: 'https://uptef.com/guestbook', changefreq: 'daily', priority: '0.5' },
-  { loc: 'https://uptef.com/example/sample', changefreq: 'monthly', priority: '0.6' },
-];
+const CST_OFFSET = 8 * 60 * 60 * 1000;
+
+/** 获取当前 CST 年月 */
+function getCurrentCSTDate() {
+  const now = new Date();
+  const cst = new Date(now.getTime() + CST_OFFSET);
+  return { year: cst.getUTCFullYear(), month: cst.getUTCMonth() + 1 };
+}
+
+function getStaticPages() {
+  const { year, month } = getCurrentCSTDate();
+  return [
+    { loc: 'https://uptef.com/', changefreq: 'daily', priority: '1.0' },
+    { loc: 'https://uptef.com/whitepaper', changefreq: 'weekly', priority: '0.8' },
+    { loc: 'https://uptef.com/terms', changefreq: 'monthly', priority: '0.4' },
+    { loc: 'https://uptef.com/privacy', changefreq: 'monthly', priority: '0.4' },
+    { loc: 'https://uptef.com/about', changefreq: 'monthly', priority: '0.6' },
+    { loc: 'https://uptef.com/guestbook', changefreq: 'daily', priority: '0.5' },
+    { loc: 'https://uptef.com/example/sample', changefreq: 'monthly', priority: '0.6' },
+    // 日志日历首页（当前月）
+    { loc: `https://uptef.com/logs/${year}/${month}`, changefreq: 'daily', priority: '0.7' },
+  ];
+}
 
 function generateSitemapXml(userUrls: string[]): string {
-  const staticEntries = STATIC_PAGES.map(
+  const staticEntries = getStaticPages().map(
     (p) => `  <url>
     <loc>${p.loc}</loc>
     <changefreq>${p.changefreq}</changefreq>

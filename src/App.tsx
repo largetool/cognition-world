@@ -18,6 +18,8 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import AccessibilityPage from './pages/AccessibilityPage';
 import GuestbookPage from './pages/GuestbookPage';
+import LogsMonthPage from './pages/LogsMonthPage';
+import LogsDayPage from './pages/LogsDayPage';
 
 // 纯 Routes 组件，不包含 BrowserRouter — 由 _app.tsx 注入路由上下文
 export default function AppRoutes() {
@@ -40,6 +42,9 @@ export default function AppRoutes() {
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/accessibility" element={<AccessibilityPage />} />
       <Route path="/guestbook" element={<GuestbookPage />} />
+	      {/* 日志日历路由（必须在 /:displayId 之前） */}
+	      <Route path="/logs/:year/:month" element={<LogsMonthPage />} />
+	      <Route path="/logs/:year/:month/:day" element={<LogsDayPage />} />
       <Route path="/:displayId" element={<UserPage />} />
       <Route path="/:displayId/thought/:thoughtId" element={<ThoughtPage />} />
 
@@ -59,6 +64,8 @@ export default function AppRoutes() {
       <Route path="/en/contact" element={<ContactPage />} />
       <Route path="/en/accessibility" element={<AccessibilityPage />} />
       <Route path="/en/guestbook" element={<GuestbookPage />} />
+	      <Route path="/en/logs/:year/:month" element={<LogsMonthPage />} />
+	      <Route path="/en/logs/:year/:month/:day" element={<LogsDayPage />} />
       <Route path="/en/:displayId" element={<UserPage />} />
       <Route path="/en/:displayId/thought/:thoughtId" element={<ThoughtPage />} />
 

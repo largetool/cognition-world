@@ -1,17 +1,22 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Globe, Shield, Zap, FileText } from 'lucide-react';
+import { CalendarDays, Globe, Shield, Zap, FileText } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { FeatureCard } from '../components/FeatureCard';
 import { getSystemStats, getRandomApprovedSlogan } from '../utils/storage';
+import CalendarWidget from '../components/CalendarWidget';
 import { GlassCard } from '../components/GlassCard';
 import { getDefaultSEO, APP_CONFIG } from '../types';
 import { generateBreadcrumbList, breadcrumbs, HOME_FAQ } from '../utils/seo';
 import { t, getCurrentLanguage } from '../locales';
 import { useAuth } from '../hooks/useAuth';
+
+const CST_OFFSET = 8 * 60 * 60 * 1000;
+const SUPABASE_URL = 'https://nbgsichilfrjsopnnvia.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iZ3NpY2hpbGZyanNvcG5udmlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMTE1MjMsImV4cCI6MjA5NTg4NzUyM30.fWr-ZoDhirVgsKGsL8BWeP36iQ235GuQ4iF_GYK0RH0';
 
 const heroBg = '/assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg';
 
@@ -22,6 +27,13 @@ export default function IndexPage() {
   const [stats, setStats] = useState({ userCount: 0, logCount: 0 });
   const [randomUser, setRandomUser] = useState<{ username: string; slogan: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // 日历数据
+  const [monthData, setMonthData] = useState<{ dayCounts: Record<number, number>; totalCount: number } | null>(null);
+
+  // 获取当前 CST 年月
+  const cstNow = new Date(new Date().getTime() + CST_OFFSET);
+  const curYear = cstNow.getUTCFullYear();
+  const curMonth = cstNow.getUTCMonth() + 1;
 
   const loadData = useCallback(async () => {
     try {
@@ -31,12 +43,46 @@ export default function IndexPage() {
       ]);
       setStats(statsData);
       setRandomUser(userData);
+
+      // 获取当月日历数据（首页展示）
+      try {
+        const cstStart = new Date(Date.UTC(curYear, curMonth - 1, 1));
+        const cstEnd = new Date(Date.UTC(curYear, curMonth, 1));
+        const utcStart = new Date(cstStart.getTime() - CST_OFFSET).toISOString();
+        const utcEnd = new Date(cstEnd.getTime() - CST_OFFSET).toISOString();
+
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/logs?select=created_at&created_at=gte.${encodeURIComponent(utcStart)}&created_at=lt.${encodeURIComponent(utcEnd)}`,
+          {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            },
+          }
+        );
+
+        if (res.ok) {
+          const logs = await res.json();
+          const logsArr: any[] = Array.isArray(logs) ? logs : [];
+          const dailyCounts: Record<number, number> = {};
+          let total = 0;
+          logsArr.forEach((log: any) => {
+            const cstDate = new Date(new Date(log.created_at).getTime() + CST_OFFSET);
+            const day = cstDate.getUTCDate();
+            dailyCounts[day] = (dailyCounts[day] || 0) + 1;
+            total++;
+          });
+          setMonthData({ dayCounts: dailyCounts, totalCount: total });
+        }
+      } catch (e) {
+        console.warn('获取日历数据失败（不影响首页加载）:', e);
+      }
     } catch (error) {
       console.error('Failed to load index data:', error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [curYear, curMonth]);
 
   useEffect(() => {
     loadData();
@@ -347,6 +393,69 @@ export default function IndexPage() {
                 ))}
               </div>
             </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ====== 日志日历模块 ====== */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
+              日志日历
+            </h2>
+            <p className="text-lg text-[var(--text-secondary)] max-w-2xl mx-auto">
+              每天都有真实用户在记录他们的故事。选择一个日期，看看谁在发声。
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="max-w-sm mx-auto"
+          >
+            {monthData ? (
+              <CalendarWidget
+                year={curYear}
+                month={curMonth}
+                dailyCounts={monthData.dayCounts}
+                totalCount={monthData.totalCount}
+                compact
+              />
+            ) : (
+              <div className="rounded-2xl p-5 bg-white/60 backdrop-blur-xl border border-white/80 animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-32 mb-4" />
+                <div className="grid grid-cols-7 gap-1">
+                  {Array.from({ length: 35 }).map((_, i) => (
+                    <div key={i} className="aspect-square rounded bg-gray-100" />
+                  ))}
+                </div>
+              </div>
+            )}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="text-center mt-8"
+          >
+            <Link
+              to={`/logs/${curYear}/${curMonth}`}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white/70 backdrop-blur-xl text-gray-800 rounded-xl font-medium border border-white/90 shadow-lg hover:bg-white/90 transition-all"
+            >
+              <CalendarDays className="w-4 h-4" />
+              查看完整日历
+            </Link>
           </motion.div>
         </div>
       </section>
