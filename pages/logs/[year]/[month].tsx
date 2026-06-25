@@ -19,6 +19,7 @@ interface MonthPageProps {
   dayCounts: DayCount[];
   totalCount: number;
   isValid: boolean;
+  ssrIsCrawler: boolean;
 }
 
 /** 判断是否为爬虫 */
@@ -44,6 +45,7 @@ export default function LogsMonthPage({
   dayCounts,
   totalCount,
   isValid,
+  ssrIsCrawler,
 }: MonthPageProps) {
   if (!isValid) {
     return (
@@ -76,19 +78,21 @@ export default function LogsMonthPage({
         <meta property="og:site_name" content="认知界 Cognition World" />
       </Head>
 
-      {/* 爬虫可见内容 */}
-      <main
-        id="ssr-content"
-        style={{
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-          maxWidth: '720px',
-          margin: '0 auto',
-          padding: '32px 16px',
-          color: '#e6e6e6',
-          background: '#0d0d1a',
-          lineHeight: 1.7,
-        }}
-      >
+      {ssrIsCrawler && (
+        <>
+          {/* 爬虫可见内容 */}
+          <main
+            id="ssr-content"
+            style={{
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              maxWidth: '720px',
+              margin: '0 auto',
+              padding: '32px 16px',
+              color: '#e6e6e6',
+              background: '#0d0d1a',
+              lineHeight: 1.7,
+            }}
+          >
         <nav style={{ marginBottom: 24, fontSize: 14 }}>
           <a href={BASE_URL} style={{ color: '#a0a0b8', textDecoration: 'none' }}>
             ← 认知界首页
@@ -136,7 +140,9 @@ export default function LogsMonthPage({
         <footer style={{ marginTop: 40, textAlign: 'center', fontSize: 13, color: '#6b7280' }}>
           认知界 — 让 AI 认识每一个具体的普通人
         </footer>
-      </main>
+          </main>
+        </>
+      )}
 
       {/* 客户端 React 应用 */}
       <AppRoutes />
@@ -148,9 +154,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const year = parseInt(context.params?.year as string, 10);
   const month = parseInt(context.params?.month as string, 10);
 
+  const userAgent = context.req?.headers['user-agent'];
+  const ssrIsCrawler = isCrawler(userAgent);
+
   // 校验参数
   if (isNaN(year) || isNaN(month) || year < 2024 || year > 2099 || month < 1 || month > 12) {
-    return { props: { isValid: false, year: 0, month: 0, dayCounts: [], totalCount: 0 } };
+    return { props: { isValid: false, year: 0, month: 0, dayCounts: [], totalCount: 0, ssrIsCrawler } };
   }
 
   try {
@@ -183,10 +192,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         month,
         dayCounts,
         totalCount,
+        ssrIsCrawler,
       },
     };
   } catch (err) {
     console.error('[LogsMonthPage] 获取日历数据失败:', err);
-    return { props: { isValid: false, year: 0, month: 0, dayCounts: [], totalCount: 0 } };
+    return { props: { isValid: false, year: 0, month: 0, dayCounts: [], totalCount: 0, ssrIsCrawler } };
   }
 };

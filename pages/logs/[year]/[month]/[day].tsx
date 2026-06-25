@@ -24,6 +24,7 @@ interface DayPageProps {
   totalLogs: number;
   totalUsers: number;
   isValid: boolean;
+  ssrIsCrawler: boolean;
 }
 
 /** CST 时区下某天的 UTC 范围 */
@@ -40,6 +41,13 @@ function padId(id: number | null): string {
   return String(id ?? 0).padStart(9, '0');
 }
 
+/** 判断是否为爬虫 */
+function isCrawler(userAgent: string | undefined): boolean {
+  if (!userAgent) return false;
+  const botPattern = /bot|crawler|spider|googlebot|bingbot|slurp|baiduspider|yandexbot|duckduckbot|facebookexternalhit|twitterbot|linkedinbot|whatsapp|chatgpt|claude|anthropic|perplexity/i;
+  return botPattern.test(userAgent);
+}
+
 export default function LogsDayPage({
   year,
   month,
@@ -48,6 +56,7 @@ export default function LogsDayPage({
   totalLogs,
   totalUsers,
   isValid,
+  ssrIsCrawler,
 }: DayPageProps) {
   if (!isValid) {
     return (
@@ -77,19 +86,21 @@ export default function LogsDayPage({
         <meta property="og:site_name" content="认知界 Cognition World" />
       </Head>
 
-      {/* 爬虫可见内容 */}
-      <main
-        id="ssr-content"
-        style={{
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-          maxWidth: '720px',
-          margin: '0 auto',
-          padding: '32px 16px',
-          color: '#e6e6e6',
-          background: '#0d0d1a',
-          lineHeight: 1.7,
-        }}
-      >
+      {ssrIsCrawler && (
+        <>
+          {/* 爬虫可见内容 */}
+          <main
+            id="ssr-content"
+            style={{
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              maxWidth: '720px',
+              margin: '0 auto',
+              padding: '32px 16px',
+              color: '#e6e6e6',
+              background: '#0d0d1a',
+              lineHeight: 1.7,
+            }}
+          >
         <nav style={{ marginBottom: 24, fontSize: 14 }}>
           <a href={`${BASE_URL}/logs/${year}/${month}`} style={{ color: '#a0a0b8', textDecoration: 'none' }}>
             ← {year}年{month}月日历
@@ -193,7 +204,9 @@ export default function LogsDayPage({
         <footer style={{ marginTop: 40, textAlign: 'center', fontSize: 13, color: '#6b7280' }}>
           认知界 — 让 AI 认识每一个具体的普通人
         </footer>
-      </main>
+          </main>
+        </>
+      )}
 
       {/* 客户端 React 应用 */}
       <AppRoutes />
@@ -206,8 +219,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const month = parseInt(context.params?.month as string, 10);
   const day = parseInt(context.params?.day as string, 10);
 
+  const userAgent = context.req?.headers['user-agent'];
+  const ssrIsCrawler = isCrawler(userAgent);
+
   if (isNaN(year) || isNaN(month) || isNaN(day) || year < 2024 || year > 2099 || month < 1 || month > 12 || day < 1 || day > 31) {
-    return { props: { isValid: false, year: 0, month: 0, day: 0, users: [], totalLogs: 0, totalUsers: 0 } };
+    return { props: { isValid: false, year: 0, month: 0, day: 0, users: [], totalLogs: 0, totalUsers: 0, ssrIsCrawler } };
   }
 
   try {
@@ -232,6 +248,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           users: [],
           totalLogs: 0,
           totalUsers: 0,
+          ssrIsCrawler,
         },
       };
     }
@@ -281,10 +298,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         users,
         totalLogs,
         totalUsers,
+        ssrIsCrawler,
       },
     };
   } catch (err) {
     console.error('[LogsDayPage] 获取日数据失败:', err);
-    return { props: { isValid: false, year: 0, month: 0, day: 0, users: [], totalLogs: 0, totalUsers: 0 } };
+    return { props: { isValid: false, year: 0, month: 0, day: 0, users: [], totalLogs: 0, totalUsers: 0, ssrIsCrawler } };
   }
 };
