@@ -303,26 +303,32 @@ export type Database = {
       }
       guestbook_messages: {
         Row: {
+          admin_reply: string | null
           content: string
           created_at: string
           id: string
           is_read: boolean | null
+          replied_at: string | null
           user_id: string
           username: string
         }
         Insert: {
+          admin_reply?: string | null
           content: string
           created_at?: string
           id?: string
           is_read?: boolean | null
+          replied_at?: string | null
           user_id: string
           username: string
         }
         Update: {
+          admin_reply?: string | null
           content?: string
           created_at?: string
           id?: string
           is_read?: boolean | null
+          replied_at?: string | null
           user_id?: string
           username?: string
         }

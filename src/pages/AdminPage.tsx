@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle, XCircle, Trash2, Shield, Image as ImageIcon, Upload, MessageSquare, Settings, Save, Globe, AlertTriangle, Flag, Lock, Unlock, Eye, X, UserPlus, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Trash2, Shield, Image as ImageIcon, Upload, MessageSquare, Settings, Save, Globe, AlertTriangle, Flag, Lock, Unlock, Eye, X, UserPlus, Search, ChevronLeft, ChevronRight, Send } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
@@ -104,8 +104,13 @@ export function AdminPage() {
    content: string;
    is_read: boolean | null;
    created_at: string;
+   admin_reply?: string | null;
+   replied_at?: string | null;
  }>>([]);
  const [isLoadingGuestbook, setIsLoadingGuestbook] = useState(false);
+ const [replyingToId, setReplyingToId] = useState<string | null>(null);
+ const [replyText, setReplyText] = useState('');
+ const [sendingReply, setSendingReply] = useState(false);
 
  useEffect(() => {
  if (authLoading) return;
@@ -221,6 +226,38 @@ useEffect(() => {
     } catch (err) {
       console.error('标记已读失败:', err);
     }
+  };
+
+  // 管理员回复留言
+  const handleSendReply = async (messageId: string) => {
+    if (!replyText.trim()) return;
+    setSendingReply(true);
+    try {
+      const now = new Date().toISOString();
+      const { error } = await supabase
+        .from('guestbook_messages')
+        .update({
+          admin_reply: replyText.trim(),
+          replied_at: now,
+          is_read: true,
+        })
+        .eq('id', messageId);
+
+      if (error) {
+        console.error('回复失败:', error);
+        alert('回复失败：' + error.message);
+      } else {
+        setGuestbookMessages(prev =>
+          prev.map(m => m.id === messageId ? { ...m, admin_reply: replyText.trim(), replied_at: now, is_read: true } : m)
+        );
+        setReplyingToId(null);
+        setReplyText('');
+      }
+    } catch (err) {
+      console.error('回复失败:', err);
+      alert('回复失败');
+    }
+    setSendingReply(false);
   };
 
   // 加载举报列表
@@ -693,6 +730,65 @@ useEffect(() => {
  </div>
  </div>
  <p className="text-sm text-[var(--text-primary)] whitespace-pre-wrap">{msg.content}</p>
+
+ {/* 已有回复 */}
+ {msg.admin_reply && (
+ <div className="mt-3 ml-2 pl-3 border-l-2 border-purple-300">
+ <div className="flex items-center gap-1.5 mb-1">
+ <span className="text-xs font-semibold text-purple-600">管理员回复</span>
+ {msg.replied_at && (
+ <span className="text-xs text-[var(--text-tertiary)]">
+ {new Date(msg.replied_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
+ </span>
+ )}
+ </div>
+ <p className="text-sm text-gray-700 whitespace-pre-wrap bg-purple-50 rounded-xl px-3 py-2">
+ {msg.admin_reply}
+ </p>
+ </div>
+ )}
+
+ {/* 回复按钮 / 回复输入框 */}
+ <div className="mt-3 flex justify-end">
+ {replyingToId === msg.id ? (
+ <div className="w-full space-y-2">
+ <textarea
+ value={replyText}
+ onChange={(e) => setReplyText(e.target.value)}
+ placeholder="输入回复内容..."
+ rows={3}
+ className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all resize-none"
+ />
+ <div className="flex justify-end gap-2">
+ <button
+ onClick={() => { setReplyingToId(null); setReplyText(''); }}
+ className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+ disabled={sendingReply}
+ >
+ 取消
+ </button>
+ <button
+ onClick={() => handleSendReply(msg.id)}
+ disabled={!replyText.trim() || sendingReply}
+ className="px-4 py-2 text-sm bg-purple-500 text-white rounded-xl hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+ >
+ {sendingReply ? (
+ <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />发送中...</>
+ ) : (
+ <><Send className="w-3.5 h-3.5" />发送回复</>
+ )}
+ </button>
+ </div>
+ </div>
+ ) : (
+ <button
+ onClick={() => { setReplyingToId(msg.id); setReplyText(''); }}
+ className="px-3 py-1.5 text-xs text-purple-600 hover:bg-purple-50 rounded-lg transition-colors flex items-center gap-1"
+ >
+ <Send className="w-3.5 h-3.5" />回复
+ </button>
+ )}
+ </div>
  </div>
  ))}
  </div>

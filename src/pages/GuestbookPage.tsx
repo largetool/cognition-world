@@ -34,6 +34,8 @@ interface Message {
   content: string;
   is_read: boolean | null;
   created_at: string;
+  admin_reply?: string | null;
+  replied_at?: string | null;
 }
 
 // 24小时留言限制
@@ -330,6 +332,19 @@ export default function GuestbookPage() {
                         <p className="text-xs text-gray-400 mt-1 ml-1">
                           {formatDistanceToNow(message.created_at)}
                         </p>
+                        {message.admin_reply && (
+                          <div className="mt-3 ml-2 pl-3 border-l-2 border-purple-300">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="text-xs font-semibold text-purple-600">管理员回复</span>
+                              {message.replied_at && (
+                                <span className="text-[10px] text-gray-400">{formatDistanceToNow(message.replied_at)}</span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-700 whitespace-pre-wrap bg-purple-50 rounded-xl px-3 py-2 inline-block">
+                              {message.admin_reply}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   ))}
