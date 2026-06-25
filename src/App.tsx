@@ -20,11 +20,14 @@ import AccessibilityPage from './pages/AccessibilityPage';
 import GuestbookPage from './pages/GuestbookPage';
 import LogsMonthPage from './pages/LogsMonthPage';
 import LogsDayPage from './pages/LogsDayPage';
+import CookieConsent from './components/CookieConsent';
 
 // 纯 Routes 组件，不包含 BrowserRouter — 由 _app.tsx 注入路由上下文
 export default function AppRoutes() {
   return (
-    <Routes>
+    <>
+      <CookieConsent />
+      <Routes>
       {/* 中文路由 */}
       <Route path="/" element={<IndexPage />} />
       <Route path="/register" element={<RegisterPage />} />
@@ -71,5 +74,6 @@ export default function AppRoutes() {
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </>
   );
 }

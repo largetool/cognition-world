@@ -19,6 +19,7 @@ import { useSSRData } from '../utils/SSRContext';
 import type { Profile } from '../types';
 import { t, getCurrentLanguage } from '../locales';
 import { parseSupabaseTime } from '../types';
+import { EXTERNAL_LINK_PLATFORMS, getPlatformConfig } from '../data/externalLinks';
 
 const LOGS_PER_PAGE = 10;
 
@@ -722,6 +723,42 @@ export default function UserPage() {
           </div>
         </div>
       </div>
+
+      {/* ===== 外站链接展示 ===== */}
+      {profile && profile.external_links && Array.isArray(profile.external_links) && profile.external_links.length > 0 && (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 mb-6">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="flex flex-wrap items-center justify-center gap-3"
+          >
+            {profile.external_links.map((link: { platform: string; url: string }) => {
+              const cfg = getPlatformConfig(link.platform);
+              return (
+                <a
+                  key={link.platform}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex flex-col items-center gap-1"
+                  title={cfg?.name || link.platform}
+                >
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-md transition-transform hover:scale-110 hover:shadow-lg"
+                    style={{ backgroundColor: cfg?.color || '#6366F1' }}
+                  >
+                    {cfg?.icon || '?'}
+                  </div>
+                  <span className="text-[10px] text-gray-400 group-hover:text-gray-600 transition-colors">
+                    {cfg?.name || link.platform}
+                  </span>
+                </a>
+              );
+            })}
+          </motion.div>
+        </div>
+      )}
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         {canPostLog && (

@@ -161,6 +161,7 @@ export async function updateProfile(userId: string, updates: {
   slogan?: string;
   location?: string;
   is_public?: boolean;
+  external_links?: any[];
 }) {
   try {
     // 过滤掉 undefined 值

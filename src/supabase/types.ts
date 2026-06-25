@@ -583,6 +583,7 @@ export type Database = {
           daily_posts_count: number | null
           display_id: number | null
           email: string | null
+          external_links: any | null
           frozen_at: string | null
           frozen_by: string | null
           frozen_ends_at: string | null
@@ -617,6 +618,7 @@ export type Database = {
           daily_posts_count?: number | null
           display_id?: number | null
           email?: string | null
+          external_links?: any | null
           frozen_at?: string | null
           frozen_by?: string | null
           frozen_ends_at?: string | null
@@ -651,6 +653,7 @@ export type Database = {
           daily_posts_count?: number | null
           display_id?: number | null
           email?: string | null
+          external_links?: any | null
           frozen_at?: string | null
           frozen_by?: string | null
           frozen_ends_at?: string | null
