@@ -264,7 +264,7 @@ export default function RegisterPage() {
 
   if (registered) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] text-[#18181B]">
+      <div className="min-h-screen text-[#18181B]" style={{ backgroundImage: 'url(/assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg)', backgroundRepeat: 'repeat', backgroundSize: 'auto', backgroundPosition: 'top center', backgroundColor: '#FAFAFA' }}>
         <SEOHead
           data={{
             title: `注册成功 - ${APP_CONFIG.name}`,
@@ -333,7 +333,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-[#18181B]">
+    <div className="min-h-screen text-[#18181B]" style={{ backgroundImage: 'url(/assets/C2283395-46CF-48E8-B1EC-3813518039AE.jpg)', backgroundRepeat: 'repeat', backgroundSize: 'auto', backgroundPosition: 'top center', backgroundColor: '#FAFAFA' }}>
       <SEOHead
         data={{
           title: `创建数字身份 - ${APP_CONFIG.name}`,
