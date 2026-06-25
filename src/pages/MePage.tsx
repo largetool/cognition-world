@@ -979,6 +979,11 @@ export default function MePage() {
                             保存
                           </button>
                         </div>
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          <p className="text-[11px] text-gray-400 leading-relaxed">
+                            在您的社交平台个人资料中添加认知界公开页链接，可提升个人页的搜索引擎权重。
+                          </p>
+                        </div>
                       </motion.div>
                     )}
                   </div>
