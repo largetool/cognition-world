@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Calendar, Eye, EyeOff, LogOut, User, Edit3, X, Save, Send, Clock, Image, CheckCircle, AlertCircle, Check, Share2, ThumbsUp } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Eye, EyeOff, LogOut, User, Edit3, X, Save, Send, Clock, Image, CheckCircle, AlertCircle, Check, Share2, ThumbsUp, UserX, Lock, AlertTriangle } from 'lucide-react';
 import { getCurrentUser, logout, updateProfile } from '../utils/auth';
 import { supabase } from '../supabase/client';
-import { createLogWithModeration, getUserBackgroundImages, selectSystemBackground, getActiveBackgroundImage, checkCanPost, recordPost, getLikes, hasUserLiked, toggleLike, deleteLog, markLogDeletable } from '../utils/storage';
+import { createLogWithModeration, getUserBackgroundImages, selectSystemBackground, getActiveBackgroundImage, checkCanPost, recordPost, getLikes, hasUserLiked, toggleLike, deleteLog, markLogDeletable, getAccountHideStatus, requestAccountHide, cancelAccountHide, requestAccountRestore } from '../utils/storage';
 import { localSystemBackgrounds } from '../data/systemBackgrounds';
 import type { Profile, SystemBackground, BackgroundImage } from '../types';
 import { parseSupabaseTime } from '../types';
@@ -149,6 +149,14 @@ export default function MePage() {
   const [linkUrl, setLinkUrl] = useState('');
   const [linkError, setLinkError] = useState('');
 
+  // 隐藏账户
+  const [hideStatus, setHideStatus] = useState<any>(null);
+  const [hideModalOpen, setHideModalOpen] = useState(false);
+  const [hideSubmitting, setHideSubmitting] = useState(false);
+  const [hideSuccess, setHideSuccess] = useState(false);
+  const [hideError, setHideError] = useState('');
+  const [restoreModalOpen, setRestoreModalOpen] = useState(false);
+
   // 点赞
   const [logLikes, setLogLikes] = useState<Record<string, { count: number; liked: boolean }>>({});
   const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
@@ -195,6 +203,14 @@ export default function MePage() {
           } catch {
             setExternalLinks([]);
           }
+        }
+
+        // 加载隐藏账户状态
+        try {
+          const status = await getAccountHideStatus();
+          if (isMounted) setHideStatus(status);
+        } catch (e) {
+          console.warn('[MePage] getAccountHideStatus failed:', e);
         }
 
         // 每个数据源独立加载，单个失败不阻塞其他
@@ -365,6 +381,58 @@ export default function MePage() {
     }
   }, [profile, editForm]);
 
+  // 隐藏账户相关
+  const handleRequestHide = async () => {
+    setHideSubmitting(true);
+    setHideError('');
+    try {
+      const result = await requestAccountHide();
+      if (result.success) {
+        setHideSuccess(true);
+        const status = await getAccountHideStatus();
+        setHideStatus(status);
+      } else {
+        setHideError(result.error || '申请失败');
+      }
+    } catch (err) {
+      setHideError('申请失败，请重试');
+    }
+    setHideSubmitting(false);
+  };
+
+  const handleCancelHide = async () => {
+    if (!confirm('确定要取消隐藏申请吗？')) return;
+    setHideSubmitting(true);
+    try {
+      const result = await cancelAccountHide();
+      if (result.success) {
+        setHideStatus(null);
+        alert('已取消隐藏申请');
+      } else {
+        alert('取消失败：' + (result.error || '请重试'));
+      }
+    } catch (err) {
+      alert('取消失败');
+    }
+    setHideSubmitting(false);
+  };
+
+  const handleRestoreAccount = async () => {
+    setHideSubmitting(true);
+    try {
+      const result = await requestAccountRestore();
+      if (result.success) {
+        setRestoreModalOpen(false);
+        setHideStatus(null);
+        alert('恢复成功，您的页面已重新公开');
+      } else {
+        alert('恢复失败：' + (result.error || '请重试'));
+      }
+    } catch (err) {
+      alert('恢复失败');
+    }
+    setHideSubmitting(false);
+  };
 
   if (isLoading) {
     return (
@@ -696,8 +764,40 @@ export default function MePage() {
                       </div>
                     </div>
 
+                    {/* 隐藏账户 */}
+                    <div className="pt-4 mt-4 border-t border-gray-100">
+                      <button
+                        onClick={() => {
+                          if (hideStatus?.hide_status === 'hidden') {
+                            setRestoreModalOpen(true);
+                          } else if (hideStatus?.hide_status === 'cooling') {
+                            handleCancelHide();
+                          } else {
+                            setHideModalOpen(true);
+                          }
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50/80 border border-red-200/60 hover:bg-red-100/80 transition-colors group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
+                          <EyeOff className="w-4 h-4 text-red-500" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="text-sm font-medium text-red-700">
+                            {hideStatus?.hide_status === 'hidden' ? '恢复公开显示' :
+                             hideStatus?.hide_status === 'cooling' ? '取消隐藏申请' :
+                             '申请隐藏账户'}
+                          </p>
+                          <p className="text-xs text-red-500/70 mt-0.5">
+                            {hideStatus?.hide_status === 'hidden' ? '您的账户当前处于隐藏状态' :
+                             hideStatus?.hide_status === 'cooling' ? '冷静期内可取消申请' :
+                             '隐藏后他人将无法查看您的公开页面'}
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+
                     {/* 按钮组 */}
-                    <div className="flex gap-3 mt-6">
+                    <div className="flex gap-3 mt-4">
                       <button
                         onClick={() => setIsEditing(false)}
                         className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 text-sm font-medium transition-colors"
@@ -960,7 +1060,7 @@ export default function MePage() {
                               try {
                                 const { error: updateError } = await supabase
                                   .from('profiles')
-                                  .update({ external_links: JSON.stringify(externalLinks), updated_at: new Date().toISOString() })
+                                  .update({ external_links: externalLinks, updated_at: new Date().toISOString() })
                                   .eq('id', profile.id);
                                 if (updateError) {
                                   setLinkError('保存失败：' + updateError.message);
@@ -1194,6 +1294,138 @@ export default function MePage() {
         {/* 底部导航栏 */}
         <BottomNav />
       </div>
+
+      {/* 隐藏账户确认弹窗 */}
+      <AnimatePresence>
+        {hideModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50"
+            onClick={() => setHideModalOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              {!hideSuccess ? (
+                <>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                      <UserX className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-[var(--text-primary)]">申请隐藏账户</h3>
+                  </div>
+
+                  <div className="space-y-3 text-sm text-[var(--text-secondary)] mb-6">
+                    <p className="font-medium text-amber-700">⚠️ 请仔细阅读以下规则：</p>
+                    <div className="bg-amber-50 p-4 rounded-lg space-y-2">
+                      <p><strong>1. 冷静期（3天）：</strong>申请后你有3天反悔期，期间可随时取消，无任何后果</p>
+                      <p><strong>2. 冻结期（6个月）：</strong>冷静期过后，你的个人主页将暂停展示，你不能发动态、留言、互动。冻结期至少6个月，不可提前解除</p>
+                      <p><strong>3. 恢复：</strong>6个月后可申请恢复，历史内容将重新对外展示</p>
+                    </div>
+                    <p className="text-amber-600">❗ 如果你有未解决的举报或争议，不能申请隐藏</p>
+                  </div>
+
+                  {hideError && (
+                    <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                      {hideError}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setHideModalOpen(false)}
+                      className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                    >
+                      取消
+                    </button>
+                    <button
+                      onClick={handleRequestHide}
+                      disabled={hideSubmitting}
+                      className="flex-1 px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors disabled:opacity-50"
+                    >
+                      {hideSubmitting ? '提交中...' : '我确认，申请隐藏'}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="w-8 h-8 text-green-500" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">申请已提交</h3>
+                  <p className="text-sm text-[var(--text-secondary)]">隐藏申请已提交。你有 3 天冷静期，期间可随时取消。</p>
+                  <button
+                    onClick={() => { setHideModalOpen(false); setHideSuccess(false); }}
+                    className="mt-4 px-6 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                  >
+                    关闭
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 恢复账户确认弹窗 */}
+      <AnimatePresence>
+        {restoreModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50"
+            onClick={() => setRestoreModalOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                  <Lock className="w-5 h-5 text-green-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">恢复账户</h3>
+              </div>
+
+              <div className="space-y-3 text-sm text-[var(--text-secondary)] mb-6">
+                <p>你的账户冻结期已满 6 个月，现在可以申请恢复。</p>
+                <p>恢复后：</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>个人主页重新对外展示</li>
+                  <li>所有历史内容重新可见</li>
+                  <li>可以正常发布动态、留言、互动</li>
+                </ul>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setRestoreModalOpen(false)}
+                  className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleRestoreAccount}
+                  disabled={hideSubmitting}
+                  className="flex-1 px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors disabled:opacity-50"
+                >
+                  {hideSubmitting ? '处理中...' : '确认恢复'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

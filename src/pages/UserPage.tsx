@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Settings, Share2, MapPin, Calendar, Eye, EyeOff, Send, ChevronLeft, ChevronRight, ArrowUp, Flag, X, AlertTriangle, ShieldAlert, UserX, Clock, Lock, CheckCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit3, Share2, MapPin, Calendar, Eye, EyeOff, Send, ChevronLeft, ChevronRight, ArrowUp, Flag, X, AlertTriangle, ShieldAlert, UserX, Clock, Lock, CheckCircle, Trash2 } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
@@ -193,13 +193,7 @@ export default function UserPage() {
   const [reportSuccess, setReportSuccess] = useState(false);
   const [reportError, setReportError] = useState('');
 
-  // 账户隐藏相关状态
-  const [hideStatus, setHideStatus] = useState<AccountHideStatus | null>(null);
-  const [hideModalOpen, setHideModalOpen] = useState(false);
-  const [hideSubmitting, setHideSubmitting] = useState(false);
-  const [hideSuccess, setHideSuccess] = useState(false);
-  const [hideError, setHideError] = useState('');
-  const [restoreModalOpen, setRestoreModalOpen] = useState(false);
+  // 隐藏账户已移至 MePage 编辑资料
 
   // 分页计算
   const totalPages = Math.ceil(logsWithDelete.length / LOGS_PER_PAGE);
@@ -312,13 +306,6 @@ export default function UserPage() {
   };
 
   // 获取账户隐藏状态
-  useEffect(() => {
-    if (isCurrentUser) {
-      getAccountHideStatus().then(status => {
-        if (status) setHideStatus(status);
-      });
-    }
-  }, [isCurrentUser]);
 
   // 登录后同步 auth_user_id（fire-and-forget，确保 RLS 点赞策略能找到匹配）
   useEffect(() => {
@@ -327,76 +314,6 @@ export default function UserPage() {
     }
   }, [currentUser]);
 
-  // 打开隐藏账户弹窗
-  const openHideModal = () => {
-    setHideModalOpen(true);
-    setHideError('');
-    setHideSuccess(false);
-  };
-
-  // 关闭隐藏账户弹窗
-  const closeHideModal = () => {
-    setHideModalOpen(false);
-    setHideError('');
-    setHideSuccess(false);
-  };
-
-  // 提交隐藏申请
-  const handleHideSubmit = async () => {
-    setHideSubmitting(true);
-    setHideError('');
-    const result = await requestAccountHide();
-    if (result.success) {
-      setHideSuccess(true);
-      const status = await getAccountHideStatus();
-      if (status) setHideStatus(status);
-      setTimeout(() => closeHideModal(), 2000);
-    } else {
-      setHideError(result.error || '申请失败');
-    }
-    setHideSubmitting(false);
-  };
-
-  // 取消隐藏申请
-  const handleCancelHide = async () => {
-    setHideSubmitting(true);
-    const result = await cancelAccountHide();
-    if (result.success) {
-      const status = await getAccountHideStatus();
-      if (status) setHideStatus(status);
-    }
-    setHideSubmitting(false);
-  };
-
-  // 打开恢复账户弹窗
-  const openRestoreModal = () => {
-    setRestoreModalOpen(true);
-    setHideError('');
-    setHideSuccess(false);
-  };
-
-  // 关闭恢复账户弹窗
-  const closeRestoreModal = () => {
-    setRestoreModalOpen(false);
-    setHideError('');
-    setHideSuccess(false);
-  };
-
-  // 提交恢复申请
-  const handleRestoreSubmit = async () => {
-    setHideSubmitting(true);
-    setHideError('');
-    const result = await requestAccountRestore();
-    if (result.success) {
-      setHideSuccess(true);
-      const status = await getAccountHideStatus();
-      if (status) setHideStatus(status);
-      setTimeout(() => closeRestoreModal(), 2000);
-    } else {
-      setHideError(result.error || '恢复失败');
-    }
-    setHideSubmitting(false);
-  };
 
   // 管理员/所有者删除日志
   const handleDeleteLog = async (logId: string) => {
@@ -616,40 +533,10 @@ export default function UserPage() {
                       to="/me"
                       className="p-2 rounded-lg hover:bg-white/20 transition-colors"
                     >
-                      <Settings className="w-5 h-5 text-[var(--text-primary)]" />
+                      <Edit3 className="w-5 h-5 text-[var(--text-primary)]" />
                     </Link>
                   )}
-                  {/* 隐藏账户按钮 - 仅当前用户可见且未被管理员冻结 */}
-                  {isCurrentUser && !profile?.is_frozen && (
-                    <>
-                      {hideStatus?.hide_status === 'none' && (
-                        <button
-                          onClick={openHideModal}
-                          className="p-2 rounded-lg hover:bg-white/20 transition-colors text-[var(--text-secondary)] hover:text-amber-600"
-                          title="隐藏账户"
-                        >
-                          <UserX className="w-5 h-5" />
-                        </button>
-                      )}
-                      {hideStatus?.hide_status === 'cooling' && (
-                        <button
-                          onClick={handleCancelHide}
-                          disabled={hideSubmitting}
-                          className="px-3 py-1.5 rounded-lg bg-amber-100 text-amber-700 text-sm font-medium hover:bg-amber-200 transition-colors disabled:opacity-50"
-                        >
-                          {hideSubmitting ? '处理中...' : '取消隐藏'}
-                        </button>
-                      )}
-                      {hideStatus?.hide_status === 'frozen' && (
-                        <button
-                          onClick={openRestoreModal}
-                          className="px-3 py-1.5 rounded-lg bg-green-100 text-green-700 text-sm font-medium hover:bg-green-200 transition-colors"
-                        >
-                          恢复账户
-                        </button>
-                      )}
-                    </>
-                  )}
+                  {/* 隐藏账户已移至「我的」页面编辑资料中 */}
                 </div>
               </div>
             </div>
@@ -725,40 +612,41 @@ export default function UserPage() {
       </div>
 
       {/* ===== 外站链接展示 ===== */}
-      {profile && profile.external_links && Array.isArray(profile.external_links) && profile.external_links.length > 0 && (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 mb-6">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="flex flex-wrap items-center justify-center gap-3"
-          >
-            {profile.external_links.map((link: { platform: string; url: string }) => {
-              const cfg = getPlatformConfig(link.platform);
-              return (
-                <a
-                  key={link.platform}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex flex-col items-center gap-1"
-                  title={cfg?.name || link.platform}
-                >
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-md transition-transform hover:scale-110 hover:shadow-lg"
-                    style={{ backgroundColor: cfg?.color || '#6366F1' }}
+      {profile && profile.external_links && (() => {
+        const links = typeof profile.external_links === 'string'
+          ? (() => { try { return JSON.parse(profile.external_links); } catch { return []; } })()
+          : profile.external_links;
+        return Array.isArray(links) && links.length > 0 ? (
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 mb-6">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+              className="flex flex-wrap items-center justify-center gap-2"
+            >
+              {links.map((link: { platform: string; url: string }, i: number) => {
+                const cfg = getPlatformConfig(link.platform);
+                return (
+                  <a
+                    key={`${link.platform}-${i}`}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={cfg?.name || link.platform}
                   >
-                    {cfg?.icon || '?'}
-                  </div>
-                  <span className="text-[10px] text-gray-400 group-hover:text-gray-600 transition-colors">
-                    {cfg?.name || link.platform}
-                  </span>
-                </a>
-              );
-            })}
-          </motion.div>
-        </div>
-      )}
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm transition-transform hover:scale-110 hover:shadow-md"
+                      style={{ backgroundColor: cfg?.color || '#6366F1' }}
+                    >
+                      {cfg?.icon || '?'}
+                    </div>
+                  </a>
+                );
+              })}
+            </motion.div>
+          </div>
+        ) : null;
+      })()}
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         {canPostLog && (
@@ -1016,150 +904,6 @@ export default function UserPage() {
 
       {/* 回到顶部按钮 */}
       <BackToTopButton />
-
-      {/* 隐藏账户确认弹窗 */}
-      <AnimatePresence>
-        {hideModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50"
-            onClick={closeHideModal}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
-              onClick={e => e.stopPropagation()}
-            >
-              {!hideSuccess ? (
-                <>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                      <UserX className="w-5 h-5 text-amber-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-[var(--text-primary)]">申请隐藏账户</h3>
-                  </div>
-
-                  <div className="space-y-3 text-sm text-[var(--text-secondary)] mb-6">
-                    <p className="font-medium text-amber-700">⚠️ 请仔细阅读以下规则：</p>
-                    <div className="bg-amber-50 p-4 rounded-lg space-y-2">
-                      <p><strong>1. 冷静期（3天）：</strong>申请后你有3天反悔期，期间可随时取消，无任何后果</p>
-                      <p><strong>2. 冻结期（6个月）：</strong>冷静期过后，你的个人主页将暂停展示，你不能发动态、留言、互动。冻结期至少6个月，不可提前解除</p>
-                      <p><strong>3. 恢复：</strong>6个月后可申请恢复，历史内容将重新对外展示</p>
-                    </div>
-                    <p className="text-amber-600">❗ 如果你有未解决的举报或争议，不能申请隐藏</p>
-                  </div>
-
-                  {hideError && (
-                    <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
-                      {hideError}
-                    </div>
-                  )}
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={closeHideModal}
-                      className="flex-1 px-4 py-2 rounded-lg border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] transition-colors"
-                    >
-                      取消
-                    </button>
-                    <button
-                      onClick={handleHideSubmit}
-                      disabled={hideSubmitting}
-                      className="flex-1 px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors disabled:opacity-50"
-                    >
-                      {hideSubmitting ? '提交中...' : '我确认，申请隐藏'}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle className="w-8 h-8 text-green-500" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">申请已提交</h3>
-                  <p className="text-sm text-[var(--text-secondary)]">隐藏申请已提交。你有 3 天冷静期，期间可随时取消。</p>
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 恢复账户确认弹窗 */}
-      <AnimatePresence>
-        {restoreModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50"
-            onClick={closeRestoreModal}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
-              onClick={e => e.stopPropagation()}
-            >
-              {!hideSuccess ? (
-                <>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                      <Lock className="w-5 h-5 text-green-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-[var(--text-primary)]">恢复账户</h3>
-                  </div>
-
-                  <div className="space-y-3 text-sm text-[var(--text-secondary)] mb-6">
-                    <p>你的账户冻结期已满 6 个月，现在可以申请恢复。</p>
-                    <p>恢复后：</p>
-                    <ul className="list-disc list-inside space-y-1 ml-2">
-                      <li>个人主页重新对外展示</li>
-                      <li>所有历史内容重新可见</li>
-                      <li>可以正常发布动态、留言、互动</li>
-                    </ul>
-                  </div>
-
-                  {hideError && (
-                    <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
-                      {hideError}
-                    </div>
-                  )}
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={closeRestoreModal}
-                      className="flex-1 px-4 py-2 rounded-lg border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] transition-colors"
-                    >
-                      取消
-                    </button>
-                    <button
-                      onClick={handleRestoreSubmit}
-                      disabled={hideSubmitting}
-                      className="flex-1 px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors disabled:opacity-50"
-                    >
-                      {hideSubmitting ? '处理中...' : '确认恢复'}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle className="w-8 h-8 text-green-500" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">账户已恢复</h3>
-                  <p className="text-sm text-[var(--text-secondary)]">欢迎回来！你的账户已恢复正常，所有历史内容重新对外展示。</p>
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <Footer />
 
