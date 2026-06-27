@@ -104,6 +104,11 @@ export default function GuestbookPage() {
 
   // 计算是否满足资格
   const getEligibility = () => {
+    // 管理员不受任何限制
+    if (user?.is_admin) {
+      return { eligible: true, registeredDays: 999, remainingDays: 0, remainingCount: 999, limitReached: false };
+    }
+
     if (!user || !registerDate) {
       return { eligible: false, registeredDays: 0, remainingDays: MIN_REGISTER_DAYS, remainingCount: MAX_MESSAGES_PER_DAY, limitReached: false };
     }
@@ -251,24 +256,25 @@ export default function GuestbookPage() {
             </motion.div>
           )}
 
-          {user && registerDate && registeredDays < MIN_REGISTER_DAYS && (
+          {/* 样板间模式提示：非管理员用户不能留言 */}
+          {user && !user.is_admin && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6"
+              className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6"
             >
               <div className="flex items-center gap-3 mb-2">
-                <Clock className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                <p className="text-amber-800 font-medium">账户注册时间不足</p>
+                <Lock className="w-5 h-5 text-slate-500 flex-shrink-0" />
+                <p className="text-slate-800 font-medium">留言板暂未开放</p>
               </div>
-              <p className="text-amber-700 text-sm">
-                您的账户已注册 {registeredDays} 天，还需等待 <strong>{remainingDays}</strong> 天才能使用留言板功能。
-                这是为了防止垃圾信息，感谢理解。
+              <p className="text-slate-600 text-sm">
+                认知界目前处于样板展示阶段，留言功能暂未对外开放。
+                感谢您的关注！
               </p>
             </motion.div>
           )}
 
-          {user && registerDate && registeredDays >= MIN_REGISTER_DAYS && limitReached && (
+          {user && !user.is_admin && registerDate && registeredDays >= MIN_REGISTER_DAYS && limitReached && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -353,8 +359,8 @@ export default function GuestbookPage() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* 输入区域 */}
-            {user && registerDate && registeredDays >= MIN_REGISTER_DAYS && !limitReached && (
+            {/* 输入区域 — 仅管理员可留言 */}
+            {user && (user.is_admin || (registerDate && registeredDays >= MIN_REGISTER_DAYS && !limitReached)) && (
               <div className="border-t border-gray-100 p-4 bg-white">
                 {error && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3 text-red-700 text-sm">

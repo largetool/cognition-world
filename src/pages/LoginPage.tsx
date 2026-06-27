@@ -140,6 +140,14 @@ export default function LoginPage() {
                 登录您的认知界账户
               </p>
 
+              {/* 展示模式提示 */}
+              <div className="mb-6 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  认知界目前处于<strong>样板展示阶段</strong>，登录功能仅供网站管理员使用。
+                  如果您是访客，请<button onClick={() => navigate('/')} className="text-blue-600 hover:underline font-medium">返回首页</button>浏览公开内容。
+                </p>
+              </div>
+
               {/* 登录类型切换 */}
               <div className="flex gap-2 mb-6">
                 <button
