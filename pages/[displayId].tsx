@@ -559,6 +559,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         ssrUserId: typedProfile.user_id,
         ssrProfile: typedProfile,
+        ssrActiveBg: typedProfile.background_image
+          ? { url: typedProfile.background_image }
+          : null,
         ssrLogs,
         ssrJsonLd,
         ssrMetaDescription,
