@@ -199,6 +199,14 @@ export default function MePage() {
             const links = typeof userProfile.external_links === 'string'
               ? JSON.parse(userProfile.external_links)
               : userProfile.external_links;
+            // 补全已保存链接的 https://
+            if (Array.isArray(links)) {
+              links.forEach((l: any) => {
+                if (l.url && !l.url.startsWith('http://') && !l.url.startsWith('https://')) {
+                  l.url = 'https://' + l.url;
+                }
+              });
+            }
             setExternalLinks(Array.isArray(links) ? links : []);
           } catch {
             setExternalLinks([]);
@@ -1033,7 +1041,12 @@ export default function MePage() {
                               if (externalLinks.some(l => l.platform === linkPlatform)) {
                                 setLinkError('该平台已添加'); return;
                               }
-                              setExternalLinks(prev => [...prev, { platform: linkPlatform, url: linkUrl.trim() }]);
+                              // 自动补 https://
+                              let url = linkUrl.trim();
+                              if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                                url = 'https://' + url;
+                              }
+                              setExternalLinks(prev => [...prev, { platform: linkPlatform, url }]);
                               setLinkPlatform('');
                               setLinkUrl('');
                               setLinkError('');

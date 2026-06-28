@@ -630,10 +630,14 @@ export default function UserPage() {
                   <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
                     {links.map((link: { platform: string; url: string }, i: number) => {
                       const cfg = getPlatformConfig(link.platform);
+                      // 自动补 https://（兼容已保存的不带协议头的链接）
+                      const href = link.url.startsWith('http://') || link.url.startsWith('https://')
+                        ? link.url
+                        : 'https://' + link.url;
                       return (
                         <a
                           key={`${link.platform}-${i}`}
-                          href={link.url}
+                          href={href}
                           target="_blank"
                           rel="noopener noreferrer"
                           title={cfg?.name || link.platform}
