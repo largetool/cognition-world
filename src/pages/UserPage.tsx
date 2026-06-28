@@ -591,7 +591,7 @@ export default function UserPage() {
               </div>
 
               {profile.slogan && (
-                <p className="text-lg text-[var(--text-tertiary)] text-center max-w-xl mb-8">
+                <p className="text-lg text-[var(--text-secondary)] text-center max-w-xl mb-8">
                   {profile.slogan}
                 </p>
               )}
