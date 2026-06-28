@@ -618,12 +618,7 @@ export default function UserPage() {
           : profile.external_links;
         return Array.isArray(links) && links.length > 0 ? (
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 mb-6">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-              className="flex flex-wrap items-center justify-center gap-2"
-            >
+            <div className="flex flex-wrap items-center justify-center gap-2">
               {links.map((link: { platform: string; url: string }, i: number) => {
                 const cfg = getPlatformConfig(link.platform);
                 return (
@@ -643,7 +638,7 @@ export default function UserPage() {
                   </a>
                 );
               })}
-            </motion.div>
+            </div>
           </div>
         ) : null;
       })()}
