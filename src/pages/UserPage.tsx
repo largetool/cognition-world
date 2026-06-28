@@ -620,42 +620,40 @@ export default function UserPage() {
                   )}
                 </div>
               </div>
+
+              {/* ===== 外站链接展示 ===== */}
+              {profile && profile.external_links && (() => {
+                const links = typeof profile.external_links === 'string'
+                  ? (() => { try { return JSON.parse(profile.external_links); } catch { return []; } })()
+                  : profile.external_links;
+                return Array.isArray(links) && links.length > 0 ? (
+                  <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
+                    {links.map((link: { platform: string; url: string }, i: number) => {
+                      const cfg = getPlatformConfig(link.platform);
+                      return (
+                        <a
+                          key={`${link.platform}-${i}`}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={cfg?.name || link.platform}
+                        >
+                          <div
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm transition-transform hover:scale-110 hover:shadow-md"
+                            style={{ backgroundColor: cfg?.color || '#6366F1' }}
+                          >
+                            {cfg?.icon || '?'}
+                          </div>
+                        </a>
+                      );
+                    })}
+                  </div>
+                ) : null;
+              })()}
             </motion.div>
           </div>
         </div>
       </div>
-
-      {/* ===== 外站链接展示 ===== */}
-      {profile && profile.external_links && (() => {
-        const links = typeof profile.external_links === 'string'
-          ? (() => { try { return JSON.parse(profile.external_links); } catch { return []; } })()
-          : profile.external_links;
-        return Array.isArray(links) && links.length > 0 ? (
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 mb-6">
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {links.map((link: { platform: string; url: string }, i: number) => {
-                const cfg = getPlatformConfig(link.platform);
-                return (
-                  <a
-                    key={`${link.platform}-${i}`}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={cfg?.name || link.platform}
-                  >
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm transition-transform hover:scale-110 hover:shadow-md"
-                      style={{ backgroundColor: cfg?.color || '#6366F1' }}
-                    >
-                      {cfg?.icon || '?'}
-                    </div>
-                  </a>
-                );
-              })}
-            </div>
-          </div>
-        ) : null;
-      })()}
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         {canPostLog && (
