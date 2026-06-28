@@ -32,16 +32,18 @@ export default async function handler(
     return res.status(405).json({ success: false, error: '仅支持 POST 请求' });
   }
 
+  // ==========================================
+  // 配置项（硬编码 fallback，解决 Vercel 环境变量不持久化的问题）
+  // ==========================================
+  const PUBLISH_API_KEY = process.env.PUBLISH_API_KEY || 'woyaofaburizhi2026';
+  const ADMIN_USER_ID = process.env.ADMIN_USER_ID || '000000000';
+  const SUPABASE_SERVICE_ROLE_KEY =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iZ3NpY2hpbGZyanNvcG5udmlhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDMxMTUyMywiZXhwIjoyMDk1ODg3NTIzfQ.eGTQAFSjT-HI0LAtHrERBN8a2h98VqQMyb1GDPA7g00';
+
   // 验证 API Key
   const apiKey = req.headers['x-api-key'] as string;
-  const expectedKey = process.env.PUBLISH_API_KEY;
-  if (!expectedKey) {
-    return res.status(500).json({
-      success: false,
-      error: '服务器未配置 PUBLISH_API_KEY',
-    });
-  }
-  if (apiKey !== expectedKey) {
+  if (apiKey !== PUBLISH_API_KEY) {
     return res.status(401).json({ success: false, error: 'API Key 无效' });
   }
 
@@ -55,30 +57,12 @@ export default async function handler(
     return res.status(400).json({ success: false, error: '内容超过 5000 字限制' });
   }
 
-  // 读取 user_id（管理员的 user_id）
-  const adminUserId = process.env.ADMIN_USER_ID;
-  if (!adminUserId) {
-    return res.status(500).json({
-      success: false,
-      error: '服务器未配置 ADMIN_USER_ID',
-    });
-  }
-
-  // 获取 service_role key（绕过 RLS）
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceRoleKey) {
-    return res.status(500).json({
-      success: false,
-      error: '服务器未配置 SUPABASE_SERVICE_ROLE_KEY',
-    });
-  }
-
   try {
     const publishedAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
     // 用原生 fetch 调 Supabase REST API，绕过 supabase-js 可能的问题
     const body: Record<string, any> = {
-      user_id: adminUserId,
+      user_id: ADMIN_USER_ID,
       content: content.trim(),
       is_public: false,
       published_at: publishedAt,
@@ -92,7 +76,7 @@ export default async function handler(
       headers: {
         'Content-Type': 'application/json',
         'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${serviceRoleKey}`,
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
         'Prefer': 'return=representation',
       },
       body: JSON.stringify(body),
