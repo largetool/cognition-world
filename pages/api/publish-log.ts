@@ -5,10 +5,9 @@
 // ============================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from '@supabase/supabase-js';
-import type { Log } from '../../src/types';
 
 const SUPABASE_URL = 'https://nbgsichilfrjsopnnvia.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iZ3NpY2hpbGZyanNvcG5udmlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMTE1MjMsImV4cCI6MjA5NTg4NzUyM30.fWr-ZoDhirVgsKGsL8BWeP36iQ235GuQ4iF_GYK0RH0';
 
 interface PublishRequest {
   content: string;
@@ -19,9 +18,10 @@ interface PublishRequest {
 
 interface PublishResponse {
   success: boolean;
-  log?: Log;
+  log?: any;
   error?: string;
   message?: string;
+  debug?: string;
 }
 
 export default async function handler(
@@ -64,48 +64,56 @@ export default async function handler(
     });
   }
 
-  try {
-    // 使用 service_role key 创建管理端客户端（绕过 RLS）
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!serviceRoleKey) {
-      return res.status(500).json({
-        success: false,
-        error: '服务器未配置 SUPABASE_SERVICE_ROLE_KEY',
-      });
-    }
-
-    const supabaseAdmin = createClient(SUPABASE_URL, serviceRoleKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
+  // 获取 service_role key（绕过 RLS）
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    return res.status(500).json({
+      success: false,
+      error: '服务器未配置 SUPABASE_SERVICE_ROLE_KEY',
     });
+  }
 
-    // 与 createLog() 一致的逻辑
+  try {
     const publishedAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-    const { data, error } = await supabaseAdmin
-      .from('logs')
-      .insert({
-        user_id: adminUserId,
-        content: content.trim(),
-        is_public: false,
-        published_at: publishedAt,
-        tags: tags || [],
-        ...(category ? { category } : {}),
-        ...(location && location.trim() ? { location: location.trim() } : {}),
-      })
-      .select()
-      .single();
+    // 用原生 fetch 调 Supabase REST API，绕过 supabase-js 可能的问题
+    const body: Record<string, any> = {
+      user_id: adminUserId,
+      content: content.trim(),
+      is_public: false,
+      published_at: publishedAt,
+      tags: tags || [],
+    };
+    if (category) body.category = category;
+    if (location?.trim()) body.location = location.trim();
 
-    if (error) {
-      console.error('[publish-log] 插入失败:', error);
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/logs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'Prefer': 'return=representation',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[publish-log] Supabase 返回错误:', response.status, errorText);
       return res.status(500).json({
         success: false,
-        error: `发布失败：${error.message}`,
+        error: `发布失败：${errorText}`,
+        debug: `HTTP ${response.status}`,
       });
     }
+
+    const data = await response.json();
+    const log = Array.isArray(data) ? data[0] : data;
 
     return res.status(200).json({
       success: true,
-      log: data as Log,
+      log,
       message: '日志发布成功',
     });
   } catch (err) {
