@@ -96,9 +96,9 @@ interface LogData {
 
 // 分类显示配置（与 LogItem 一致）
 const CATEGORY_CONFIG: Record<string, { label: string; textColor: string; bgColor: string; borderColor: string }> = {
-  experience: { label: '经历', textColor: 'text-amber-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/20' },
+  experience: { label: '回忆', textColor: 'text-amber-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/20' },
   present:   { label: '此刻', textColor: 'text-sky-400',  bgColor: 'bg-sky-500/10',   borderColor: 'border-sky-500/20' },
-  future:    { label: '将来', textColor: 'text-emerald-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/20' },
+  future:    { label: '预测', textColor: 'text-emerald-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/20' },
 };
 
 /** 手动转 CST(UTC+8) 格式化时间，避免 ICU 依赖问题 */
@@ -1123,9 +1123,9 @@ export default function MePage() {
                 <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-200">
                   <div className="flex items-center gap-1.5">
                     {[
-                      { value: 'experience', label: '经历', color: 'text-amber-600 bg-amber-50 border-amber-200', activeColor: 'bg-amber-500 text-white border-amber-500' },
+                      { value: 'experience', label: '回忆', color: 'text-amber-600 bg-amber-50 border-amber-200', activeColor: 'bg-amber-500 text-white border-amber-500' },
                       { value: 'present', label: '此刻', color: 'text-sky-600 bg-sky-50 border-sky-200', activeColor: 'bg-sky-500 text-white border-sky-500' },
-                      { value: 'future', label: '将来', color: 'text-emerald-600 bg-emerald-50 border-emerald-200', activeColor: 'bg-emerald-500 text-white border-emerald-500' },
+                      { value: 'future', label: '预测', color: 'text-emerald-600 bg-emerald-50 border-emerald-200', activeColor: 'bg-emerald-500 text-white border-emerald-500' },
                     ].map(opt => (
                       <button
                         key={opt.value}

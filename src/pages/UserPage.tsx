@@ -673,9 +673,9 @@ export default function UserPage() {
               {/* 分类选择 */}
               <div className="flex items-center gap-1.5">
                 {[
-                  { value: 'experience', label: '经历', color: 'text-amber-600 bg-amber-50 border-amber-200', activeColor: 'bg-amber-500 text-white border-amber-500' },
+                  { value: 'experience', label: '回忆', color: 'text-amber-600 bg-amber-50 border-amber-200', activeColor: 'bg-amber-500 text-white border-amber-500' },
                   { value: 'present', label: '此刻', color: 'text-sky-600 bg-sky-50 border-sky-200', activeColor: 'bg-sky-500 text-white border-sky-500' },
-                  { value: 'future', label: '将来', color: 'text-emerald-600 bg-emerald-50 border-emerald-200', activeColor: 'bg-emerald-500 text-white border-emerald-500' },
+                  { value: 'future', label: '预测', color: 'text-emerald-600 bg-emerald-50 border-emerald-200', activeColor: 'bg-emerald-500 text-white border-emerald-500' },
                 ].map(opt => (
                   <button
                     key={opt.value}

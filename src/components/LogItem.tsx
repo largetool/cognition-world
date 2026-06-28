@@ -18,9 +18,9 @@ const MAX_PREVIEW_LENGTH = 100;
 
 // 分类显示配置
 const CATEGORY_CONFIG: Record<string, { label: string; textColor: string; bgColor: string; borderColor: string }> = {
-  experience: { label: '经历', textColor: 'text-amber-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/20' },
+  experience: { label: '回忆', textColor: 'text-amber-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/20' },
   present:   { label: '此刻', textColor: 'text-sky-400',  bgColor: 'bg-sky-500/10',   borderColor: 'border-sky-500/20' },
-  future:    { label: '将来', textColor: 'text-emerald-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/20' },
+  future:    { label: '预测', textColor: 'text-emerald-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/20' },
 };
 
 /** 从时间戳提取"年月"显示，用于分类时间绑定 */
