@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Edit3, Share2, MapPin, Calendar, Eye, EyeOff, Send, ChevronLeft, ChevronRight, ArrowUp, Flag, X, AlertTriangle, ShieldAlert, UserX, Clock, Lock, CheckCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit3, Share2, MapPin, Calendar, Eye, EyeOff, Send, ChevronLeft, ChevronRight, ArrowUp, Flag, X, AlertTriangle, ShieldAlert, UserX, Clock, Lock, CheckCircle, Trash2, LogOut } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
@@ -144,6 +144,11 @@ export default function UserPage() {
   const userId = ssrUserId || displayId;
   const navigate = useNavigate();
   const { user: currentUser } = useAuth() as { user: Profile | null };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
 
   // SSR 模式：使用预取数据；客户端模式：使用 useUser hook 拉取
   const clientUserData = useUser(ssrProfile !== undefined ? undefined : userId, currentUser?.is_admin ?? undefined);
@@ -535,6 +540,15 @@ export default function UserPage() {
                     >
                       <Edit3 className="w-5 h-5 text-[var(--text-primary)]" />
                     </Link>
+                  )}
+                  {currentUser && (
+                    <button
+                      onClick={handleLogout}
+                      className="p-2 rounded-lg hover:bg-white/20 transition-colors"
+                      title="退出登录"
+                    >
+                      <LogOut className="w-5 h-5 text-[var(--text-primary)]" />
+                    </button>
                   )}
                   {/* 隐藏账户已移至「我的」页面编辑资料中 */}
                 </div>

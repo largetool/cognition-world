@@ -1,9 +1,10 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, LogIn, Home, Shield } from 'lucide-react';
+import { User, LogIn, Home, Shield, LogOut } from 'lucide-react';
 import type { Profile } from '../types';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { t, getCurrentLanguage } from '../locales';
+import { supabase } from '../supabase/client';
 
 interface NavbarProps {
   user: Profile | null;
@@ -13,6 +14,12 @@ interface NavbarProps {
 export function Navbar({ user, transparent = false }: NavbarProps) {
   const location = useLocation();
   const isHome = location.pathname === '/';
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
 
   return (
     <>
@@ -87,6 +94,13 @@ export function Navbar({ user, transparent = false }: NavbarProps) {
                   <User className="w-4 h-4" />
                   <span className="hidden sm:inline">我的</span>
                 </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-1 px-3 py-2 rounded-lg text-[var(--text-secondary)] hover:text-red-500 hover:bg-red-50 transition-colors"
+                  title="退出登录"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
               </>
             ) : (
               <div className="flex items-center space-x-2">
