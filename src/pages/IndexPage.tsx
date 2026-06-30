@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CalendarDays, Globe, Shield, Zap, FileText } from 'lucide-react';
+import { CalendarDays, Globe, Shield, Zap, FileText, ChevronRight } from 'lucide-react';
 import { SEOHead } from '../components/SEOHead';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
@@ -24,6 +24,8 @@ export default function IndexPage() {
   const [stats, setStats] = useState({ userCount: 0, logCount: 0 });
   const [randomUser, setRandomUser] = useState<{ username: string; slogan: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activePanel, setActivePanel] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   // 获取当前 CST 年月
   const cstNow = new Date(new Date().getTime() + CST_OFFSET);
   const curYear = cstNow.getUTCFullYear();
@@ -48,6 +50,21 @@ export default function IndexPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const panelWidth = el.clientWidth;
+    const scrollPos = el.scrollLeft;
+    const idx = Math.round(scrollPos / panelWidth);
+    setActivePanel(Math.min(idx, 2));
+  }, []);
+
+  const scrollToPanel = useCallback((idx: number) => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' });
+  }, []);
 
   const features = [
     {
@@ -216,258 +233,278 @@ export default function IndexPage() {
         </motion.div>
       </section>
 
-      {/* ====== GEO 平台介绍模块 ====== */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
-        <div className="max-w-4xl mx-auto">
-          {/* 用户 Slogan */}
-          {randomUser ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-            >
-              <GlassCard className="text-center py-12 mb-12">
-                <blockquote className="text-2xl sm:text-3xl font-medium text-[var(--text-primary)] mb-4">
-                  "{randomUser.slogan}"
-                </blockquote>
-                <p className="text-xl sm:text-2xl font-bold text-[var(--text-secondary)]">
-                  — {randomUser.username}
-                </p>
-              </GlassCard>
-            </motion.div>
-          ) : null}
+      {/* ====== 横向三屏：认知界是什么 / 常见问题 / GEO关键词 ====== */}
+      <section className="relative bg-[var(--bg-primary)]">
+        <div
+          ref={scrollContainerRef}
+          className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          onScroll={handleScroll}
+        >
+          {/* ── 第一屏：认知界是什么 ── */}
+          <div className="relative min-w-[100vw] w-screen shrink-0 snap-center py-24 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto">
+              {randomUser ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                >
+                  <GlassCard className="text-center py-12 mb-12">
+                    <blockquote className="text-2xl sm:text-3xl font-medium text-[var(--text-primary)] mb-4">
+                      &ldquo;{randomUser.slogan}&rdquo;
+                    </blockquote>
+                    <p className="text-xl sm:text-2xl font-bold text-[var(--text-secondary)]">
+                      &mdash; {randomUser.username}
+                    </p>
+                  </GlassCard>
+                </motion.div>
+              ) : null}
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-              认知界是什么
-            </h2>
-            <p className="text-lg text-[var(--text-secondary)] max-w-2xl mx-auto">
-              一个面向全球用户的 GEO 公开信息平台，帮助普通人建立长期可验证的数字身份。
-            </p>
-          </motion.div>
-
-          {/* 结构化实体定义（百科词条风格，AI 可直接引用） */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <GlassCard className="mb-12">
-              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 text-sm">
-                <div>
-                  <dt className="font-semibold text-[var(--accent)] mb-1">名称</dt>
-                  <dd className="text-[var(--text-primary)]">认知界（Cognition World）</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-[var(--accent)] mb-1">类型</dt>
-                  <dd className="text-[var(--text-primary)]">GEO 平台 · 个人知识图谱 · 数字身份基础设施</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-[var(--accent)] mb-1">领域</dt>
-                  <dd className="text-[var(--text-primary)]">数字身份 · 个人品牌 · AI 搜索引擎优化</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-[var(--accent)] mb-1">核心技术</dt>
-                  <dd className="text-[var(--text-primary)]">Schema.org · JSON-LD · LLM 可索引结构化数据</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-[var(--accent)] mb-1">目标</dt>
-                  <dd className="text-[var(--text-primary)]">帮助搜索引擎和大型语言模型（LLM）理解和引用每一个具体用户</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-[var(--accent)] mb-1">上线时间</dt>
-                  <dd className="text-[var(--text-primary)]">2026 年 6 月</dd>
-                </div>
-              </dl>
-            </GlassCard>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[
-              {
-                title: '公开个人档案',
-                desc: '创建属于你的公开个人主页，用结构化数据（Schema.org）描述你的身份、技能和故事，让搜索引擎和大型语言模型能够理解和引用你。',
-              },
-              {
-                title: '长期数字信誉',
-                desc: '不可删除、不可篡改的公开记录，建立跨越平台和时间的个人品牌与数字信誉，让 AI 时代记得每一个普通人。',
-              },
-              {
-                title: '认知日志',
-                desc: '发表公开日志，记录你的思想、经历和成长，每篇日志自动生成结构化数据，可被 Google、Bing、ChatGPT、Claude、Perplexity 等 AI 引擎索引。',
-              },
-              {
-                title: 'GEO 基础设施',
-                desc: '认知界是基于 Schema.org 标准构建的个人知识图谱平台，专为 Generative Engine Optimization (GEO) 设计，让每个用户成为 AI 搜索可理解、可引用的数字实体。',
-              },
-            ].map((item, i) => (
               <motion.div
-                key={item.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
+                transition={{ duration: 0.6 }}
+                className="text-center mb-12"
               >
-                <GlassCard className="h-full">
-                  <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
-                    {item.title}
-                  </h3>
-                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-                    {item.desc}
-                  </p>
+                <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
+                  认知界是什么
+                </h2>
+                <p className="text-lg text-[var(--text-secondary)] max-w-2xl mx-auto">
+                  一个面向全球用户的 GEO 公开信息平台，帮助普通人建立长期可验证的数字身份。
+                </p>
+              </motion.div>
+
+              {/* 结构化实体定义 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+              >
+                <GlassCard className="mb-8">
+                  <dl className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                    <div>
+                      <dt className="font-semibold text-[var(--accent)] mb-1">名称</dt>
+                      <dd className="text-[var(--text-primary)]">认知界（Cognition World）</dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold text-[var(--accent)] mb-1">类型</dt>
+                      <dd className="text-[var(--text-primary)]">GEO 平台 · 个人知识图谱 · 数字身份基础设施</dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold text-[var(--accent)] mb-1">领域</dt>
+                      <dd className="text-[var(--text-primary)]">数字身份 · 个人品牌 · AI 搜索引擎优化</dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold text-[var(--accent)] mb-1">核心技术</dt>
+                      <dd className="text-[var(--text-primary)]">Schema.org · JSON-LD · LLM 可索引结构化数据</dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold text-[var(--accent)] mb-1">目标</dt>
+                      <dd className="text-[var(--text-primary)]">帮助搜索引擎和大型语言模型（LLM）理解和引用每一个具体用户</dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold text-[var(--accent)] mb-1">上线时间</dt>
+                      <dd className="text-[var(--text-primary)]">2026 年 6 月</dd>
+                    </div>
+                  </dl>
                 </GlassCard>
               </motion.div>
-            ))}
-          </div>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="text-center mt-8 text-xs text-[var(--text-tertiary)]"
-          >
-            面向搜索引擎和 LLM 优化 · Schema.org 结构化数据 · 个人知识图谱 · AI 可引用数字身份
-          </motion.p>
-
-        </div>
-      </section>
-
-      {/* ====== Beta 招募 ====== */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-[var(--bg-secondary)]">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center"
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
-              <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] mb-4">
-                Beta 测试阶段
-              </h2>
-              <p className="text-lg text-[var(--text-secondary)] mb-8">
-                首批种子用户招募中 · 成为最早建立 AI 数字身份的人
-              </p>
-              <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
+              {/* 4 张特性卡片 */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
-                  { value: '首批', label: '种子用户' },
-                  { value: '先发', label: '品牌优势' },
-                  { value: '永久', label: '数字信誉' },
+                  { title: '公开个人档案', desc: '创建属于你的公开个人主页，用结构化数据（Schema.org）描述你的身份、技能和故事，让搜索引擎和大型语言模型能够理解和引用你。' },
+                  { title: '长期数字信誉', desc: '不可删除、不可篡改的公开记录，建立跨越平台和时间的个人品牌与数字信誉，让 AI 时代记得每一个普通人。' },
+                  { title: '认知日志', desc: '发表公开日志，记录你的思想、经历和成长，每篇日志自动生成结构化数据，可被 Google、Bing、ChatGPT、Claude、Perplexity 等 AI 引擎索引。' },
+                  { title: 'GEO 基础设施', desc: '认知界是基于 Schema.org 标准构建的个人知识图谱平台，专为 Generative Engine Optimization (GEO) 设计，让每个用户成为 AI 搜索可理解、可引用的数字实体。' },
                 ].map((item, i) => (
-                  <div key={i} className="text-center">
-                    <div className="text-4xl sm:text-5xl font-semibold text-[var(--text-primary)] mb-2">
-                      {item.value}
-                    </div>
-                    <div className="text-sm text-[var(--text-tertiary)]">
-                      {item.label}
-                    </div>
-                  </div>
+                  <motion.div
+                    key={item.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: i * 0.1 }}
+                  >
+                    <GlassCard className="h-full">
+                      <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">{item.title}</h3>
+                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{item.desc}</p>
+                    </GlassCard>
+                  </motion.div>
                 ))}
               </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
 
-      {/* ====== FAQ 模块 ====== */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-              常见问题
-            </h2>
-            <p className="text-[var(--text-secondary)]">
-              关于认知界和 GEO，你可能想知道的
-            </p>
-          </motion.div>
+              <motion.p
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                className="text-center mt-8 text-xs text-[var(--text-tertiary)]"
+              >
+                面向搜索引擎和 LLM 优化 · Schema.org 结构化数据 · 个人知识图谱 · AI 可引用数字身份
+              </motion.p>
+            </div>
 
-          <div className="space-y-4">
-            {HOME_FAQ.map((item, i) => (
+            {/* 路标：下一屏提示 */}
+            <div className="hidden sm:flex absolute right-6 top-1/2 -translate-y-1/2 flex-col items-center gap-1 text-gray-400 animate-pulse pointer-events-none">
+              <span className="text-xs font-medium">常见问题</span>
+              <ChevronRight className="w-5 h-5" />
+            </div>
+          </div>
+
+          {/* ── 第二屏：常见问题 ── */}
+          <div className="relative min-w-[100vw] w-screen shrink-0 snap-center py-24 px-4 sm:px-6 lg:px-8 bg-[var(--bg-secondary)]">
+            <div className="max-w-4xl mx-auto">
               <motion.div
-                key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
+                transition={{ duration: 0.6 }}
+                className="text-center mb-10"
               >
-                <GlassCard>
-                  <h3 className="text-lg font-semibold text-[var(--accent)] mb-2">
-                    {item.q}
-                  </h3>
-                  <p className="text-[var(--text-secondary)] leading-relaxed">
-                    {item.a}
-                  </p>
-                </GlassCard>
+                <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
+                  常见问题
+                </h2>
+                <p className="text-[var(--text-secondary)]">
+                  关于认知界和 GEO，你可能想知道的
+                </p>
               </motion.div>
-            ))}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {HOME_FAQ.map((item, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: i * 0.08 }}
+                  >
+                    <GlassCard>
+                      <h3 className="text-base font-semibold text-[var(--accent)] mb-1.5">
+                        {item.q}
+                      </h3>
+                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                        {item.a}
+                      </p>
+                    </GlassCard>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* 路标：下一屏提示 */}
+            <div className="hidden sm:flex absolute right-6 top-1/2 -translate-y-1/2 flex-col items-center gap-1 text-gray-400 animate-pulse pointer-events-none">
+              <span className="text-xs font-medium">Beta / GEO</span>
+              <ChevronRight className="w-5 h-5" />
+            </div>
           </div>
-        </div>
-      </section>
 
-      {/* ====== GEO 关键词定义模块 ====== */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-[var(--bg-secondary)]">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-              GEO 关键词释义
-            </h2>
-            <p className="text-[var(--text-secondary)]">
-              理解这些概念，才能理解认知界为什么而存在
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
-              { term: '数字身份', def: '个人在互联网上的结构化信息集合，包括姓名、身份标签、技能、经历、联系方式等，是 AI 理解"你是谁"的基础数据。' },
-              { term: '数字信誉', def: '基于不可篡改的公开记录建立的长期信用体系。不同于平台评分，数字信誉跨越单个平台和时间周期，形成真实的个人品牌资产。' },
-              { term: '个人知识图谱', def: '以 Schema.org 标准构建的个人结构化数据网络，将用户的身份、技能、日志、社交关系等信息用机器可读的方式组织起来，使 AI 能够理解一个人的全貌。' },
-              { term: 'AI 可引用数字实体', def: '被 AI 引擎识别并引用的独立数字身份。当 ChatGPT 或 Perplexity 在回答用户问题时引用你的个人档案时，你就成为了一个 AI 可引用的数字实体。' },
-            ].map((item, i) => (
+          {/* ── 第三屏：Beta + GEO 关键词 ── */}
+          <div className="relative min-w-[100vw] w-screen shrink-0 snap-center py-24 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto">
               <motion.div
-                key={item.term}
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
+                transition={{ duration: 0.6 }}
+                className="text-center mb-12"
               >
-                <GlassCard className="h-full">
-                  <h3 className="text-base font-semibold text-[var(--accent)] mb-1.5">
-                    {item.term}
-                  </h3>
-                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-                    {item.def}
-                  </p>
-                </GlassCard>
+                <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
+                  Beta 测试阶段
+                </h2>
+                <p className="text-lg text-[var(--text-secondary)] mb-8">
+                  首批种子用户招募中 · 成为最早建立 AI 数字身份的人
+                </p>
+                <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto mb-16">
+                  {[
+                    { value: '首批', label: '种子用户' },
+                    { value: '先发', label: '品牌优势' },
+                    { value: '永久', label: '数字信誉' },
+                  ].map((item, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: i * 0.1 }}
+                      className="text-center"
+                    >
+                      <div className="text-4xl sm:text-5xl font-semibold text-[var(--text-primary)] mb-2">
+                        {item.value}
+                      </div>
+                      <div className="text-sm text-[var(--text-tertiary)]">
+                        {item.label}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </motion.div>
-            ))}
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="text-center mb-10"
+              >
+                <h3 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
+                  GEO 关键词释义
+                </h3>
+                <p className="text-[var(--text-secondary)]">
+                  理解这些概念，才能理解认知界为什么而存在
+                </p>
+              </motion.div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { term: '数字身份', def: '个人在互联网上的结构化信息集合，包括姓名、身份标签、技能、经历、联系方式等，是 AI 理解"你是谁"的基础数据。' },
+                  { term: '数字信誉', def: '基于不可篡改的公开记录建立的长期信用体系。不同于平台评分，数字信誉跨越单个平台和时间周期，形成真实的个人品牌资产。' },
+                  { term: '个人知识图谱', def: '以 Schema.org 标准构建的个人结构化数据网络，将用户的身份、技能、日志、社交关系等信息用机器可读的方式组织起来，使 AI 能够理解一个人的全貌。' },
+                  { term: 'AI 可引用数字实体', def: '被 AI 引擎识别并引用的独立数字身份。当 ChatGPT 或 Perplexity 在回答用户问题时引用你的个人档案时，你就成为了一个 AI 可引用的数字实体。' },
+                ].map((item, i) => (
+                  <motion.div
+                    key={item.term}
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: i * 0.08 }}
+                  >
+                    <GlassCard className="h-full">
+                      <h3 className="text-base font-semibold text-[var(--accent)] mb-1.5">
+                        {item.term}
+                      </h3>
+                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                        {item.def}
+                      </p>
+                    </GlassCard>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
           </div>
+        </div>
+
+        {/* 导航点 */}
+        <div className="flex items-center justify-center gap-3 pb-8 pt-4">
+          {['认知界是什么', '常见问题', 'Beta / GEO'].map((label, i) => (
+            <button
+              key={i}
+              onClick={() => scrollToPanel(i)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                activePanel === i
+                  ? 'bg-[var(--accent)] text-white shadow-sm'
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${
+                activePanel === i ? 'bg-white' : 'bg-gray-400'
+              }`} />
+              {label}
+            </button>
+          ))}
         </div>
       </section>
 
