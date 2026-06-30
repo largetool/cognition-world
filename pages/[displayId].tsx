@@ -531,19 +531,25 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const pUrl = userUrl(typedProfile.display_id);
 
     // Agnes AI: 生成用户的 GEO 简介（Person.description）
+    // 优先使用数据库中已有的 geo_bio（由每日批量富化任务预生成）
     let geoBio: string | undefined;
-    const logContents = (logs || []).map((l: any) => l.content || '').filter(Boolean);
-    if (logContents.length > 0) {
-      try {
-        geoBio = await generateUserBio({
-          username: typedProfile.username,
-          tag: typedProfile.tag || '',
-          slogan: typedProfile.slogan || '',
-          location: typedProfile.location || '',
-          logContents,
-        });
-      } catch (e) {
-        console.warn('[Agnes] 生成简介失败，使用 slogan 降级:', (e as Error).message);
+    if ((typedProfile as any).geo_bio) {
+      geoBio = (typedProfile as any).geo_bio;
+      console.log(`[SSR] 使用预生成 geo_bio: ${typedProfile.username}`);
+    } else {
+      const logContents = (logs || []).map((l: any) => l.content || '').filter(Boolean);
+      if (logContents.length > 0) {
+        try {
+          geoBio = await generateUserBio({
+            username: typedProfile.username,
+            tag: typedProfile.tag || '',
+            slogan: typedProfile.slogan || '',
+            location: typedProfile.location || '',
+            logContents,
+          });
+        } catch (e) {
+          console.warn('[Agnes] 生成简介失败，使用 slogan 降级:', (e as Error).message);
+        }
       }
     }
 

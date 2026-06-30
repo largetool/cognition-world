@@ -35,8 +35,8 @@ export default function WhitepaperPage() {
         data={{
           title: '白皮书 - 认知界 | 人本位互联网',
           description: '认知界（Cognition World）白皮书：在 AI 时代，重建真实的人类连接',
-          canonicalUrl: 'https://cognitionworld.com/whitepaper',
-          ogImage: 'https://cognitionworld.com/og-whitepaper.jpg',
+          canonicalUrl: 'https://uptef.com/whitepaper',
+          ogImage: 'https://uptef.com/og-whitepaper.jpg',
           ogType: 'article',
         }}
         jsonLd={{
@@ -55,10 +55,10 @@ export default function WhitepaperPage() {
                 name: '认知界',
                 logo: {
                   '@type': 'ImageObject',
-                  url: 'https://cognitionworld.com/logo.png',
+                  url: 'https://uptef.com/logo.png',
                 },
               },
-              url: 'https://cognitionworld.com/whitepaper',
+              url: 'https://uptef.com/whitepaper',
               datePublished: '2026-06-01',
             },
             generateBreadcrumbList([breadcrumbs.home, breadcrumbs.whitepaper]),

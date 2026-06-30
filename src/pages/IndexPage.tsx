@@ -162,7 +162,12 @@ export default function IndexPage() {
                   className="inline-flex items-center gap-2 px-8 py-4 bg-white/70 backdrop-blur-xl text-gray-800 rounded-2xl font-medium text-lg border border-white/90 shadow-lg shadow-slate-200/40 hover:bg-white/90 transition-all"
                 >
                   <CalendarDays className="w-5 h-5" />
-                  日志月历
+                  <span>日志月历</span>
+                  {stats.logCount > 0 && (
+                    <span className="text-base font-normal text-gray-500">
+                      · {stats.logCount.toLocaleString()} 条
+                    </span>
+                  )}
                 </Link>
               </motion.div>
             </div>

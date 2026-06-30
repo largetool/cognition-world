@@ -660,7 +660,7 @@ export async function getSitemapStats(): Promise<{ userCount: number; logCount: 
 
 // 生成动态站点地图内容
 export async function generateSitemapXml(): Promise<string> {
- const baseUrl = 'https://cognitionworld.com';
+ const baseUrl = 'https://uptef.com';
 
  // 获取所有动态（限制5000条，避免站点地图过大）
  const { data: logs } = await supabase.from('logs').select('user_id, id, created_at').order('created_at', { ascending: false }).limit(5000);

@@ -17,8 +17,8 @@ export default function PrivacyPage() {
           description: '认知界隐私政策：了解我们如何保护您的数据，不收集隐私，只传递您愿意公开的信息',
           keywords: ['隐私政策', '数据保护', '认知界', 'Cognition World', '隐私说明'],
           ogType: 'article',
-          ogImage: 'https://cognitionworld.com/og-image.png',
-          canonicalUrl: 'https://cognitionworld.com/privacy',
+          ogImage: 'https://uptef.com/og-image.png',
+          canonicalUrl: 'https://uptef.com/privacy',
         }}
         jsonLd={{
           '@context': 'https://schema.org',
@@ -36,14 +36,14 @@ export default function PrivacyPage() {
                 name: '认知界',
                 logo: {
                   '@type': 'ImageObject',
-                  url: 'https://cognitionworld.com/logo.png',
+                  url: 'https://uptef.com/logo.png',
                 },
               },
               datePublished: '2026-05-01',
               dateModified: '2026-05-01',
               mainEntityOfPage: {
                 '@type': 'WebPage',
-                '@id': 'https://cognitionworld.com/privacy',
+                '@id': 'https://uptef.com/privacy',
               },
             },
             generateBreadcrumbList([breadcrumbs.home, breadcrumbs.privacy]),
