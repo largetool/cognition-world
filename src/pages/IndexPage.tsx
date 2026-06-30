@@ -233,6 +233,28 @@ export default function IndexPage() {
         </motion.div>
       </section>
 
+      {/* 用户 Slogan - 保留在英雄区下方，不参与横向滚动 */}
+      {randomUser ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="py-12 px-4 sm:px-6 lg:px-8"
+        >
+          <div className="max-w-4xl mx-auto">
+            <GlassCard className="text-center py-12">
+              <blockquote className="text-2xl sm:text-3xl font-medium text-[var(--text-primary)] mb-4">
+                &ldquo;{randomUser.slogan}&rdquo;
+              </blockquote>
+              <p className="text-xl sm:text-2xl font-bold text-[var(--text-secondary)]">
+                &mdash; {randomUser.username}
+              </p>
+            </GlassCard>
+          </div>
+        </motion.div>
+      ) : null}
+
       {/* ====== 横向三屏：认知界是什么 / 常见问题 / GEO关键词 ====== */}
       <section className="relative bg-[var(--bg-primary)]">
         <div
@@ -244,23 +266,6 @@ export default function IndexPage() {
           {/* ── 第一屏：认知界是什么 ── */}
           <div className="relative min-w-[100vw] w-screen shrink-0 snap-center py-24 px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto">
-              {randomUser ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: 0.1 }}
-                >
-                  <GlassCard className="text-center py-12 mb-12">
-                    <blockquote className="text-2xl sm:text-3xl font-medium text-[var(--text-primary)] mb-4">
-                      &ldquo;{randomUser.slogan}&rdquo;
-                    </blockquote>
-                    <p className="text-xl sm:text-2xl font-bold text-[var(--text-secondary)]">
-                      &mdash; {randomUser.username}
-                    </p>
-                  </GlassCard>
-                </motion.div>
-              ) : null}
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -373,7 +378,7 @@ export default function IndexPage() {
                 </p>
               </motion.div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-5 max-w-3xl mx-auto">
                 {HOME_FAQ.map((item, i) => (
                   <motion.div
                     key={i}
@@ -382,11 +387,11 @@ export default function IndexPage() {
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: i * 0.08 }}
                   >
-                    <GlassCard>
-                      <h3 className="text-base font-semibold text-[var(--accent)] mb-1.5">
+                    <GlassCard className="p-6">
+                      <h3 className="text-xl font-semibold text-[var(--accent)] mb-2">
                         {item.q}
                       </h3>
-                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                      <p className="text-base text-[var(--text-secondary)] leading-relaxed">
                         {item.a}
                       </p>
                     </GlassCard>
@@ -402,9 +407,11 @@ export default function IndexPage() {
             </div>
           </div>
 
-          {/* ── 第三屏：Beta + GEO 关键词 ── */}
+          {/* ── 第三屏：GEO 关键词 + Beta ── */}
           <div className="relative min-w-[100vw] w-screen shrink-0 snap-center py-24 px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto">
+
+              {/* GEO 关键词释义 */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -413,12 +420,54 @@ export default function IndexPage() {
                 className="text-center mb-12"
               >
                 <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-                  Beta 测试阶段
+                  GEO 关键词释义
                 </h2>
+                <p className="text-[var(--text-secondary)] mb-10">
+                  理解这些概念，才能理解认知界为什么而存在
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+                  {[
+                    { term: '数字身份', def: '个人在互联网上的结构化信息集合，包括姓名、身份标签、技能、经历、联系方式等，是 AI 理解"你是谁"的基础数据。' },
+                    { term: '数字信誉', def: '基于不可篡改的公开记录建立的长期信用体系。不同于平台评分，数字信誉跨越单个平台和时间周期，形成真实的个人品牌资产。' },
+                    { term: '个人知识图谱', def: '以 Schema.org 标准构建的个人结构化数据网络，将用户的身份、技能、日志、社交关系等信息用机器可读的方式组织起来，使 AI 能够理解一个人的全貌。' },
+                    { term: 'AI 可引用数字实体', def: '被 AI 引擎识别并引用的独立数字身份。当 ChatGPT 或 Perplexity 在回答用户问题时引用你的个人档案时，你就成为了一个 AI 可引用的数字实体。' },
+                  ].map((item, i) => (
+                    <motion.div
+                      key={item.term}
+                      initial={{ opacity: 0, y: 15 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: i * 0.08 }}
+                    >
+                      <GlassCard className="h-full">
+                        <h3 className="text-base font-semibold text-[var(--accent)] mb-1.5">
+                          {item.term}
+                        </h3>
+                        <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                          {item.def}
+                        </p>
+                      </GlassCard>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Beta 测试阶段 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="text-center pt-8 border-t border-gray-100"
+              >
+                <h3 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] mb-4">
+                  Beta 测试阶段
+                </h3>
                 <p className="text-lg text-[var(--text-secondary)] mb-8">
                   首批种子用户招募中 · 成为最早建立 AI 数字身份的人
                 </p>
-                <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto mb-16">
+                <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
                   {[
                     { value: '首批', label: '种子用户' },
                     { value: '先发', label: '品牌优势' },
@@ -443,46 +492,6 @@ export default function IndexPage() {
                 </div>
               </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="text-center mb-10"
-              >
-                <h3 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-                  GEO 关键词释义
-                </h3>
-                <p className="text-[var(--text-secondary)]">
-                  理解这些概念，才能理解认知界为什么而存在
-                </p>
-              </motion.div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  { term: '数字身份', def: '个人在互联网上的结构化信息集合，包括姓名、身份标签、技能、经历、联系方式等，是 AI 理解"你是谁"的基础数据。' },
-                  { term: '数字信誉', def: '基于不可篡改的公开记录建立的长期信用体系。不同于平台评分，数字信誉跨越单个平台和时间周期，形成真实的个人品牌资产。' },
-                  { term: '个人知识图谱', def: '以 Schema.org 标准构建的个人结构化数据网络，将用户的身份、技能、日志、社交关系等信息用机器可读的方式组织起来，使 AI 能够理解一个人的全貌。' },
-                  { term: 'AI 可引用数字实体', def: '被 AI 引擎识别并引用的独立数字身份。当 ChatGPT 或 Perplexity 在回答用户问题时引用你的个人档案时，你就成为了一个 AI 可引用的数字实体。' },
-                ].map((item, i) => (
-                  <motion.div
-                    key={item.term}
-                    initial={{ opacity: 0, y: 15 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: i * 0.08 }}
-                  >
-                    <GlassCard className="h-full">
-                      <h3 className="text-base font-semibold text-[var(--accent)] mb-1.5">
-                        {item.term}
-                      </h3>
-                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-                        {item.def}
-                      </p>
-                    </GlassCard>
-                  </motion.div>
-                ))}
-              </div>
             </div>
           </div>
         </div>
